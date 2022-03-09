@@ -17,7 +17,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "testnet",
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
@@ -35,7 +35,9 @@ module.exports = {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
       chainId: 97,
       gasPrice: 20000000000,
-      accounts: ["9e33e7fc1edaad3099f6788013921c5a01f418be85eff34f94a6a8923b6fc671"]
+      // gas: 2100000,
+      // gasPrice: 8000000000,
+      accounts: ["2c9950b89e00f2585a5e1a353648b2ea07fd3cf437146b4dc1b2b624e045596d"]
     },
     mainnet: {
       url: "https://bsc-dataseed.binance.org/",
@@ -46,7 +48,7 @@ module.exports = {
     }
   },
   solidity: {
-    version: "0.8.0",
+    version: "0.8.1",
     // settings: {
     //   optimizer: {
     //     enabled: true
