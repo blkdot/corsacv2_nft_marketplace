@@ -26,7 +26,7 @@ contract TradableERC1155 is
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
-    /**
+    /*
      0xd9b67a26 = type(IERC1155).interfaceId =   bytes4(keccak256("balanceOf(address,uint256)")) 
                                             ^   bytes4(keccak256("balanceOfBatch(address[],uint256[])"))
                                             ^   bytes4(keccak256("setApprovalForAll(address,bool)"))

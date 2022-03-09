@@ -19,7 +19,7 @@ contract TradableERC721 is ERC721, ContextMixin, NativeMetaTransaction, Ownable 
     using SafeMath for uint256;
     using Counters for Counters.Counter; 
 
-    /**
+    /*
      0x80ac58cd = type(IERC721).interfaceId =   bytes4(keccak256("balanceOf(address)")) 
                                             ^   bytes4(keccak256("ownerOf(uint256)"))
                                             ^   bytes4(keccak256("safeTransferFrom(address,address,uint256)"))
@@ -32,10 +32,10 @@ contract TradableERC721 is ERC721, ContextMixin, NativeMetaTransaction, Ownable 
      */
     bytes4 constant internal INTERFACE_ERC721 = 0x80ac58cd;
 
-    /**
-     * We rely on the OZ Counter util to keep track of the next available ID.
-     * We track the nextTokenId instead of the currentTokenId to save users on gas costs. 
-     * Read more about it here: https://shiny.mirror.xyz/OUampBbIz9ebEicfGnQf5At_ReMHlZy0tB4glb9xQ0E
+    /*
+      We rely on the OZ Counter util to keep track of the next available ID.
+      We track the nextTokenId instead of the currentTokenId to save users on gas costs. 
+      Read more about it here: https://shiny.mirror.xyz/OUampBbIz9ebEicfGnQf5At_ReMHlZy0tB4glb9xQ0E
      */ 
     Counters.Counter private _nextTokenId;
 
