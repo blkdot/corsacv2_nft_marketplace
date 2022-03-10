@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./ICorsacContract.sol";
-import "./TradableERC721.sol";
+import "./ERC721Tradable.sol";
 
 contract CorsacERC721 is ICorsacERC721 {
     constructor() {}
@@ -14,7 +14,7 @@ contract CorsacERC721 is ICorsacERC721 {
         string memory _uri,
         address factory
     ) external override returns (address) {
-        TradableERC721 tCon721 = new TradableERC721(
+        ERC721Tradable tCon721 = new ERC721Tradable(
             _name,
             _symbol,
             _uri,

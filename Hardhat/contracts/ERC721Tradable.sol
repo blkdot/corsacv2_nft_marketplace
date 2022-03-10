@@ -12,10 +12,10 @@ import "./common/meta-transactions/ContextMixin.sol";
 import "./common/meta-transactions/NativeMetaTransaction.sol";
 
 /**
- * @title TradableERC721
- * TradableERC721 - ERC721 contract that whitelists a trading address, and has minting functionality.
+ * @title ERC721Tradable
+ * ERC721Tradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
-contract TradableERC721 is ERC721, ContextMixin, NativeMetaTransaction, Ownable {
+contract ERC721Tradable is ERC721, ContextMixin, NativeMetaTransaction, Ownable {
     using SafeMath for uint256;
     using Counters for Counters.Counter; 
 

@@ -12,11 +12,11 @@ import "./common/meta-transactions/ContextMixin.sol";
 import "./common/meta-transactions/NativeMetaTransaction.sol";
 
 /**
- * @title TradableERC1155
- * TradableERC1155 - ERC1155 contract that whitelists an operator address, has create and mint functionality, and supports useful standards from OpenZeppelin,
+ * @title ERC1155Tradable
+ * ERC1155Tradable - ERC1155 contract that whitelists an operator address, has create and mint functionality, and supports useful standards from OpenZeppelin,
   like _exists(), name(), symbol(), and totalSupply()
  */
-contract TradableERC1155 is
+contract ERC1155Tradable is
     ContextMixin,
     ERC1155,
     NativeMetaTransaction,
