@@ -12,6 +12,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./ICorsacNFTFactory.sol";
 import "./ICorsacContract.sol";
+import "./IERC721Tradable.sol";
+import "hardhat/console.sol";
 
 contract CorsacNFTFactory is 
     ICorsacNFTFactory, 
@@ -408,6 +410,11 @@ contract CorsacNFTFactory is
         }
     }
 
+    function mintTo(address collectionAddr, address _to, string memory uri) external onlyOwner {
+        require(collectionOccupation[collectionAddr] == true);
+        IERC721Tradable(collectionAddr).mintTo(_to, uri);
+    }
+
     /**
      * @dev this function transfers NFTs of 'sc' from account 'from' to account 'to' for token ids 'ids'
      * @param sc - address of NFT collection contract
@@ -452,6 +459,15 @@ contract CorsacNFTFactory is
         return collections;
     }
 
+    function getRecentCollection() public view returns (address) {
+        require(collections.length > 0, 'No collections');
+        return collections[collections.length - 1];
+    }
+
+    function getTokenId(address collectionAddr) external view onlyOwner returns (uint256) {
+        return IERC721Tradable(collectionAddr).getTokenId();
+    }
+
     /**
      * @dev this function sets default fee ratio.
      */
@@ -490,7 +506,7 @@ contract CorsacNFTFactory is
      * @param sc - address of NFT collection contract
      * @param tokenId - token index in 'sc'
      * @param payment - payment method for buyer/bidder/offerer/auctioner, 0: BNB, 1: BUSD, 2: Corsac, ...
-     * @param method - duration of sale in seconds
+     * @param method - method of sale, 0: fixed price, 1: timed auction, 2: offer
      * @param duration - duration of sale in seconds
      * @param basePrice - price in 'payment' coin
      * @param feeRatio - fee ratio (1/10000) for transaction

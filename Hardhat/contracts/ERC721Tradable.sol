@@ -11,11 +11,15 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./common/meta-transactions/ContextMixin.sol";
 import "./common/meta-transactions/NativeMetaTransaction.sol";
 
+import "./IERC721Tradable.sol";
+
+import "hardhat/console.sol";
+
 /**
  * @title ERC721Tradable
  * ERC721Tradable - ERC721 contract that whitelists a trading address, and has minting functionality.
  */
-contract ERC721Tradable is ERC721, ContextMixin, NativeMetaTransaction, Ownable {
+contract ERC721Tradable is IERC721Tradable, ERC721, ContextMixin, NativeMetaTransaction, Ownable {
     using SafeMath for uint256;
     using Counters for Counters.Counter; 
 
@@ -80,7 +84,7 @@ contract ERC721Tradable is ERC721, ContextMixin, NativeMetaTransaction, Ownable 
      * @dev Mints a token to an address with a tokenURI.
      * @param _to address of the future owner of the token
      */
-    function mintTo(address _to, string memory uri) public onlyOwner {
+    function mintTo(address _to, string memory uri) public override {
         uint256 currentTokenId = _nextTokenId.current();
 
         // token URI set if valid
@@ -94,6 +98,10 @@ contract ERC721Tradable is ERC721, ContextMixin, NativeMetaTransaction, Ownable 
         _nextTokenId.increment();
 
         _safeMint(_to, currentTokenId);
+    }
+
+    function getTokenId() external view override returns(uint256)  {
+        return _nextTokenId.current();
     }
 
     /**
@@ -112,7 +120,7 @@ contract ERC721Tradable is ERC721, ContextMixin, NativeMetaTransaction, Ownable 
     function setCreator(
         address _to,
         uint256 _id
-    ) public onlyOwner {
+    ) public {
         creators[_id] = _to;
         emit CreatorSet(_to, _id);
     }

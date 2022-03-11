@@ -14,38 +14,69 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
+  
+  console.log('\n--------------------------------------------------------------------------');
 
   // 1. Deploy Test Token
+  console.log("\ndeploying UBA Token...");
   const UBAToken = await hre.ethers.getContractFactory("UBAToken");
   const uba = await UBAToken.deploy();
 
-  await uba.deployed();
+  console.log("UBA deployed to: ", uba.address);
+  console.log("UBA Token Total Supply: ", await uba.totalSupply());
+  console.log('\n--------------------------------------------------------------------------');
 
-  console.log("UBA Token deployed to:", uba.address);
+  // 2. Deploy Tradable ERC-721 Contract
+  console.log("\ndeploying ERC721Tradable contract...");
+  const ERC721Tradable = await hre.ethers.getContractFactory("ERC721Tradable");
+  const tradable721 = await ERC721Tradable.deploy("Corsac NFT", "CSCT-NFT", "https://baseuri/", "0x0000000000000000000000000000000000000000");
 
-  // 2. Deploy Corsac ERC-721 Contract
+  await tradable721.deployed();
+
+  console.log("ERC721Tradable deployed to: ", tradable721.address);
+  console.log('\n--------------------------------------------------------------------------');
+
+  // 3. Deploy Tradable ERC-1155 Contract
+  console.log("\ndeploying ERC1155Tradable contract...");
+  const ERC1155Tradable = await hre.ethers.getContractFactory("ERC1155Tradable");
+  const tradable1155 = await ERC1155Tradable.deploy("My ERC1155 NFT Test", "NENT1", "test-uri", "0x0000000000000000000000000000000000000000");
+
+  await tradable1155.deployed();
+
+  console.log("ERC1155Tradable deployed to: ", tradable1155.address);
+  console.log('\n--------------------------------------------------------------------------');
+
+  // 4. Deploy Corsac ERC-721 Contract
+  console.log("\ndeploying CorsacERC721 contract...");
   const CorsacERC721 = await hre.ethers.getContractFactory("CorsacERC721");
-  const c721 = await CorsacERC721.deploy();
+  const cERC721 = await CorsacERC721.deploy();
 
-  await c721.deployed();
+  const cERC721Inst = await cERC721.deployed();
 
-  console.log("CorsacERC721 deployed to:", c721.address);
+  console.log("CorsacERC721 deployed to: ", cERC721Inst.address);
+  console.log('\n--------------------------------------------------------------------------');
 
-  // 3. Deploy Corsac ERC-1155 Contract
+  // 5. Deploy Corsac ERC-1155 Contract
+  console.log("\ndeploying CorsacERC1155 contract...");
   const CorsacERC1155 = await hre.ethers.getContractFactory("CorsacERC1155");
-  const c1155 = await CorsacERC1155.deploy();
+  const cERC1155 = await CorsacERC1155.deploy();
 
-  await c1155.deployed();
+  const cERC1155Inst = await cERC1155.deployed();
 
-  console.log("CorsacERC1155 deployed to:", c1155.address);
-
-  // 4. Deploy Corsac NFT Factory Contract
+  console.log("CorsacERC1155 deployed to: ", cERC1155Inst.address);
+  console.log('\n--------------------------------------------------------------------------');
+  
+  // 6. Deploy Corsac NFT Factory Contract
+  console.log("\ndeploying CorsacNFTFactory contract...");
   const CorsacNFTFactory = await hre.ethers.getContractFactory("CorsacNFTFactory");
-  const nftFactory = await CorsacNFTFactory.deploy(c721.address, c1155.address);
+  const nftFactory = await CorsacNFTFactory.deploy(cERC721Inst.address, cERC1155Inst.address);
 
-  await nftFactory.deployed();
+  const nftFactoryInst = await nftFactory.deployed();
 
-  console.log("CorsacNFTFactory deployed to:", nftFactory.address);
+  console.log("CorsacNFTFactory deployed to: ", nftFactoryInst.address);
+  console.log('\n--------------------------------------------------------------------------');
+
+  console.log('\nDone!!!');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
