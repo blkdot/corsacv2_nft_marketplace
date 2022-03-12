@@ -83,7 +83,7 @@ contract CorsacNFTFactory is
     mapping(address => bool) private pendingValue;
 
     /*
-     pending value that presents the creator is enabled/disabled by true/false
+     booking info
      */
     mapping(uint256 => BookInfo[]) private bookInfo;
 
@@ -261,13 +261,15 @@ contract CorsacNFTFactory is
     constructor(
         address singleCollectionDeployer,
         address multipleCollectionDeployer
-    ) {
+    ) payable {
         paymentTokens.push(address(0)); // native currency
         
         setDefaultFeeRatio(250);
         setDefaultRoyaltyRatio(300);
         updateDeployers(singleCollectionDeployer, multipleCollectionDeployer);
     }
+
+    receive() external payable {}
 
     /**
      * @dev this function updates the deployers for ERC721, ERC1155
@@ -410,6 +412,12 @@ contract CorsacNFTFactory is
         }
     }
 
+    /**
+     * @dev this function creates/mints new NFT
+     * @param collectionAddr - collection
+     * @param _to - to account
+     * @param uri - uri for NFT
+     */
     function mintTo(address collectionAddr, address _to, string memory uri) external onlyOwner {
         require(collectionOccupation[collectionAddr] == true);
         IERC721Tradable(collectionAddr).mintTo(_to, uri);
@@ -459,11 +467,28 @@ contract CorsacNFTFactory is
         return collections;
     }
 
+    /**
+     * @dev this function returns last collection
+     */
     function getRecentCollection() public view returns (address) {
         require(collections.length > 0, 'No collections');
         return collections[collections.length - 1];
     }
 
+    /**
+     * @dev this function returns collection by index
+     * @param index - index of collection
+     */
+    function getCollection(uint256 index) public view returns (address) {
+        require(collections.length > 0, 'No collections');
+        require(collections.length > index, 'Invalid index');
+        return collections[index];
+    }
+
+    /**
+     * @dev this function returns token ID from collection
+     * @param collectionAddr - collection address
+     */
     function getTokenId(address collectionAddr) external view onlyOwner returns (uint256) {
         return IERC721Tradable(collectionAddr).getTokenId();
     }
@@ -713,7 +738,7 @@ contract CorsacNFTFactory is
         uint256 salePrice = csns.copy * csns.basePrice;
         uint256 serviceFee = salePrice * csns.feeRatio / 10000;
         uint256 totalPay = salePrice + serviceFee;
-
+        
         if (csns.payment == 0) {
             require(
                 msg.value >= totalPay,

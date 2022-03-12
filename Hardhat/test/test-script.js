@@ -18,10 +18,12 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
   let owner, owner1, owner2;
   let user = "0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199";
 
-  it("contract creation should be work", async function () {
+  const provider = waffle.provider;
+
+  it("deploy contracts", async function() {
     [owner, owner1, owner2] = await ethers.getSigners();
     
-    console.log('\n--------------------------------------------------------------------------');
+    console.log('\nstarting to deploy token--------------------------------------------------');
     console.log("Owner Address: ", owner.address);
     console.log("Owner1 Address: ", owner1.address);
     console.log("Owner2 Address: ", owner2.address);
@@ -68,17 +70,21 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     console.log('\n--------------------------------------------------------------------------');
     console.log("CorsacERC1155 deployed to: ", cERC1155Inst.address);
     
-    // 6. Deploy Corsac NFT Factory Contract
+    // 6. Deploy Corsac NFT Factory Contract with 1 ether
     const CorsacNFTFactory = await hre.ethers.getContractFactory("CorsacNFTFactory");
-    nftFactory = await CorsacNFTFactory.deploy(cERC721Inst.address, cERC1155Inst.address);
+    nftFactory = await CorsacNFTFactory.deploy(cERC721Inst.address, cERC1155Inst.address, {value: ethers.utils.parseUnits("1", "ether").toHexString()});
 
     nftFactoryInst = await nftFactory.deployed();
 
     console.log('\n--------------------------------------------------------------------------');
     console.log("CorsacNFTFactory deployed to: ", nftFactory.address);
+
+    // await nftFactoryInst.connect(owner).receive();
+    console.log('\n--------------------------------------------------------------------------');
+    console.log("Marketplace was charged! balance=", await provider.getBalance(nftFactoryInst.address));
   });
 
-  it("setFactoryContract", async () => {
+  it("set contract factories", async function() {
     let tx = await c721Inst.setFactoryContract(nftFactory.address);
     tx = await c1155Inst.setFactoryContract(nftFactory.address);
 
@@ -86,34 +92,34 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     console.log("Factories of tradable ERC721, 1155 were set!");
   });
 
-  it("creator permission", async () => {
+  it("creator permission", async function() {
     console.log('\nstarting permission--------------------------------------------------------');
-    console.log('\ncreator: owner1....');
+    console.log('\nowner1 setting as creator....');
     await nftFactoryInst.startPendingCreator(owner1.address, true);
     
     await new Promise(r => setTimeout(r, 4000));
 
     await nftFactoryInst.endPendingCreator(owner1.address);
-    console.log("user-%s as a creator", owner1.address);
+    console.log("address-%s as a creator", owner1.address);
 
-    console.log('\ncreator: owner2....');
+    console.log('\nowner2 setting as creator....');
     await nftFactoryInst.startPendingCreator(owner2.address, true);
     
     await new Promise(r => setTimeout(r, 4000));
 
     await nftFactoryInst.endPendingCreator(owner2.address);
-    console.log("user-%s as a creator", owner2.address);
+    console.log("address-%s as a creator", owner2.address);
 
-    console.log('\ncreator: owner3....');
+    console.log('\nuser setting as creator....');
     await nftFactoryInst.startPendingCreator(user, true);
     
     await new Promise(r => setTimeout(r, 4000));
 
     await nftFactoryInst.endPendingCreator(user);
-    console.log("user-%s as a creator", user);
+    console.log("address-%s as a creator", user);
   });
 
-  it("should work createNewCollection", async function () {
+  it("create new collection", async function() {
     console.log('\nstarting create collection-------------------------------------------');
     console.log('\ncreating new collection 721 for owner1...');
     let tx = await nftFactoryInst.connect(owner1).createNewCollection(
@@ -158,7 +164,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     console.log(cols);
   });
 
-  it("should work addCollection", async function () {
+  it("add collection", async function() {
     console.log('\nstarting add collection-------------------------------------------');
     console.log('\nadding a collection 721 for owner1...');
     let tx = await nftFactoryInst.connect(owner1).addCollection(c721Inst.address);
@@ -175,7 +181,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     console.log('\n----------------------------------------------------------------------------');
   });
 
-  it("NFT mints", async function() {
+  it("mint NFT", async function() {
     console.log('\nstarting NFT mint-------------------------------------------');
     const collection = await nftFactory.getRecentCollection();
     
@@ -202,7 +208,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
   });
 
   it("buy NFT", async function() {
-    const provider = waffle.provider;
+    console.log('\nstarting buy NFT-------------------------------------------');
 
     let balance1 = await provider.getBalance(owner.address);
     let balance2 = await provider.getBalance(owner1.address);
@@ -224,7 +230,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     await marketApproveTx.wait();
 
     const amount = 0.02 * 1e18;
-    const marketOfferTx = await nftFactory.connect(owner1).createSale(
+    const createSaleTx = await nftFactory.connect(owner1).createSale(
       collection, // sc, address of NFT collection contract
       2, // token ID
       0, // payment method, 0: BNB, 1: BUSD, 2: Corsac, ...
@@ -235,12 +241,56 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
       0, // fee ratio, (1/10000) for transaction, 0: default
       0 // royalty ratio, (1/10000) for transaction, 0: default
     );
-    await marketOfferTx.wait();
-    console.log("created sale!");
+    await createSaleTx.wait();
+    console.log("owner1 created sale! price =", amount);
 
-    // const acceptTx = await market.connect(owner1).acceptSell(1, {value: String(amount)});
-    // await acceptTx.wait();
+    const buyTx = await nftFactory.connect(owner).buy(0, {value: String(0.03 * 1e18)});
+    await buyTx.wait();
 
-    // expect(await testtoken.ownerOf(1)).to.equal(owner1.address);
+    expect(await mintedNFT.ownerOf(2)).to.equal(owner.address);
+    console.log("owner bought from owner1!");
+    console.log("balance of owner:", await provider.getBalance(owner.address));
+    console.log("balance of owner1:", await provider.getBalance(owner1.address));
+  });
+
+  it("timed auction", async function() {
+    console.log('\nstarting timed auction-------------------------------------------');
+    console.log("balance of marketplace:", await provider.getBalance(nftFactoryInst.address));
+    console.log("balance of owner:", await provider.getBalance(owner.address));
+    console.log("balance of owner1:", await provider.getBalance(owner1.address));
+    console.log("balance of owner2:", await provider.getBalance(owner2.address));
+
+    const collection = await nftFactory.getRecentCollection();
+    const amount = 0.02 * 1e18;
+    const createSaleTx = await nftFactory.connect(owner).createSale(
+      collection, // sc, address of NFT collection contract
+      2, // token ID
+      0, // payment method, 0: BNB, 1: BUSD, 2: Corsac, ...
+      1, // copy, if type of sc is ERC721, copy should be 1 and if ERC1155, copy > 0
+      1, // method of sale, 0: fixed price, 1: timed auction, 2: offer
+      100, // duration
+      String(amount), // basePrice
+      0, // fee ratio, (1/10000) for transaction, 0: default
+      0 // royalty ratio, (1/10000) for transaction, 0: default
+    );
+    await createSaleTx.wait();
+    console.log("owner created timed auction! price =", amount);
+
+    const bidTx1 = await nftFactory.connect(owner1).placeBid(1, String(0.03 * 1e18), {value: String(0.03 * 1e18)});
+    await bidTx1.wait();
+    console.log("owner1 placed bid! price =", String(0.03 * 1e18));
+
+    const bidTx2 = await nftFactory.connect(owner2).placeBid(1, String(0.04 * 1e18), {value: String(0.04 * 1e18)});
+    await bidTx2.wait();
+    console.log("owner2 placed bid! price =", String(0.04 * 1e18));
+
+    const finalizeAuctionTx = await nftFactory.connect(owner).finalizeAuction(1);
+    await finalizeAuctionTx.wait();
+    console.log("finalizing auction...");
+
+    console.log("balance of marketplace:", await provider.getBalance(nftFactoryInst.address));
+    console.log("balance of owner:", await provider.getBalance(owner.address));
+    console.log("balance of owner1:", await provider.getBalance(owner1.address));
+    console.log("balance of owner2:", await provider.getBalance(owner2.address));
   });
 });
