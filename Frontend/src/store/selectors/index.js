@@ -5,6 +5,11 @@ import { createSelector, createStructuredSelector } from "reselect";
 export const nftBreakdownState = (state) => state.NFT.nftBreakdown;
 export const nftShowcaseState = (state) => state.NFT.nftShowcase;
 export const nftDetailState = (state) => state.NFT.nftDetail;
+
+export const nftBalancesBreakdownState = (state) => state.NFTBalance.nftBalancesBreakdown;
+export const nftBalancesShowcaseState = (state) => state.NFTBalance.nftBalancesShowcase;
+export const nftBalanceDetailState = (state) => state.NFTBalance.nftBalanceDetail;
+
 export const hotCollectionsState = (state) => state.hotCollection.hotCollections;
 export const authorsState = (state) => state.authors.authorList;
 export const authorRankingsState = (state) => state.authors.authorRanking;
@@ -32,6 +37,35 @@ export const nftFilter = createStructuredSelector({
 });
 
 export const nftItems = createSelector(nftFilter, nftBreakdownState, ( filters, nfts ) => {
+    let { data } = nfts;
+    const { categories, status, itemsType, collections, nftTitle } = filters;
+    
+    if(!data) {
+        return [];
+    }
+
+    if(categories.size) {
+        data = data.filter( nft => categories.has(nft.category));
+    }
+    if(status.size) {
+        data = data.filter( nft => status.has(nft.status));
+    }
+    if(itemsType.size) {
+        data = data.filter( nft => itemsType.has(nft.item_type));
+    }
+    if(collections.size) {
+        data = data.filter( nft => collections.has(nft.collections));
+    }
+    if(nftTitle.trim().length) {
+        let pattern = new RegExp(`${nftTitle.trim()}`, 'gi');
+        console.log(pattern)
+        data = data.filter( nft => nft.title.match(pattern));
+    }
+
+    return data;
+});
+
+export const nftBalanceItems = createSelector(nftFilter, nftBalancesBreakdownState, ( filters, nfts ) => {
     let { data } = nfts;
     const { categories, status, itemsType, collections, nftTitle } = filters;
     

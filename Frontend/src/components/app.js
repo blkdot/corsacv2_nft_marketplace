@@ -1,4 +1,6 @@
-import React from 'react';
+// import React from 'react';
+import { useEffect, useState } from "react";
+import { useMoralis } from "react-moralis";
 import { Router, Location, Redirect } from '@reach/router';
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
@@ -63,6 +65,7 @@ import Tabs from './pages/tabs';
 import Minter from './pages/Minter';
 import Mintergrey from './pages/MinterGrey';
 import Profile from './pages/Profile';
+import MyNFT from './pages/MyNFT';
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -73,7 +76,7 @@ const GlobalStyles = createGlobalStyle`
 `;
 
 export const ScrollTop = ({ children, location }) => {
-  React.useEffect(() => window.scrollTo(0,0), [location])
+  useEffect(() => window.scrollTo(0,0), [location])
   return children
 }
 
@@ -91,10 +94,22 @@ const PosedRouter = ({ children }) => (
   </Location>
 );
 
-const app= () => (
-  <div className="wraper">
-  <GlobalStyles />
-    <Header/>
+const App = ({ isServerInfo }) => {
+  const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+  useEffect(() => {
+    console.log(isWeb3Enabled);
+    console.log(isAuthenticated);
+    console.log(isWeb3EnableLoading);
+    const connectorId = window.localStorage.getItem("connectorId");
+    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) 
+      enableWeb3({ provider: connectorId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isWeb3Enabled]);
+
+  return (
+    <div className="wraper">
+      <GlobalStyles />
+      <Header/>
       <PosedRouter>
         <ScrollTop path="/">
           <Home exact path="/">
@@ -158,9 +173,11 @@ const app= () => (
           <Tabs path="/tabs" />
           <Minter path="/mint" />
           <Mintergrey path="/minter" />
+          <MyNFT path="/mynft" />
         </ScrollTop>
       </PosedRouter>
-    <ScrollToTopBtn />
-  </div>
-);
-export default app;
+      <ScrollToTopBtn />
+    </div>
+  );
+};
+export default App;

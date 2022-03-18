@@ -63,6 +63,25 @@ export const getComments = asyncAction(
     'nft/GET_COMMENTS_FAIL'
 )();
 
+export const getNftBalancesBreakdown = asyncAction(
+    'nft/GET_NFT_BALANCES_BREAKDOWN',
+    'nft/GET_NFT_BALANCES_BREAKDOWN_SUCCESS',
+    'nft/GET_NFT_BALANCES_BREAKDOWN_FAIL'
+)();
+
+export const getNftBalancesShowcase = asyncAction(
+    'nft/GET_NFT_BALANCES_SHOWCASE',
+    'nft/GET_NFT_BALANCES_SHOWCASE_SUCCESS',
+    'nft/GET_NFT_BALANCES_SHOWCASE_FAIL'
+)();
+
+export const getNftBalanceDetail = asyncAction(
+    'nft/GET_NFT_BALANCE_DETAIL',
+    'nft/GET_NFT_BALANCE_DETAIL_SUCCESS',
+    'nft/GET_NFT_BALANCE_DETAIL_FAIL'
+)();
+
+export const setNftBalances = action('nft/SET_NFT_BALANCES')();
 export const clearNfts = action('nft/CLEAR_ALL_NFTS')();
 export const clearFilter = action('nft/CLEAR_FILTER')();
 export const filterCategories = action('nft/FILTER_CATEGORIES')();

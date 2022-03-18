@@ -1,117 +1,116 @@
 import React from 'react';
-import Particle from '../components/Particle';
-import SliderMainParticleGrey from '../components/SliderMainParticleGrey';
+import SliderCarouselSingleRedux from '../components/SliderCarouselSingleRedux';
 import FeatureBox from '../components/FeatureBox';
 import CarouselCollectionRedux from '../components/CarouselCollectionRedux';
-import CarouselNewRedux from '../components/CarouselNewRedux';
+import ColumnNewRedux from '../components/ColumnNewRedux';
 import AuthorListRedux from '../components/AuthorListRedux';
 import Footer from '../components/footer';
-
+import Reveal from 'react-awesome-reveal';
+import { keyframes } from "@emotion/react";
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
+
+const fadeInUp = keyframes`
+  0% {
+    opacity: 0;
+    -webkit-transform: translateY(40px);
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+  }
+`;
+
+
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-const homeone= () => (
+const homethree= () => (
   <div className="greyscheme">
-  <StyledHeader theme={theme} />
-      <section className="jumbotron no-bg relative" style={{backgroundImage: `url(${'./img/background/8.jpg'})`}}>
-       <Particle/>
-         <SliderMainParticleGrey/>
-      </section>
-
-      <section className='container no-bottom'>
-        <div className="row">
-            <div className="col-lg-2 col-sm-4 col-6 mb30">
-                <span className="box-url">
-                    <img src="./img/wallet/1.png" alt="" className="mb20"/>
-                    <h4>Metamask</h4>
-                </span>
-            </div>
-
-            <div className="col-lg-2 col-sm-4 col-6 mb30">
-                <span className="box-url">
-                    <img src="./img/wallet/2.png" alt="" className="mb20"/>
-                    <h4>Bitski</h4>
-                </span>
-            </div>       
-
-            <div className="col-lg-2 col-sm-4 col-6 mb30">
-                <span className="box-url">
-                    <img src="./img/wallet/3.png" alt="" className="mb20"/>
-                    <h4>Fortmatic</h4>
-                </span>
-            </div>    
-
-            <div className="col-lg-2 col-sm-4 col-6 mb30">
-                <span className="box-url">
-                    <img src="./img/wallet/4.png" alt="" className="mb20"/>
-                    <h4>WalletConnect</h4>
-                </span>
-            </div>
-
-            <div className="col-lg-2 col-sm-4 col-6 mb30">
-                <span className="box-url">
-                    <img src="./img/wallet/5.png" alt="" className="mb20"/>
-                    <h4>Coinbase Wallet</h4>
-                </span>
-            </div>
-
-            <div className="col-lg-2 col-sm-4 col-6 mb30">
-                <span className="box-url">
-                    <img src="./img/wallet/6.png" alt="" className="mb20"/>
-                    <h4>Arkane</h4>
-                </span>
-            </div>                                       
-        </div>
-      </section>
-
-      <section className='container no-top no-bottom'>
-        <div className='row'>
-          <div className="spacer-double"></div>
-          <div className='col-lg-12 mb-2'>
-              <h2>New Items</h2>
-          </div>
-        </div> 
-        <CarouselNewRedux/>
-      </section>
-
-      <section className='container no-top no-bottom'>
-        <div className='row'>
-          <div className="spacer-double"></div>
-          <div className='col-lg-12'>
-              <h2>Top Sellers</h2>
-          </div>
-          <div className='col-lg-12'>
-            <AuthorListRedux/>
-          </div>
-        </div>
-      </section>
-
-      <section className='container no-top no-bottom'>
-        <div className='row'>
-          <div className="spacer-double"></div>
-          <div className='col-lg-12 mb-2'>
-              <h2>Hot Collections</h2>
-          </div>
-            <div className='col-lg-12'>
-              <CarouselCollectionRedux/>
-            </div>
-          </div>
-      </section>
-
-      <section className='container no-top'>
-        <div className='row'>
+    <StyledHeader theme={theme} />
+    <section className="jumbotron no-bg" style={{backgroundImage: `url(${'./img/background/7.jpg'})`}}>
+      <div className='container'>
+        <div className='row align-items-center'>
+          <div className='col-lg-6'>
+            <div className="spacer-single"></div>
+            <Reveal className='onStep' keyframes={fadeInUp} delay={0} duration={600} triggerOnce>
+              <h6 className=""><span className="text-uppercase color">Corsac V2 Market</span></h6>
+            </Reveal>
+            <div className="spacer-10"></div>
+            <Reveal className='onStep' keyframes={fadeInUp} delay={300} duration={600} triggerOnce>
+              <h1 className="">Discover Rare Digital Art And Collect NFTs</h1>
+            </Reveal>
+            <Reveal className='onStep' keyframes={fadeInUp} delay={600} duration={600} triggerOnce>
+              <p className=" lead">
+                Home to the world’s first custom non-fungible tokens’ (NFT) marketplace transactable via Corsac (CORSAC V2), a hyper deflationary token that is designed to become scarce over time. Holders of Corsac (CORSAC V2) will earn a 9% reward from every Buy/Sell/Transfer in Binance-pegged USD (BUSD), a regulated stable currency, sent straight to holders wallets every hour
+              </p>
+            </Reveal>
+            <div className="spacer-10"></div>
+            <Reveal className='onStep' keyframes={fadeInUp} delay={800} duration={900} triggerOnce>
+              <span onClick={()=> window.open("/#", "_self")} className="btn-main lead">Explore</span>
+              <div className="mb-sm-30"></div>
+            </Reveal>
             <div className="spacer-double"></div>
-            <div className='col-lg-12 mb-3'>
-              <h2>Create and Sell Now</h2>
-            </div>
-            <FeatureBox/>
+          </div>
+          <div className='col-lg-6 px-0'>
+            <SliderCarouselSingleRedux/>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
+
+    <section className='container'>
+      <div className='container'>
+        <div className='row'>
+          <div className='col-lg-12'>
+              <h2 className='style-2'>New Items</h2>
+          </div>
+        </div>
+        <ColumnNewRedux/>
+      </div>
+    </section>
+
+    <section className='container no-top'>
+      <div className='row'>
+        <div className='col-lg-12'>
+          <h2 className='style-2'>Hot Collections</h2>
+        </div>
+      </div>
+      <div className='container no-top'>
+        <div className='row'>
+          <div className='col-lg-12 px-0'>
+            <CarouselCollectionRedux/>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className='container no-top'>
+      <div className='row'>
+        <div className='col-lg-12'>
+          <h2 className='style-2'>Top Seller</h2>
+        </div>
+        <div className='col-lg-12'>
+          <AuthorListRedux/>
+        </div>
+      </div>
+    </section>
+
+    <section className='container no-top'>
+      <div className='row'>
+        <div className='col-lg-12'>
+          <h2 className='style-2'>Create and sell</h2>
+        </div>
+      </div>
+      <div className='container px-0'>
+        <FeatureBox/>
+      </div>
+    </section>
 
     <Footer />
 
   </div>
 );
-export default homeone;
+export default homethree;

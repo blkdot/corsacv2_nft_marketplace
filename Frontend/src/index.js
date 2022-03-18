@@ -15,11 +15,40 @@ import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import store from './store';
 
+import { MoralisProvider } from "react-moralis";
+import { MoralisDappProvider } from "./providers/MoralisDappProvider/MoralisDappProvider";
+
+const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+
+const Application = () => {
+  const isServerInfo = APP_ID && SERVER_URL ? true : false;
+  console.log(isServerInfo);
+  if (isServerInfo)
+    return (
+      <MoralisProvider appId={APP_ID} serverUrl={SERVER_URL} store={store}>
+        <MoralisDappProvider>
+          {/* <App isServerInfo /> */}
+          <Provider store={store}>
+            <App isServerInfo />
+          </Provider>
+        </MoralisDappProvider>
+      </MoralisProvider>
+    );
+  else {
+    return (
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        {/* <QuickStart /> */}
+        <p>Can't connect to Moralis Server!</p>
+      </div>
+    );
+  }
+};
+
 ReactDOM.render(
-	<Provider store={store}>
-		<App />
-	</Provider>, 
-	document.getElementById('root'));
+	<Application />,
+	document.getElementById('root')
+);
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA

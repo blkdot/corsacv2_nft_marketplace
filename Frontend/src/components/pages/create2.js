@@ -26,7 +26,7 @@ const GlobalStyles = createGlobalStyle`
   }
   .mainside{
     .connect-wal{
-      display: none;
+      // display: none;
     }
     .logout{
       display: flex;

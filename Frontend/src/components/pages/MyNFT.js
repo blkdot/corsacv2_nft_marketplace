@@ -1,0 +1,121 @@
+import React, { memo, useEffect } from "react";
+import {useMoralis, useNFTBalances, useWeb3ExecuteFunction} from "react-moralis";
+import { useSelector, useDispatch } from 'react-redux';
+import ColumnNFTBalancesRedux from '../components/ColumnNFTBalancesRedux';
+import Footer from '../components/footer';
+import * as selectors from '../../store/selectors';
+import { fetchHotCollections, setNFTBalances } from "../../store/actions/thunks";
+import api from "../../core/api";
+
+import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
+
+//IMPORT DYNAMIC STYLED COMPONENT
+import { StyledHeader } from '../Styles';
+//SWITCH VARIABLE FOR PAGE STYLE
+const theme = 'GREY'; //LIGHT, GREY, RETRO
+
+const MyNFT = function({ collectionId = 1 }) {
+  const [openMenu, setOpenMenu] = React.useState(true);
+  const [openMenu1, setOpenMenu1] = React.useState(false);
+  const handleBtnClick = () => {
+    setOpenMenu(!openMenu);
+    setOpenMenu1(false);
+    document.getElementById("Mainbtn").classList.add("active");
+    document.getElementById("Mainbtn1").classList.remove("active");
+  };
+  const handleBtnClick1 = () => {
+    setOpenMenu1(!openMenu1);
+    setOpenMenu(false);
+    document.getElementById("Mainbtn1").classList.add("active");
+    document.getElementById("Mainbtn").classList.remove("active");
+  };
+
+  const dispatch = useDispatch();
+  const hotCollectionsState = useSelector(selectors.hotCollectionsState);
+  const hotCollections = hotCollectionsState.data ? hotCollectionsState.data[0] : {};
+
+  useEffect(() => {
+      dispatch(fetchHotCollections(collectionId));
+  }, [dispatch, collectionId]);
+
+  const {data: NFTBalances} = useNFTBalances();
+  const {account} = useMoralis();
+  const {marketAddress, contractABI} = useMoralisDapp();
+  const contractProcessor = useWeb3ExecuteFunction();
+  const contractABIJson = JSON.parse(contractABI);
+  const listItemFunction = "createSale";
+
+  useEffect(() => {
+    if (NFTBalances && NFTBalances.result)
+      dispatch(setNFTBalances(NFTBalances.result));
+  }, [dispatch, NFTBalances]);
+
+  console.log("my NFT balance111:", NFTBalances);
+  
+  return (
+    // <></>
+    <div className="greyscheme">
+      <StyledHeader theme={theme} />
+      { hotCollections.author &&  hotCollections.author.banner &&
+          <section id='profile_banner' className='jumbotron breadcumb no-bg' style={{backgroundImage: `url(${api.baseUrl + hotCollections.author.banner.url})`}}>
+            <div className='mainbreadcumb'>
+            </div>
+          </section>
+        }
+
+      <section className='container d_coll no-top no-bottom'>
+        <div className='row'>
+          <div className="col-md-12">
+            <div className="d_profile">
+                <div className="profile_avatar">
+                { hotCollections.author &&  hotCollections.author.avatar &&
+                  <div className="d_profile_img">
+                    <img src={api.baseUrl + hotCollections.author.avatar.url} alt=""/>
+                    <i className="fa fa-check"></i>
+                  </div>
+                }
+                <div className="profile_name">
+                    <h4>
+                      { hotCollections.name }                                                          
+                        <div className="clearfix"></div>
+                        {/* { hotCollections.author &&  hotCollections.author.wallet &&
+                          <span id="wallet" className="profile_wallet">{ hotCollections.author.wallet }</span>
+                        } */}
+                        <span id="wallet" className="profile_wallet">{ account }</span>
+                        <button id="btn_copy" title="Copy Text">Copy</button>
+                    </h4>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className='container no-top'>
+        <div className='row'>
+          <div className='col-lg-12'>
+              <div className="items_filter">
+                <ul className="de_nav">
+                    <li id='Mainbtn' className="active"><span onClick={handleBtnClick}>On Sale</span></li>
+                    <li id='Mainbtn1' className=""><span onClick={handleBtnClick1}>Owned</span></li>
+                </ul>
+            </div>
+          </div>
+        </div>
+        {openMenu && (  
+          <div id='zero1' className='onStep fadeIn'>
+            <ColumnNFTBalancesRedux shuffle showLoadMore={false} authorId={hotCollections.author ? hotCollections.author.id : 1} />
+          </div>
+        )}
+        {openMenu1 && ( 
+          <div id='zero2' className='onStep fadeIn'>
+            <ColumnNFTBalancesRedux shuffle showLoadMore={false}/>
+          </div>
+        )}
+      </section>
+      <Footer />
+    </div>
+  );
+}
+export default memo(MyNFT);
