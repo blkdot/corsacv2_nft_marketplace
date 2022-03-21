@@ -1,4 +1,8 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
+
+require("dotenv").config();
+require("hardhat-deploy");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -35,6 +39,18 @@ module.exports = {
       //   accounts: ["9e33e7fc1edaad3099f6788013921c5a01f418be85eff34f94a6a8923b6fc671"]
       // }
     },
+    rinkeby: {
+      url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+      chainId: 4,
+      gasPrice: "auto",
+      accounts: ["2c9950b89e00f2585a5e1a353648b2ea07fd3cf437146b4dc1b2b624e045596d"],
+    },
+    kovan: {
+      url: "https://kovan.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+      chainId: 42,
+      gasPrice: "auto",
+      accounts: ["2c9950b89e00f2585a5e1a353648b2ea07fd3cf437146b4dc1b2b624e045596d"],
+    },
     testnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
       chainId: 97,
@@ -49,6 +65,19 @@ module.exports = {
 
       gasPrice: 20000000000,
       accounts: ["9e33e7fc1edaad3099f6788013921c5a01f418be85eff34f94a6a8923b6fc671"]
+    }
+  },
+  etherscan: {
+    apiKey: 
+    {
+      mainnet: "B77M9DYRXMQC74ZI9N8TH5EETPMSX66MAE",
+      ropsten: "B77M9DYRXMQC74ZI9N8TH5EETPMSX66MAE",
+      rinkeby: "B77M9DYRXMQC74ZI9N8TH5EETPMSX66MAE",
+      goerli: "B77M9DYRXMQC74ZI9N8TH5EETPMSX66MAE",
+      kovan: "B77M9DYRXMQC74ZI9N8TH5EETPMSX66MAE",
+      // binance smart chain
+      bsc: "P5W8JCU8Q3F8CNVX69DXU8PCFVE6VGG8QT",
+      bscTestnet: "P5W8JCU8Q3F8CNVX69DXU8PCFVE6VGG8QT"
     }
   },
   solidity: {

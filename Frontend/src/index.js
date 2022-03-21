@@ -10,6 +10,7 @@ import './assets/style.scss';
 import './assets/style_grey.scss';
 import App from './components/app';
 import * as serviceWorker from './serviceWorker';
+import "antd/dist/antd.css";
 
 //redux store
 import { Provider } from 'react-redux'

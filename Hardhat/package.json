@@ -4,12 +4,14 @@
   "description": "Smart contracts for Corsac V2 NFT",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "verify-bsc": "npx hardhat --network testnet bsctestscan-verify"
   },
   "author": "blkdot",
   "license": "ISC",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "chai": "^4.3.6",
     "ethereum-waffle": "^3.4.0",
@@ -17,6 +19,9 @@
     "hardhat": "^2.9.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.5.0"
+    "@openzeppelin/contracts": "^4.5.0",
+    "dotenv": "^16.0.0",
+    "hardhat-deploy": "^0.11.0",
+    "hardhat-etherscan": "^1.0.1"
   }
 }
