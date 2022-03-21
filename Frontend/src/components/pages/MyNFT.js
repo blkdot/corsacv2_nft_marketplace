@@ -1,7 +1,8 @@
 import React, { memo, useEffect } from "react";
 import {useMoralis, useNFTBalances, useWeb3ExecuteFunction} from "react-moralis";
 import { useSelector, useDispatch } from 'react-redux';
-import ColumnNFTBalancesRedux from '../components/ColumnNFTBalancesRedux';
+import MyNFTBalance from '../components/MyNFTBalance';
+import MyNFTBalanceOnSale from '../components/MyNFTBalanceOnSale';
 import Footer from '../components/footer';
 import * as selectors from '../../store/selectors';
 import { fetchHotCollections, setNFTBalances } from "../../store/actions/thunks";
@@ -53,7 +54,6 @@ const MyNFT = function({ collectionId = 1 }) {
   console.log("my NFT balance111:", NFTBalances);
   
   return (
-    // <></>
     <div className="greyscheme">
       <StyledHeader theme={theme} />
       { hotCollections.author &&  hotCollections.author.banner &&
@@ -76,7 +76,8 @@ const MyNFT = function({ collectionId = 1 }) {
                 }
                 <div className="profile_name">
                     <h4>
-                      { hotCollections.name }                                                          
+                      {/* { hotCollections.name } */}
+                      My NFTs
                         <div className="clearfix"></div>
                         {/* { hotCollections.author &&  hotCollections.author.wallet &&
                           <span id="wallet" className="profile_wallet">{ hotCollections.author.wallet }</span>
@@ -97,20 +98,20 @@ const MyNFT = function({ collectionId = 1 }) {
           <div className='col-lg-12'>
               <div className="items_filter">
                 <ul className="de_nav">
-                    <li id='Mainbtn' className="active"><span onClick={handleBtnClick}>On Sale</span></li>
-                    <li id='Mainbtn1' className=""><span onClick={handleBtnClick1}>Owned</span></li>
+                    <li id='Mainbtn' className="active"><span onClick={handleBtnClick}>Owned</span></li>
+                    <li id='Mainbtn1' className=""><span onClick={handleBtnClick1}>On Sale</span></li>
                 </ul>
             </div>
           </div>
         </div>
         {openMenu && (  
           <div id='zero1' className='onStep fadeIn'>
-            <ColumnNFTBalancesRedux shuffle showLoadMore={false} authorId={hotCollections.author ? hotCollections.author.id : 1} />
+            <MyNFTBalance showLoadMore={false} />
           </div>
         )}
         {openMenu1 && ( 
           <div id='zero2' className='onStep fadeIn'>
-            <ColumnNFTBalancesRedux shuffle showLoadMore={false}/>
+            <MyNFTBalanceOnSale showLoadMore={false} />
           </div>
         )}
       </section>

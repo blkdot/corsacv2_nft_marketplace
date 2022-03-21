@@ -8,14 +8,14 @@ import NftMusicCard from './NftMusicCard';
 import { shuffleArray } from '../../store/utils';
 import {Tooltip, Modal, Input, Spin, Button, Skeleton, Tabs, DatePicker } from "antd";
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {useMoralis, useWeb3ExecuteFunction} from "react-moralis";
+import {useMoralis, useWeb3ExecuteFunction, useNFTBalances} from "react-moralis";
 
 //react functional component
-const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId = null }) => {
+const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null }) => {
 
     const dispatch = useDispatch();
-    const nfts = useSelector(selectors.nftBalanceItems);
-    // const nfts = nftItems ? shuffle ? shuffleArray(nftItems) : nftItems : [];
+    const {data: NFTBalances} = useNFTBalances();
+    const nfts = NFTBalances ? NFTBalances.result : [];
     // console.log("nfts:", nfts);
     const [height, setHeight] = useState(0);
 
@@ -69,7 +69,7 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
           // // duration: duration
           // duration: 600
           sc: "0x42581e7d5ed7bc9c279412dada4df83806811586",
-          tokenID: nft.token_id,
+          tokenId: nft.token_id,
           payment: 1,
           copy: 1,
           method: parseInt(tabKey) - 1,
@@ -79,6 +79,7 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
           royaltyRatio: 0
         },
       };
+      console.log(ops);
       await contractProcessor.fetch({
         params: ops,
         onSuccess: () => {
@@ -89,6 +90,7 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
           succList();
         },
         onError: (error) => {
+          console.log(error);
           setLoading(false);
           failList();
         },
@@ -175,9 +177,9 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
       }, secondsToGo * 1000);
     }
     
-    useEffect(() => {
-        dispatch(actions.fetchNftBalancesBreakdown(authorId));
-    }, [dispatch, authorId]);
+    // useEffect(() => {
+    //     dispatch(actions.fetchNftBalancesBreakdown(authorId));
+    // }, [dispatch, authorId]);
 
     //will run when component unmounted
     useEffect(() => {
@@ -214,16 +216,17 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
                 </div>
             }
             <Modal
+              key="1"
               title='Approve to list NFT in the market'
               visible={visible1}
               onCancel={() => setVisibility1(false)}
               onOk={() => () => approveAll(nftToSend)}
               okText="List"
               footer={[
-                <Button onClick={() => setVisibility1(false)}>
+                <Button onClick={() => setVisibility1(false)} key="1">
                   Cancel
                 </Button>,
-                <Button onClick={() => approveAll(nftToSend)} type="primary">
+                <Button onClick={() => approveAll(nftToSend)} type="primary" key="2">
                   Approve
                 </Button>
               ]}
@@ -242,16 +245,17 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
               </Spin>
             </Modal>
             <Modal
+              key="2"
               title={`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}
               visible={visible2}
               onCancel={() => setVisibility2(false)}
               onOk={() => list(nftToSend)}
               okText="List"
               footer={[
-                <Button onClick={() => setVisibility2(false)}>
+                <Button onClick={() => setVisibility2(false)} key="1">
                   Cancel
                 </Button>,
-                <Button onClick={() => list(nftToSend)} type="primary">
+                <Button onClick={() => list(nftToSend)} type="primary" key="2">
                   List
                 </Button>
               ]}
@@ -297,4 +301,4 @@ const ColumnNFTBalancesRedux = ({ showLoadMore = true, shuffle = false, authorId
     );
 };
 
-export default memo(ColumnNFTBalancesRedux);
+export default memo(MyNFTBalance);

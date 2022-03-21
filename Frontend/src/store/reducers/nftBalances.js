@@ -17,6 +17,7 @@ const states = (state = defaultState, action) => {
     case getType(actions.getNftBalancesBreakdown.success):
       //append existing data with new data
       payload = state.nftBalancesBreakdown.data ? [...state.nftBalancesBreakdown.data, ...action.payload] : action.payload;
+      console.log("getNFTBalancesBreakdown payload:", payload);
       return { ...state, nftBalancesBreakdown: entityLoadingSucceeded(state.nftBalancesBreakdown, payload) };
     case getType(actions.getNftBalancesBreakdown.failure):
       return { ...state, nftBalancesBreakdown: entityLoadingFailed(state.nftBalancesBreakdown) };
