@@ -536,6 +536,7 @@ contract CorsacNFTFactory is
      * @param basePrice - price in 'payment' coin
      * @param feeRatio - fee ratio (1/10000) for transaction
      * @param royaltyRatio - royalty ratio (1/10000) for transaction
+     * @param isOther - create salse from other ERC721
      */
     function createSale(
         address sc,
@@ -546,25 +547,38 @@ contract CorsacNFTFactory is
         uint256 duration,
         uint256 basePrice,
         uint256 feeRatio,
-        uint256 royaltyRatio
+        uint256 royaltyRatio,
+        uint256 isOther
     ) public {
         (, uint256 sc_type) = getURIString(sc, tokenId);
         address creator = address(0);
-
+        
         if (sc_type == 1) {
             require(
                 IERC721(sc).ownerOf(tokenId) == msg.sender,
                 "not owner of the ERC721 token to be on sale"
             );
             require(copy == 1, "ERC721 token sale amount is not 1");
-            creator = IContractInfoWrapper(sc).getCreator(tokenId);
+
+            if (isOther == 0) {
+                creator = IContractInfoWrapper(sc).getCreator(tokenId);
+            } else {
+                creator = msg.sender;
+            }
+            
         } else if (sc_type == 2) {
             uint256 bl = IERC1155(sc).balanceOf(msg.sender, tokenId);
             require(
                 bl >= copy && copy > 0,
                 "exceeded amount of ERC1155 token to be on sale"
             );
-            creator = IContractInfoWrapper(sc).getCreator(tokenId);
+
+            if (isOther == 0) {
+                creator = IContractInfoWrapper(sc).getCreator(tokenId);
+            } else {
+                creator = msg.sender;
+            }
+            
         } else revert("Not supported NFT contract");
 
         uint256 curSaleIndex = saleCount;
@@ -1047,7 +1061,7 @@ contract CorsacNFTFactory is
     function isSaleValid(uint256 saleId) internal view returns (bool) {
         if (saleId >= saleCount) return false;
         CorsacNFTSale storage csns = saleList[saleId];
-
+        
         if (csns.seller == address(0)) return false;
         return true;
     }

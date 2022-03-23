@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import "antd/dist/antd.css";
 import "./assets/animated.css";
 import '../node_modules/font-awesome/css/font-awesome.min.css'; 
 import '../node_modules/elegant-icons/style.css';
@@ -10,7 +11,6 @@ import './assets/style.scss';
 import './assets/style_grey.scss';
 import App from './components/app';
 import * as serviceWorker from './serviceWorker';
-import "antd/dist/antd.css";
 
 //redux store
 import { Provider } from 'react-redux'

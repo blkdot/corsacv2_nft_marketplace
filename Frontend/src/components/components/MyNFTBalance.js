@@ -53,33 +53,26 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     }
 
     async function list(nft) {
-      // console.log(nft);return false;
       setLoading(true);
-      // const p = price * ("1e" + 18);
       const p = price * ("1e" + 9);
       const ops = {
         contractAddress: marketAddress,
         functionName: listItemFunction,
         abi: contractABIJson,
         params: {
-          // nft: nft.token_address,
-          // tokenId: nft.token_id,
-          // method: parseInt(tabKey) - 1,
-          // price: String(p),
-          // // duration: duration
-          // duration: 600
-          sc: "0x42581e7d5ed7bc9c279412dada4df83806811586",
-          tokenId: nft.token_id,
+          sc: nft.token_address,
+          tokenId: parseInt(nft.token_id),
           payment: 1,
           copy: 1,
           method: parseInt(tabKey) - 1,
           duration: 86400,
           basePrice: String(p),
           feeRatio: 0,
-          royaltyRatio: 0
+          royaltyRatio: 0,
+          isOther: 1
         },
       };
-      console.log(ops);
+      
       await contractProcessor.fetch({
         params: ops,
         onSuccess: () => {
@@ -207,6 +200,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   setNftToSend={setNftToSend}
                   setVisibility1={setVisibility1}
                   setVisibility2={setVisibility2}
+                  onSale={false}
                 />
             ))}
             { showLoadMore && nfts.length <= 20 &&

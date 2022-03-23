@@ -25,7 +25,8 @@ const NftCard = ({
                   onImgLoad,
                   setNftToSend,
                   setVisibility1,
-                  setVisibility2
+                  setVisibility2,
+                  onSale = false
                  }) => {
     const {account} = useMoralis();  
 
@@ -43,6 +44,10 @@ const NftCard = ({
       console.log('flag ===', flag);
       if (flag) setVisibility2(true);
       else setVisibility1(true);
+    };
+
+    const handleBuyClick = async (nft) => {
+        
     };
 
     async function isApprovedForAll(nft) {
@@ -127,10 +132,12 @@ const NftCard = ({
                         )
                     }
                     <div className="nft__item_action">
-                        <span onClick={() => handleSellClick(nft)}>
-                            {/* { nft.status && nft.status === 'on_auction' ? 'Place a bid' : 'Buy Now' } */}
-                            Create Sale
-                        </span>
+                        { !onSale ? (
+                            <span onClick={() => handleSellClick(nft)}>Create Sale</span>
+                        ) : (
+                            <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
+                        )}
+                        {/* { nft.status && nft.status === 'on_auction' ? 'Place a bid' : 'Buy Now' } */}
                     </div>
                     <div className="nft__item_like">
                         <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>

@@ -17,6 +17,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
 
   let owner, owner1, owner2;
   let user = "0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199";
+  let peabotToken = "0x1a4300eBb74AC59CC29ebBa01c78a737B804b16c";
 
   const provider = waffle.provider;
 
@@ -80,7 +81,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     
     // 6. Deploy Corsac NFT Factory Contract with 1 ether
     const CorsacNFTFactory = await hre.ethers.getContractFactory("CorsacNFTFactory");
-    nftFactory = await CorsacNFTFactory.deploy(cERC721Inst.address, cERC1155Inst.address, {value: ethers.utils.parseUnits("1", "ether").toHexString()});
+    nftFactory = await CorsacNFTFactory.deploy(cERC721.address, cERC1155.address, {value: ethers.utils.parseUnits("1", "ether").toHexString()});
 
     nftFactoryInst = await nftFactory.deployed();
 
@@ -89,7 +90,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
 
     // await nftFactoryInst.connect(owner).receive();
     console.log('\n--------------------------------------------------------------------------');
-    console.log("Marketplace was charged! balance=", await provider.getBalance(nftFactoryInst.address));
+    console.log("Marketplace was charged! balance=", await provider.getBalance(nftFactory.address));
   });
 
   it("set payment tokens", async function() {
@@ -114,6 +115,13 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
   it("creator permission", async function() {
     console.log('\nstarting permission--------------------------------------------------------');
     console.log('\nowner1 setting as creator....');
+    // await nftFactoryInst.startPendingCreator(owner.address, true);
+    
+    // await new Promise(r => setTimeout(r, 4000));
+
+    // await nftFactoryInst.endPendingCreator(owner.address);
+    // console.log("address-%s as a creator", owner.address);
+
     await nftFactoryInst.startPendingCreator(owner1.address, true);
     
     await new Promise(r => setTimeout(r, 4000));
@@ -136,6 +144,30 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
 
     await nftFactoryInst.endPendingCreator(user);
     console.log("address-%s as a creator", user);
+  });
+
+  it("create sale with NFT already created", async function() {
+    console.log('\nstarting create sale with NFT already created-----------------');
+
+    const amount = 250 * 1e9;
+    const createSaleTx = await nftFactory.connect(owner).createSale(
+      peabotToken, // sc, address of NFT collection contract
+      0, // token ID
+      1, // payment method, 0: BNB, 1: BUSD, 2: Corsac, ... (NOTE: will set by setPaymentToken and refer "set payment tokens" in this script)
+      1, // copy, if type of sc is ERC721, copy should be 1 and if ERC1155, copy > 0
+      0, // method of sale, 0: fixed price, 1: timed auction, 2: offer
+      86400, // duration
+      String(amount), // basePrice
+      0, // fee ratio, (1/10000) for transaction, 0: default
+      0, // royalty ratio, (1/10000) for transaction, 0: default
+      1 // isOther
+    );
+    await createSaleTx.wait();
+
+    console.log("owner created sale! price =", amount);
+
+    // const salesInfo = await nftFactory.getSaleInfo(0, 3);
+    // console.log("salesInfo:", salesInfo);
   });
 
   it("create new collection", async function() {
@@ -266,13 +298,17 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
       86400, // duration
       String(amount), // basePrice
       0, // fee ratio, (1/10000) for transaction, 0: default
-      0 // royalty ratio, (1/10000) for transaction, 0: default
+      0, // royalty ratio, (1/10000) for transaction, 0: default
+      0 // isOther
     );
     await createSaleTx.wait();
     console.log("owner1 created sale! price =", amount);
 
+    // const salesInfo = await nftFactory.getSaleInfo(0, 3);
+    // console.log("salesInfo:", salesInfo);
+
     await uba.approve(nftFactory.address, String(300 * 1e9));
-    const buyTx = await nftFactory.connect(owner).buy(0, {value: String(300 * 1e9)});
+    const buyTx = await nftFactory.connect(owner).buy(1, {value: String(300 * 1e9)});
     await buyTx.wait();
 
     expect(await mintedNFT.ownerOf(2)).to.equal(owner.address);
@@ -312,22 +348,26 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
       100, // duration
       String(amount), // basePrice
       0, // fee ratio, (1/10000) for transaction, 0: default
-      0 // royalty ratio, (1/10000) for transaction, 0: default
+      0, // royalty ratio, (1/10000) for transaction, 0: default
+      0 // isOther
     );
     await createSaleTx.wait();
     console.log("owner created timed auction! price =", amount);
 
+    // const salesInfo = await nftFactory.getSaleInfo(2, 1);
+    // console.log("salesInfo:", salesInfo);
+
     await uba.connect(owner1).approve(nftFactory.address, String(1000 * 1e9));
-    const bidTx1 = await nftFactory.connect(owner1).placeBid(1, String(400 * 1e9), {value: String(1000 * 1e9)});
+    const bidTx1 = await nftFactory.connect(owner1).placeBid(2, String(400 * 1e9), {value: String(1000 * 1e9)});
     await bidTx1.wait();
     console.log("owner1 placed bid! price =", String(400 * 1e9));
 
     await uba.connect(owner2).approve(nftFactory.address, String(1000 * 1e9));
-    const bidTx2 = await nftFactory.connect(owner2).placeBid(1, String(500 * 1e9), {value: String(1000 * 1e9)});
+    const bidTx2 = await nftFactory.connect(owner2).placeBid(2, String(500 * 1e9), {value: String(1000 * 1e9)});
     await bidTx2.wait();
     console.log("owner2 placed bid! price =", String(500 * 1e9));
 
-    const finalizeAuctionTx = await nftFactory.connect(owner).finalizeAuction(1);
+    const finalizeAuctionTx = await nftFactory.connect(owner).finalizeAuction(2);
     await finalizeAuctionTx.wait();
     console.log("finalizing auction...");
 

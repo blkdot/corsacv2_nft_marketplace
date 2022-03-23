@@ -197,7 +197,9 @@ contract ERC721Tradable is IERC721Tradable, ERC721, ContextMixin, NativeMetaTran
         @param _tokenId index of the token to be retrieved.
      */
     function tokenURI(uint256 _tokenId) override public view returns (string memory) {
-        require(_exists(_tokenId));
+        require(_exists(_tokenId), 'No exists token ID');
+        console.log(_tokenId);
+        console.log(uriMapping[_tokenId]);
 
         if (bytes(uriMapping[_tokenId]).length > 0) {
             return uriMapping[_tokenId];
