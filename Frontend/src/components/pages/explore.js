@@ -19,7 +19,7 @@ const explore= () => (
           <CheckboxFilter />
         </div>
         <div className="col-md-9">
-          <Explore3Cols/>
+          <Explore3Cols showLoadMore={false} />
         </div>
       </div>
     </section>

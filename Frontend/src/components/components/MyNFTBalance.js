@@ -16,7 +16,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const dispatch = useDispatch();
     const {data: NFTBalances} = useNFTBalances();
     const nfts = NFTBalances ? NFTBalances.result : [];
-    // console.log("nfts:", nfts);
+
     const [height, setHeight] = useState(0);
 
     const onImgLoad = ({target:img}) => {

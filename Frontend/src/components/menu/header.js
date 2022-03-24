@@ -24,10 +24,7 @@ const NavLink = props => (
   />
 );
 
-
-
 const Header = function({ className }) {
-
     const [openMenu, setOpenMenu] = React.useState(false);
     const [openMenu1, setOpenMenu1] = React.useState(false);
     const [openMenu2, setOpenMenu2] = React.useState(false);
@@ -435,16 +432,16 @@ const Header = function({ className }) {
                         {showpop && 
                           <div className="popshow">
                             <div className="d-name">
-                                <h4>Monica Lucas</h4>
+                                <h4>Your name</h4>
                                 <span className="name" onClick={()=> window.open("", "_self")}>Set display name</span>
                             </div>
                             <div className="d-balance">
                                 <h4>Balance</h4>
-                                12.858 ETH
+                                0 ETH
                             </div>
                             <div className="d-wallet">
                                 <h4>My Wallet</h4>
-                                <span id="wallet" className="d-wallet-address">DdzFFzCqrhshMSxb9oW3mRo4MJrQkusV3fGFSTwaiu4wPBqMryA9DYVJCkW9n7twCffG5f5wX2sSkoDXGiZB1HPa7K7f865Kk4LqnrME</span>
+                                <span id="wallet" className="d-wallet-address">{account}</span>
                                 <button id="btn_copy" title="Copy Text">Copy</button>
                             </div>
                             <div className="d-line"></div>

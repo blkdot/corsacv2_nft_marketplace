@@ -38,7 +38,6 @@ const states = (state = defaultState, action) => {
 
     case getType(actions.setNftBalances):
       payload = state.nftBalancesBreakdown.data ? [...state.nftBalancesBreakdown.data, ...action.payload] : action.payload;
-      console.log("payload:", payload);
       return { ...state, nftBalancesBreakdown: entityLoadingSucceeded(state.nftBalancesBreakdown, payload) };
 
     case getType(actions.clearNfts):

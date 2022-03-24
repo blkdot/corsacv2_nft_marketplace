@@ -31,6 +31,7 @@ import Colectiongrey from './pages/colectionGrey';
 // import ItemDetail from './pages/ItemDetail';
 import ItemDetailRedux from './pages/ItemDetailRedux';
 import ItemDetailReduxgrey from './pages/ItemDetailReduxGrey';
+import ItemDetail from './pages/ItemDetail';
 import Author from './pages/Author';
 import AuthorGrey from './pages/AuthorGrey';
 import AuthorOpensea from './pages/Opensea/author';
@@ -138,7 +139,8 @@ const App = ({ isServerInfo }) => {
           <Colection path="/colection/:collectionId" />
           <Colectiongrey path="/colectionGrey/:collectionId" />
           <ItemDetailRedux path="/ItemDetail/:nftId" />
-          <ItemDetailReduxgrey path="/ItemDetailGrey/:nftId" />
+          {/* <ItemDetailReduxgrey path="/ItemDetailGrey/:nftId" /> */}
+          <ItemDetail path="/item-detail" />
           <Author path="/Author/:authorId" />
           <Profile path="/Profile/:authorId" />
           <AuthorGrey path="/AuthorGrey/:authorId" />

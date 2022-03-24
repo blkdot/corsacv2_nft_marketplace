@@ -56,3 +56,7 @@ export const fetchNftDetail = (nftId) => async (dispatch) => {
     dispatch(actions.getNftDetail.failure(err));
   }
 };
+
+export const setBuyNFT = (nft) => (dispatch) => {
+  dispatch(actions.setBuyNFT(nft));
+};

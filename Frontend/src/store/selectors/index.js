@@ -10,6 +10,8 @@ export const nftBalancesBreakdownState = (state) => state.NFTBalance.nftBalances
 export const nftBalancesShowcaseState = (state) => state.NFTBalance.nftBalancesShowcase;
 export const nftBalanceDetailState = (state) => state.NFTBalance.nftBalanceDetail;
 
+export const buyNFTState = (state) => state.NFT.buyNFT;
+
 export const hotCollectionsState = (state) => state.hotCollection.hotCollections;
 export const authorsState = (state) => state.authors.authorList;
 export const authorRankingsState = (state) => state.authors.authorRanking;

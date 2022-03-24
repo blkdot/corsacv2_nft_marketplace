@@ -82,6 +82,8 @@ export const getNftBalanceDetail = asyncAction(
 )();
 
 export const setNftBalances = action('nft/SET_NFT_BALANCES')();
+export const setBuyNFT = action('nft/SET_BUY_NFT')();
+
 export const clearNfts = action('nft/CLEAR_ALL_NFTS')();
 export const clearFilter = action('nft/CLEAR_FILTER')();
 export const filterCategories = action('nft/FILTER_CATEGORIES')();

@@ -4,6 +4,8 @@ import MoralisDappContext from "./context";
 
 function MoralisDappProvider({ children }) {
   const { web3, Moralis, user } = useMoralis();
+  const [corsacTokenAddress, setCorsacTokenAddress] = 
+    useState('0x5698ec5045E685a1399cf0c8a4f3a40883d870a1');
   const [walletAddress, setWalletAddress] = useState();
   const [chainId, setChainId] = useState();
    //Smart Contract ABI here  
@@ -32,7 +34,7 @@ function MoralisDappProvider({ children }) {
   // );
 
   return (
-    <MoralisDappContext.Provider value={{ walletAddress, chainId, marketAddress, setMarketAddress, contractABI, setContractABI }}>
+    <MoralisDappContext.Provider value={{ walletAddress, chainId, marketAddress, corsacTokenAddress, setCorsacTokenAddress, setMarketAddress, contractABI, setContractABI }}>
       {children}
     </MoralisDappContext.Provider>
   );
