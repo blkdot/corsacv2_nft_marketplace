@@ -31,22 +31,24 @@ const ItemDetail = ({ nftId }) => {
     const nftDetailState = useSelector(selectors.buyNFTState);
 
 		const contractProcessor = useWeb3ExecuteFunction();
-    const {marketAddress, contractABI, corsacTokenAddress} = useMoralisDapp();
+    const {marketAddress, contractABI, corsacTokenAddress, corsacTokenABI} = useMoralisDapp();
 		const Web3Api = useMoralisWeb3Api();
 		const {account} = useMoralis();
 		const {chainId} = useChain();
 
-    const contractABIJson = JSON.parse(contractABI);
-		const listItemFunction = "getSaleInfo";
+    const listItemFunction = "getSaleInfo";
 		
 		const [saleInfo, setSaleInfo] = useState(null);
 		const [nft, setNFT] = useState(null);
 
 		const [basePrice, setBasePrice] = useState(0);
 		const [yourBalance, setYourBalance] = useState(0);
+		const [serviceFee, setServiceFee] = useState(0);
+		const [serviceFeePercent, setServiceFeePercent] = useState(0);
 		const [payment, setPayment] = useState(0);
 		const [decimals, setDecimals] = useState(18);
 		const [symbol, setSymbol] = useState("BNB");
+		const [tokenApproved, setTokenApproved] = useState(false);
 
 		const handleBtnClick0 = () => {
 			setOpenMenu0(!openMenu0);
@@ -77,31 +79,132 @@ const ItemDetail = ({ nftId }) => {
 				chain: chainId,
 				address: account
 			};
-			console.log(options);
+			
 			const balances = await Web3Api.account.getTokenBalances(options);
 			const nativeBalance = await Web3Api.account.getNativeBalance(options);
-			// console.log("token blance:", balances);
-			// console.log("native balance:", nativeBalance);
-
+			
 			const token = balances.filter((t, index) => {
 				return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
 			});
-			// console.log("Token Balance:", token[0]);
-			// console.log("Native Balance:", nativeBalance);
-			// console.log("Sale Info:", saleInfo);
-			// console.log("Sale Info:", (new BigNumber(saleInfo.basePrice._hex, 16)).comparedTo(token[0].balance, 10));
-			// console.log("Sale Info:", (new BigNumber(saleInfo.basePrice._hex, 16)).comparedTo(100000000000, 10));
+			
 			setDecimals(token[0].decimals);
 			setSymbol(token[0].symbol);
-			setBasePrice((new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber());
-			setYourBalance((new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber());
-			console.log("Fixed price:", basePrice);
-			console.log("Fixed balance:", yourBalance);
+			
+			// const bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+			// const yBalance = (new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+			const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
+			const yBalance = new BigNumber(nativeBalance.balance).toNumber();
+			const sFeePercent = (new BigNumber(saleInfo.feeRatio._hex, 16)) / 100;
+			const sFee = bPrice * (new BigNumber(saleInfo.feeRatio._hex, 16)) / 10000;
 
-			if (basePrice > yourBalance) {
+			setBasePrice(bPrice);
+			setYourBalance(yBalance);
+			setServiceFeePercent(sFeePercent);
+			setServiceFee(sFee);
+						
+			console.log("base price:", bPrice);
+			console.log("your balance:", yBalance);
+			console.log("service fee:", sFee);
+
+			if ((bPrice + sFee) > yBalance) {
 				setNotAvailableBalance(true);
 			}
 			setOpenCheckout(true);
+		};
+		const handleCheckoutClick = async () => {
+			if (payment != 0x0) {
+				// in case ERC-20 token, not stable coin
+				const ops = {
+					contractAddress: corsacTokenAddress,
+					functionName: "allowance",
+					abi: corsacTokenABI,
+					params: {
+						owner: account,
+						spender: marketAddress
+					},
+				};
+				console.log("calling allowance...");
+				await contractProcessor.fetch({
+					params: ops,
+					onSuccess: async (result) => {
+						console.log("success");
+						
+						const allowance = (new BigNumber(result._hex, 16)).toNumber();
+						console.log("allowance:", allowance);
+
+						// if (basePrice + serviceFee > allowance.dividedBy(new BigNumber(10).pow(decimals))) {
+						if (basePrice + serviceFee > allowance) {
+							const result = await approveToken();
+														
+							if (result) {
+								await buyItem();
+							}
+						} else {
+							await buyItem();
+						}
+					},
+					onError: (error) => {
+						console.log("failed:", error);
+					},
+				});
+			} else {
+				// in case stable coin
+				await buyItem();
+			}
+		};
+
+		const approveToken = async () => {
+			// const amount = (new BigNumber(2)).pow(256) - 1;
+			const amount = basePrice + serviceFee;
+			console.log("amount:", amount);
+			const ops = {
+				contractAddress: corsacTokenAddress,
+				functionName: "approve",
+				abi: corsacTokenABI,
+				params: {
+					spender: marketAddress,
+					amount: amount.toString()
+				},
+			};
+			await contractProcessor.fetch({
+				params: ops,
+				onSuccess: (result) => {
+					console.log("success:approved");
+					setTokenApproved(true);
+					return true;
+				},
+				onError: (error) => {
+					console.log("failed:approved", error);
+					setTokenApproved(false);
+					return false;
+				},
+			});
+		};
+
+		const buyItem = async () => {
+			console.log("buyItem");
+			// const amount = (new BigNumber(2)).pow(256) - 1;
+			const totalPrice = basePrice + serviceFee;
+			console.log("totalPrice:", totalPrice);
+			const ops = {
+				contractAddress: marketAddress,
+				functionName: "buy",
+				abi: contractABI,
+				params: {
+					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
+				},
+				msgValue: totalPrice,
+			};
+			await contractProcessor.fetch({
+				params: ops,
+				onSuccess: (result) => {
+					console.log("success:buy");
+					navigate('/explore');
+				},
+				onError: (error) => {
+					console.log("failed:buy", error);
+				},
+			});
 		};
 
 		useEffect(() => {
@@ -117,7 +220,7 @@ const ItemDetail = ({ nftId }) => {
         const ops = {
           contractAddress: marketAddress,
           functionName: listItemFunction,
-          abi: contractABIJson,
+          abi: contractABI,
           params: {
             startIdx: 0,
             count: 100000
@@ -133,6 +236,7 @@ const ItemDetail = ({ nftId }) => {
                       nft.token_id == sale.tokenId.toString());
 						});
 						console.log("sale INFO:", sales[0]);
+						setPayment(sales[0].payment);
 						setSaleInfo(sales[0]);
           },
           onError: (error) => {
@@ -148,8 +252,8 @@ const ItemDetail = ({ nftId }) => {
 		}, [nft]);
 
 		
-    const [openCheckout, setOpenCheckout] = React.useState(false);
-    const [openCheckoutbid, setOpenCheckoutbid] = React.useState(false);
+    const [openCheckout, setOpenCheckout] = useState(false);
+    const [openCheckoutbid, setOpenCheckoutbid] = useState(false);
 		const [notAvailableBalance, setNotAvailableBalance] = useState(false);
 
     return (
@@ -362,8 +466,8 @@ const ItemDetail = ({ nftId }) => {
 					</section>
 				}
 				<Footer /> 
-				{ openCheckout &&
-					notAvailableBalance ? (
+				{ openCheckout && !notAvailableBalance &&
+					(
 					<div className='checkout'>
 						<div className='maincheckout'>
 							<button className='btn-close' onClick={() => setOpenCheckout(false)}>x</button>
@@ -374,36 +478,81 @@ const ItemDetail = ({ nftId }) => {
 								You are about to purchase a <span className="bold">{nft.name} #{nft.token_id}</span> 
 								<span className="bold"> from {saleInfo.seller}</span>
 							</p>
-							<div className='detailcheckout mt-4'>
+							{/* <div className='detailcheckout mt-4'>
 								<div className='listcheckout'>
 									<h6>
 										Enter quantity. <span className="color">10 available</span>
 									</h6>
 									<input type="text" name="buy_now_qty" id="buy_now_qty" className="form-control" style={inputColorStyle}/>
 								</div>
-							</div>
+							</div> */}
 							<div className='heading mt-3'>
 								<p>Your balance</p>
 								<div className='subtotal'>
-									10.67856 ETH
+									{yourBalance} {symbol}
+								</div>
+							</div>
+							<div className='heading mt-3'>
+								<p>Item Price</p>
+								<div className='subtotal'>
+									{basePrice} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
-								<p>Service fee 2.5%</p>
+								<p>Service fee {serviceFeePercent}%</p>
 								<div className='subtotal'>
-									0.00325 ETH
+									{serviceFee} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>You will pay</p>
 								<div className='subtotal'>
-									0.013325 ETH
+									{basePrice + serviceFee} {symbol}
 								</div>
 							</div>
-							<button className='btn-main lead mb-5' onClick={() => handleBuyClick(nft)}>Checkout</button>
+							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick(nft)}>Checkout</button>
 						</div>
-					</div>) : (
-						<p>aaa</p>
+					</div>
+					)
+				}
+				{ openCheckout && notAvailableBalance &&
+					(
+					<div className='checkout'>
+						<div className='maincheckout'>
+							<button className='btn-close' onClick={() => setOpenCheckout(false)}>x</button>
+							<div className='heading'>
+								<h3>Error</h3>
+							</div>
+							<p>
+								Your balance is <span className="bold">Not Enough</span> to buy this item.
+							</p>
+							<div className='heading mt-3'>
+								<p>Your balance</p>
+								<div className='subtotal'>
+									{yourBalance} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Item Price</p>
+								<div className='subtotal'>
+									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Service fee {serviceFeePercent}%</p>
+								<div className='subtotal'>
+									{serviceFee} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>You have to pay</p>
+								<div className='subtotal'>
+									{basePrice + serviceFee} {symbol}
+								</div>
+							</div>
+							<button className='btn-main lead mb-5' onClick={() => setOpenCheckout(false)}>Okay, got it!</button>
+						</div>
+					</div>
 					)
 				}
 				{ openCheckoutbid &&

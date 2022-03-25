@@ -12,6 +12,7 @@ import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappPro
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
+import { navigate } from "@reach/router";
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
@@ -35,16 +36,22 @@ const MyNFT = function({ collectionId = 1 }) {
   const hotCollectionsState = useSelector(selectors.hotCollectionsState);
   const hotCollections = hotCollectionsState.data ? hotCollectionsState.data[0] : {};
 
-  useEffect(() => {
-      dispatch(fetchHotCollections(collectionId));
-  }, [dispatch, collectionId]);
-
   const {data: NFTBalances} = useNFTBalances();
   const {account} = useMoralis();
   const {marketAddress, contractABI} = useMoralisDapp();
   const contractProcessor = useWeb3ExecuteFunction();
-  const contractABIJson = JSON.parse(contractABI);
   const listItemFunction = "createSale";
+  const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+
+  useEffect(() => {
+    const connectorId = window.localStorage.getItem("connectorId");
+    if (!isAuthenticated) 
+      navigate('/');
+  }, []);
+  
+  useEffect(() => {
+    dispatch(fetchHotCollections(collectionId));
+  }, [dispatch, collectionId]);
 
   useEffect(() => {
     if (NFTBalances && NFTBalances.result)

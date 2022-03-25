@@ -20,7 +20,6 @@ const Explore3Cols = ({showLoadMore = true}) => {
     const [saleNFTs, setSaleNFTs] = useState([]);
     const contractProcessor = useWeb3ExecuteFunction();
     const {marketAddress, contractABI} = useMoralisDapp();
-    const contractABIJson = JSON.parse(contractABI);
     const listItemFunction = "getSaleInfo";
     const {Moralis, account} = useMoralis();
     const {chainId} = useChain();
@@ -40,21 +39,20 @@ const Explore3Cols = ({showLoadMore = true}) => {
 
     useEffect(() => {
       async function getSalesInfo(seller) {
+        const web3 = await Moralis.enableWeb3();
         const ops = {
           contractAddress: marketAddress,
           functionName: listItemFunction,
-          abi: contractABIJson,
+          abi: contractABI,
           params: {
             startIdx: 0,
             count: 100000
           },
         };
-        console.log("calling getSalesInfo...");
         await contractProcessor.fetch({
           params: ops,
           onSuccess: (result) => {
             console.log("success");
-            console.log(result);
             setSaleNFTs(result);
           },
           onError: (error) => {
@@ -63,6 +61,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
           },
         });
       }
+      
       getSalesInfo(account);
     },[]);
 
@@ -78,15 +77,14 @@ const Explore3Cols = ({showLoadMore = true}) => {
               chain: chainId
             };
             try {
+              const web3 = await Moralis.enableWeb3();
               const result = await Moralis.Web3API.token.getAllTokenIds(options);
-              // console.log("result:", result?.result);
+              
               const temp = result?.result.filter((nft, index) => {
                 return nft.token_id == saleInfo.tokenId.toString();
               });
-              // console.log("temp:", temp);
-
+              
               promises.push(...temp);
-              // console.log("promises:", promises);
             } catch (e) {
               console.log(e);
             }

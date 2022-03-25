@@ -36,7 +36,6 @@ const MyNFTBalanceOnSale = ({ showLoadMore = true, shuffle = false, authorId = n
     const [price, setPrice] = useState(0);
     const [loading, setLoading] = useState(false);
 
-    const contractABIJson = JSON.parse(contractABI);
     const listItemFunction = "getSaleInfo";
     const [dueDate, setDueDate] = useState(null);
     const [duration, setDuration] = useState(0);
@@ -50,7 +49,7 @@ const MyNFTBalanceOnSale = ({ showLoadMore = true, shuffle = false, authorId = n
         const ops = {
           contractAddress: marketAddress,
           functionName: listItemFunction,
-          abi: contractABIJson,
+          abi: contractABI,
           params: {
             startIdx: 0,
             count: 100000

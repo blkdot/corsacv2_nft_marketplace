@@ -438,7 +438,7 @@ contract CorsacNFTFactory is
         uint256[] memory ids,
         uint256[] memory amounts
     ) internal {
-        require(collectionOccupation[sc] == true);
+        // require(collectionOccupation[sc] == true);
 
         if (IERC165(sc).supportsInterface(type(IERC721).interfaceId)) {
             // ERC721 transfer, amounts has no meaning in this case

@@ -61,8 +61,8 @@ const MyNftCard = ({
         functionName: "isApprovedForAll",
         abi: [{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}],
         params: {
-        owner: account,
-        operator: marketAddress
+          owner: account,
+          operator: marketAddress
         },
       };
       let flag = false;
@@ -100,12 +100,12 @@ const MyNftCard = ({
                         <Clock deadline={nft.deadline} />
                     </div>
                 }
-                <div className="author_list_pp">
+                {/* <div className="author_list_pp">
                     <span onClick={()=> navigateTo(nft.author_link ? nft.author_link : '')}>                                    
                         <img className="lazy" src="" alt=""/>
                         <i className="fa fa-check"></i>
                     </span>
-                </div>
+                </div> */}
                 <div className="nft__item_wrap" style={{height: `${height}px`}}>
                     <Outer>
                         <span>

@@ -98,9 +98,6 @@ const PosedRouter = ({ children }) => (
 const App = ({ isServerInfo }) => {
   const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
   useEffect(() => {
-    console.log(isWeb3Enabled);
-    console.log(isAuthenticated);
-    console.log(isWeb3EnableLoading);
     const connectorId = window.localStorage.getItem("connectorId");
     if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) 
       enableWeb3({ provider: connectorId });

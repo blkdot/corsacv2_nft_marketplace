@@ -17,7 +17,12 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
 
   let owner, owner1, owner2;
   let user = "0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199";
-  let peabotToken = "0x1a4300eBb74AC59CC29ebBa01c78a737B804b16c";
+
+  let peabot;
+  let peabotAddress = "0x1a4300eBb74AC59CC29ebBa01c78a737B804b16c";
+
+  let blkdot;
+  let blkdotAddress = "0xd7DAc4870894bC1614dc2E9235c003BCb86F6AF0";
 
   const provider = waffle.provider;
 
@@ -91,6 +96,19 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     // await nftFactoryInst.connect(owner).receive();
     console.log('\n--------------------------------------------------------------------------');
     console.log("Marketplace was charged! balance=", await provider.getBalance(nftFactory.address));
+
+    // 7. Get and approve all peabot ERC721 token contract for testing
+    peabot = await ethers.getContractAt("ITERC721", peabotAddress);
+    await peabot.connect(owner).setApprovalForAll(nftFactory.address, true);
+
+    blkdot = await ethers.getContractAt("ITERC721", blkdotAddress);
+    await blkdot.connect(owner).setApprovalForAll(nftFactory.address, true);
+    console.log('\n--------------------------------------------------------------------------');
+    console.log('Getting and approve all peabot & blkdot ERC721 tokens for testing...');
+    console.log("peabot amount of owner:", await peabot.balanceOf(owner.address));
+    console.log("peabot amount of owner1:", await peabot.balanceOf(owner1.address));
+    console.log("blkdot amount of owner:", await blkdot.balanceOf(owner.address));
+    console.log("blkdot amount of owner1:", await blkdot.balanceOf(owner1.address));
   });
 
   it("set payment tokens", async function() {
@@ -151,7 +169,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
 
     const amount = 250 * 1e9;
     const createSaleTx = await nftFactory.connect(owner).createSale(
-      peabotToken, // sc, address of NFT collection contract
+      peabotAddress, // sc, address of NFT collection contract
       0, // token ID
       1, // payment method, 0: BNB, 1: BUSD, 2: Corsac, ... (NOTE: will set by setPaymentToken and refer "set payment tokens" in this script)
       1, // copy, if type of sc is ERC721, copy should be 1 and if ERC1155, copy > 0
@@ -166,8 +184,15 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
 
     console.log("owner created sale! price =", amount);
 
-    // const salesInfo = await nftFactory.getSaleInfo(0, 3);
-    // console.log("salesInfo:", salesInfo);
+    const salesInfo = await nftFactory.getSaleInfo(0, 3);
+    console.log("salesInfo:", salesInfo);
+
+    await uba.connect(owner1).approve(nftFactory.address, String(300 * 1e9));
+    const buyTx = await nftFactory.connect(owner1).buy(0, {value: String(300 * 1e9)});
+    await buyTx.wait();
+    console.log("owner1 bought nft from owner!");
+    console.log("peabot amounts of owner:", await peabot.balanceOf(owner.address));
+    console.log("peabot amounts of owner1:", await peabot.balanceOf(owner1.address));
   });
 
   it("create new collection", async function() {
@@ -308,7 +333,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     // console.log("salesInfo:", salesInfo);
 
     await uba.approve(nftFactory.address, String(300 * 1e9));
-    const buyTx = await nftFactory.connect(owner).buy(1, {value: String(300 * 1e9)});
+    const buyTx = await nftFactory.connect(owner).buy(1, {value: String(250 * 1e9)});
     await buyTx.wait();
 
     expect(await mintedNFT.ownerOf(2)).to.equal(owner.address);

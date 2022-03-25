@@ -34,7 +34,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const [price, setPrice] = useState(0);
     const [loading, setLoading] = useState(false);
 
-    const contractABIJson = JSON.parse(contractABI);
     const listItemFunction = "createSale";
     const [dueDate, setDueDate] = useState(null);
     const [duration, setDuration] = useState(0);
@@ -58,7 +57,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       const ops = {
         contractAddress: marketAddress,
         functionName: listItemFunction,
-        abi: contractABIJson,
+        abi: contractABI,
         params: {
           sc: nft.token_address,
           tokenId: parseInt(nft.token_id),
