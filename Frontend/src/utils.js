@@ -142,3 +142,19 @@ export function classList(classes) {
     .map(entry => entry[0])
     .join(" ");
 }
+
+export function getSymbolByChainId(chainId) {
+  const ethNetworks = [0x1, 0x3, 0x4, 0x5, 0x2a];
+  const bscNetworks = [0x38, 0x61];
+  const polygonNetworks = [0x89, 0x13881];
+  const avalancheNetworks = [0xa86a, 0xa869];
+  const fantomNetworks = [0xfa];
+
+  if (ethNetworks.includes(parseInt(chainId))) return 'ETH';
+  if (bscNetworks.includes(parseInt(chainId))) return 'BSC';
+  if (polygonNetworks.includes(parseInt(chainId))) return 'MATIC';
+  if (avalancheNetworks.includes(parseInt(chainId))) return 'AVALAN';
+  if (fantomNetworks.includes(parseInt(chainId))) return 'FTM';
+
+  return 'Unknown';
+}

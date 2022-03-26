@@ -4,6 +4,9 @@ import Breakpoint, { BreakpointProvider, setDefaultBreakpoints } from "react-soc
 //import { header } from 'react-bootstrap';
 import { Link, navigate } from '@reach/router';
 import useOnclickOutside from "react-cool-onclickoutside";
+import {CopyToClipboard} from 'react-copy-to-clipboard';
+
+import BalanceTokens from '../components/BalanceTokens';
 
 setDefaultBreakpoints([
   { xs: 0 },
@@ -84,6 +87,8 @@ const Header = function({ className }) {
       closeNot();
     });
 
+    const [copied, setCopied] = useState(false);
+
     useEffect(() => {
       const header = document.getElementById("myHeader");
       const totop = document.getElementById("scroll-to-top");
@@ -107,7 +112,7 @@ const Header = function({ className }) {
     }, []);
 
     const {authenticate, isAuthenticated, account, logout} = useMoralis();
-    // const navigate = useNavigate();
+    
     const disconnect = async () => {
       await logout();
       window.localStorage.removeItem("connectorId");
@@ -435,14 +440,17 @@ const Header = function({ className }) {
                                 <h4>Your name</h4>
                                 <span className="name" onClick={()=> window.open("", "_self")}>Set display name</span>
                             </div>
-                            <div className="d-balance">
+                            {/* <div className="d-balance">
                                 <h4>Balance</h4>
                                 0 ETH
-                            </div>
+                            </div> */}
+                            <BalanceTokens />
                             <div className="d-wallet">
                                 <h4>My Wallet</h4>
                                 <span id="wallet" className="d-wallet-address">{account}</span>
-                                <button id="btn_copy" title="Copy Text">Copy</button>
+                                <CopyToClipboard text={account} onCopy={() => setCopied(true)}>
+                                  <button id="btn_copy" title="Copy Address">Copy</button>
+                                </CopyToClipboard>
                             </div>
                             <div className="d-line"></div>
                             <ul className="de-submenu-profile">

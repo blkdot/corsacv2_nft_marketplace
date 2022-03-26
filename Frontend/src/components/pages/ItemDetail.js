@@ -9,7 +9,7 @@ import * as selectors from '../../store/selectors';
 import api from "../../core/api";
 import moment from "moment";
 import { navigate } from '@reach/router';
-import BigNumber from 'bignumber.js'
+import BigNumber from 'bignumber.js';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import {useChain, useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction, useNFTBalances, useMoralisQuery} from "react-moralis";
@@ -81,6 +81,7 @@ const ItemDetail = ({ nftId }) => {
 			};
 			
 			const balances = await Web3Api.account.getTokenBalances(options);
+			console.log(balances);
 			const nativeBalance = await Web3Api.account.getNativeBalance(options);
 			
 			const token = balances.filter((t, index) => {
@@ -90,10 +91,10 @@ const ItemDetail = ({ nftId }) => {
 			setDecimals(token[0].decimals);
 			setSymbol(token[0].symbol);
 			
-			// const bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-			// const yBalance = (new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-			const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
-			const yBalance = new BigNumber(nativeBalance.balance).toNumber();
+			const bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+			const yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+			// const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
+			// const yBalance = new BigNumber(token[0].balance).toNumber();
 			const sFeePercent = (new BigNumber(saleInfo.feeRatio._hex, 16)) / 100;
 			const sFee = bPrice * (new BigNumber(saleInfo.feeRatio._hex, 16)) / 10000;
 
@@ -109,9 +110,8 @@ const ItemDetail = ({ nftId }) => {
 			if ((bPrice + sFee) > yBalance) {
 				setNotAvailableBalance(true);
 			}
-			setOpenCheckout(true);
-		};
-		const handleCheckoutClick = async () => {
+			
+			// check allowance
 			if (payment != 0x0) {
 				// in case ERC-20 token, not stable coin
 				const ops = {
@@ -123,30 +123,36 @@ const ItemDetail = ({ nftId }) => {
 						spender: marketAddress
 					},
 				};
-				console.log("calling allowance...");
+				console.log("checking allowance...");
 				await contractProcessor.fetch({
 					params: ops,
 					onSuccess: async (result) => {
 						console.log("success");
 						
-						const allowance = (new BigNumber(result._hex, 16)).toNumber();
+						const allowance = (new BigNumber(result._hex, 16)).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
 						console.log("allowance:", allowance);
 
-						// if (basePrice + serviceFee > allowance.dividedBy(new BigNumber(10).pow(decimals))) {
-						if (basePrice + serviceFee > allowance) {
-							const result = await approveToken();
-														
-							if (result) {
-								await buyItem();
-							}
+						if (bPrice + sFee > allowance) {
+							setTokenApproved(false);
 						} else {
-							await buyItem();
+							setTokenApproved(true);
 						}
 					},
 					onError: (error) => {
 						console.log("failed:", error);
 					},
 				});
+			}
+			setOpenCheckout(true);
+		};
+		const handleCheckoutClick = async () => {
+			if (payment != 0x0) {
+				// in case ERC-20 token, not stable coin
+				if (tokenApproved) {
+					await buyItem();
+				} else {
+					await approveToken();
+				}
 			} else {
 				// in case stable coin
 				await buyItem();
@@ -155,7 +161,7 @@ const ItemDetail = ({ nftId }) => {
 
 		const approveToken = async () => {
 			// const amount = (new BigNumber(2)).pow(256) - 1;
-			const amount = basePrice + serviceFee;
+			const amount = (basePrice + serviceFee) * (new BigNumber(10).pow(decimals)).toNumber();
 			console.log("amount:", amount);
 			const ops = {
 				contractAddress: corsacTokenAddress,
@@ -183,8 +189,7 @@ const ItemDetail = ({ nftId }) => {
 
 		const buyItem = async () => {
 			console.log("buyItem");
-			// const amount = (new BigNumber(2)).pow(256) - 1;
-			const totalPrice = basePrice + serviceFee;
+			const totalPrice = (basePrice + serviceFee) * (new BigNumber(10).pow(decimals)).toNumber();
 			console.log("totalPrice:", totalPrice);
 			const ops = {
 				contractAddress: marketAddress,
@@ -199,7 +204,7 @@ const ItemDetail = ({ nftId }) => {
 				params: ops,
 				onSuccess: (result) => {
 					console.log("success:buy");
-					navigate('/explore');
+					navigate('/mynft');
 				},
 				onError: (error) => {
 					console.log("failed:buy", error);
@@ -510,7 +515,9 @@ const ItemDetail = ({ nftId }) => {
 									{basePrice + serviceFee} {symbol}
 								</div>
 							</div>
-							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick(nft)}>Checkout</button>
+							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick(nft)}>
+								{tokenApproved ? 'Checkout' : 'Approve'}
+							</button>
 						</div>
 					</div>
 					)

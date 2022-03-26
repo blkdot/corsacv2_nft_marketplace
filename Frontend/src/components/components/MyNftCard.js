@@ -45,7 +45,7 @@ const MyNftCard = ({
       setNftToSend(nft);
       
       let flag = await isApprovedForAll(nft);
-      console.log('flag ===', flag);
+      
       if (flag) setVisibility2(true);
       else setVisibility1(true);
     };

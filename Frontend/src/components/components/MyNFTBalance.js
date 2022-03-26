@@ -52,6 +52,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     }
 
     async function list(nft) {
+      console.log(duration);
       setLoading(true);
       const p = price * ("1e" + 9);
       const ops = {
@@ -169,10 +170,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       }, secondsToGo * 1000);
     }
     
-    // useEffect(() => {
-    //     dispatch(actions.fetchNftBalancesBreakdown(authorId));
-    // }, [dispatch, authorId]);
-
     //will run when component unmounted
     useEffect(() => {
         return () => {

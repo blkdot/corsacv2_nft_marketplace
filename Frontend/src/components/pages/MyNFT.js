@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {useMoralis, useNFTBalances, useWeb3ExecuteFunction} from "react-moralis";
 import { useSelector, useDispatch } from 'react-redux';
 import MyNFTBalance from '../components/MyNFTBalance';
@@ -9,6 +9,7 @@ import { fetchHotCollections, setNFTBalances } from "../../store/actions/thunks"
 import api from "../../core/api";
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
+import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
@@ -38,10 +39,15 @@ const MyNFT = function({ collectionId = 1 }) {
 
   const {data: NFTBalances} = useNFTBalances();
   const {account} = useMoralis();
+  const [copied, setCopied] = useState(false);
   const {marketAddress, contractABI} = useMoralisDapp();
   const contractProcessor = useWeb3ExecuteFunction();
   const listItemFunction = "createSale";
   const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+  const inputColorStyle = {
+    color: '#111'
+  };
+
 
   useEffect(() => {
     const connectorId = window.localStorage.getItem("connectorId");
@@ -90,7 +96,9 @@ const MyNFT = function({ collectionId = 1 }) {
                           <span id="wallet" className="profile_wallet">{ hotCollections.author.wallet }</span>
                         } */}
                         <span id="wallet" className="profile_wallet">{ account }</span>
-                        <button id="btn_copy" title="Copy Text">Copy</button>
+                        <CopyToClipboard text={account} onCopy={() => setCopied(true)}>
+                          <button id="btn_copy" title="Copy Address" style={inputColorStyle}>Copy</button>
+                        </CopyToClipboard>
                     </h4>
                 </div>
               </div>

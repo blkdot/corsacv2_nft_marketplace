@@ -38,7 +38,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
     }
 
     useEffect(() => {
-      async function getSalesInfo(seller) {
+      async function getSalesInfo() {
         const web3 = await Moralis.enableWeb3();
         const ops = {
           contractAddress: marketAddress,
@@ -62,7 +62,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
         });
       }
       
-      getSalesInfo(account);
+      getSalesInfo();
     },[]);
 
     useEffect(() => {
