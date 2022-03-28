@@ -1,7 +1,7 @@
 // import React from 'react';
 import { useEffect, useState } from "react";
 import { useMoralis } from "react-moralis";
-import { Router, Location, Redirect } from '@reach/router';
+import { Router, Location, Redirect, navigate } from '@reach/router';
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
 import Home from './pages/home';
@@ -97,9 +97,17 @@ const PosedRouter = ({ children }) => (
 
 const App = ({ isServerInfo }) => {
   const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+
   useEffect(() => {
     const connectorId = window.localStorage.getItem("connectorId");
-    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) 
+    console.log("connectorId:", connectorId);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("isWeb3Enabled:", isWeb3Enabled);
+    console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
+    console.log("window.web3:", window.web3);
+    console.log("window.ethereum:", window.ethereum);
+    
+    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading)
       enableWeb3({ provider: connectorId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled]);

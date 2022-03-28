@@ -7,8 +7,6 @@ import NftMusicCard from './NftMusicCard';
 import { clearNfts, clearFilter } from '../../store/actions';
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import {useChain, useMoralis, useWeb3ExecuteFunction, useNFTBalances, useMoralisQuery} from "react-moralis";
-import { navigate } from '@reach/router';
-
 
 const Explore3Cols = ({showLoadMore = true}) => {
 
@@ -39,6 +37,8 @@ const Explore3Cols = ({showLoadMore = true}) => {
 
     useEffect(() => {
       async function getSalesInfo() {
+        if (window.web3 == undefined && window.ethereum == undefined)
+          return;
         const web3 = await Moralis.enableWeb3();
         const ops = {
           contractAddress: marketAddress,
