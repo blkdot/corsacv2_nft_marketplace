@@ -68,6 +68,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
     useEffect(() => {
       async function fetchAPIData() {
         console.log(chainId);
+        console.log(saleNFTs);
         if (saleNFTs && saleNFTs.length > 0) {
           const promises = [];
           

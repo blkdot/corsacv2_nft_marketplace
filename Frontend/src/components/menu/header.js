@@ -225,6 +225,14 @@ const Header = function({ className }) {
                         Activity
                       </NavLink>
                     </div>
+                    { (isAuthenticated && account) && (
+                    <div className='navbar-item'>
+                      <NavLink to="/mynft">
+                        My NFTs
+                        <span className='lines'></span>
+                      </NavLink>
+                    </div>
+                    )}
                     <div className='navbar-item'>
                       <div ref={ref3}>
                         <div className="dropdown-custom dropdown-toggle btn" 
