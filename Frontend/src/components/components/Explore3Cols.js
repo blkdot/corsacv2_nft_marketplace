@@ -21,7 +21,34 @@ const Explore3Cols = ({showLoadMore = true}) => {
     const listItemFunction = "getSaleInfo";
     const {Moralis, account} = useMoralis();
     const {chainId} = useChain();
-    const queryMarketItems = useMoralisQuery("ListedOnSale");
+    const queryMarketItems = useMoralisQuery("SalesList");
+    const fetchMarketItems = JSON.parse(
+      JSON.stringify(queryMarketItems.data, [
+        "saleId",
+        "creator",
+        "seller",
+        "sc",
+        "tokenId",
+        "copy",
+        "payment",
+        "basePrice",
+        "method",
+        "startTime",
+        "endTime",
+        "feeRatio",
+        "royaltyRatio",
+        "confirmed"
+      ])
+    );
+    const getMarketItem = (nft) => {
+      const result = fetchMarketItems?.find(
+        (e) =>
+          e.sc.toLowerCase() === nft?.token_address.toLowerCase() &&
+          e.tokenId === nft?.token_id &&
+          e.confirmed === true
+      );
+      return result;
+    };
 
     const [height, setHeight] = useState(0);
 
@@ -69,6 +96,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
       async function fetchAPIData() {
         console.log(chainId);
         console.log(saleNFTs);
+        // const web3 = await Moralis.enableWeb3();
         if (saleNFTs && saleNFTs.length > 0) {
           const promises = [];
           
@@ -78,7 +106,6 @@ const Explore3Cols = ({showLoadMore = true}) => {
               chain: chainId
             };
             try {
-              const web3 = await Moralis.enableWeb3();
               const result = await Moralis.Web3API.token.getAllTokenIds(options);
               
               const temp = result?.result.filter((nft, index) => {
@@ -102,24 +129,34 @@ const Explore3Cols = ({showLoadMore = true}) => {
               //   chain: chainId
               // };
               // const result = await Moralis.Web3API.token.reSyncMetadata(options);
-              // const options1 = {
-              //   address: nft.token_address,
-              //   token_id: nft.token_id,
-              //   chain: chainId
-              // };
-              // const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options1);
-              // if (tokenIdMetadata.token_uri) {
-              //   await fetch((tokenIdMetadata.token_uri))
-              //     .then((response) => response.json())
-              //     .then((data) => {
-              //       nft.imagePath = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
-              //     })
-              // } else {
-              //   nft.imagePath = fallbackImg;
-              // }
-              nft.imagePath = fallbackImg;
+              const options1 = {
+                address: nft.token_address,
+                token_id: nft.token_id,
+                chain: chainId
+              };
+              const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options1);
+              if (tokenIdMetadata.token_uri) {
+                await fetch((tokenIdMetadata.token_uri))
+                  .then((response) => response.json())
+                  .then((data) => {
+                    nft.imagePath = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                  }).catch(function() {
+                    console.log("error: getting uri");
+                  });
+              } else {
+                nft.imagePath = fallbackImg;
+              }
+              // nft.imagePath = fallbackImg;
             } else {
               nft.imagePath = JSON.parse(nft.metadata).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+            }
+
+            const marketItem = getMarketItem(nft);
+            console.log(marketItem);
+            if (marketItem != undefined && marketItem != null) {
+              nft.method = marketItem.method;
+              nft.endTime = marketItem.endTime;
+              nft.confirmed = marketItem.confirmed;
             }
           }
 

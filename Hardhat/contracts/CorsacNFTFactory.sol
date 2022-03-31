@@ -149,7 +149,18 @@ contract CorsacNFTFactory is
      */
     event ListedOnSale(
         uint256 saleId,
-        CorsacNFTSale saleInfo
+        address creator,
+        address seller,
+        address sc,
+        uint256 tokenId,
+        uint256 copy,
+        uint256 payment,
+        uint256 basePrice,
+        uint256 method,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 feeRatio,
+        uint256 royaltyRatio
     );
 
     /**
@@ -610,7 +621,18 @@ contract CorsacNFTFactory is
 
         emit ListedOnSale(
             curSaleIndex,
-            csns
+            csns.creator,
+            csns.seller,
+            csns.sc,
+            csns.tokenId,
+            csns.copy,
+            csns.payment,
+            csns.basePrice,
+            csns.method,
+            csns.startTime,
+            csns.endTime,
+            csns.feeRatio,
+            csns.royaltyRatio
         );
     }
 

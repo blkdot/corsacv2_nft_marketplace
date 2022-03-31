@@ -2,12 +2,23 @@ import React, { memo, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import styled from "styled-components";
-import Clock from "./Clock";
+// import Clock from "./Clock";
 import { navigate } from '@reach/router';
 
 import {useMoralis, useWeb3ExecuteFunction} from "react-moralis";
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import {} from "react-moralis";
+import Countdown from 'react-countdown';
+
+const renderer = props => {
+  if (props.completed) {
+    // Render a completed state
+    return <span>Ended</span>;
+  } else {
+    // Render a countdown
+    return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
+  }
+};
 
 const Outer = styled.div`
   display: flex;
@@ -95,9 +106,14 @@ const MyNftCard = ({
              <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
                 )
             }
-                { nft.deadline && nft.deadline && clockTop &&
+                { nft.endTime && clockTop &&
                     <div className="de_countdown">
-                        <Clock deadline={nft.deadline} />
+                        {/* <Clock deadline={nft.deadline} /> */}
+                        <Countdown
+                          date={parseInt(nft.endTime) * 1000}
+                          // zeroPadTime={2}
+                          renderer={renderer}
+                        />
                     </div>
                 }
                 {/* <div className="author_list_pp">
@@ -113,10 +129,15 @@ const MyNftCard = ({
                         </span>
                     </Outer>
                 </div>
-                { nft.deadline && !clockTop &&
-                    <div className="de_countdown">
-                        <Clock deadline={nft.deadline} />
-                    </div>
+                { nft.endTime && !clockTop &&
+                    // <div className="de_countdown">
+                    //     <Clock deadline={nft.deadline} />
+                    // </div>
+                    <Countdown
+                        date={parseInt(nft.endTime) * 1000}
+                        // zeroPadTime={2}
+                        renderer={renderer}
+                    />
                 }
                 <div className="nft__item_info">
                     <span onClick={() => navigateTo(nft.nft_link ? `${nft.nft_link}/${nft.id}` : '')}>

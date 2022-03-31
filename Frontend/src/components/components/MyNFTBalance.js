@@ -65,7 +65,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           payment: 1,
           copy: 1,
           method: parseInt(tabKey) - 1,
-          duration: 86400,
+          duration: duration,
           basePrice: String(p),
           feeRatio: 0,
           royaltyRatio: 0,
