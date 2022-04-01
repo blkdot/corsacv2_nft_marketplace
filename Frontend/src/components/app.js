@@ -1,7 +1,7 @@
 // import React from 'react';
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useMoralis } from "react-moralis";
-import { Router, Location, Redirect, navigate } from '@reach/router';
+import { Router, Location, Redirect } from '@reach/router';
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
 import Home from './pages/home';
@@ -30,7 +30,7 @@ import Colection from './pages/colection';
 import Colectiongrey from './pages/colectionGrey';
 // import ItemDetail from './pages/ItemDetail';
 import ItemDetailRedux from './pages/ItemDetailRedux';
-import ItemDetailReduxgrey from './pages/ItemDetailReduxGrey';
+// import ItemDetailReduxgrey from './pages/ItemDetailReduxGrey';
 import ItemDetail from './pages/ItemDetail';
 import Author from './pages/Author';
 import AuthorGrey from './pages/AuthorGrey';

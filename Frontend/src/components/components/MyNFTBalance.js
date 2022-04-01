@@ -1,21 +1,20 @@
 import React, { memo, useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import * as selectors from '../../store/selectors';
+import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { clearNfts, clearFilter } from '../../store/actions';
 import MyNftCard from './MyNftCard';
 import NftMusicCard from './NftMusicCard';
-import { shuffleArray } from '../../store/utils';
-import {Tooltip, Modal, Input, Spin, Button, Skeleton, Tabs, DatePicker } from "antd";
-import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {useMoralis, useWeb3ExecuteFunction, useNFTBalances} from "react-moralis";
+import { Modal, Input, Spin, Button, Tabs, DatePicker } from "antd";
+import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
+import { useMoralis, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
+import BigNumber from "bignumber.js";
 
 //react functional component
 const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null }) => {
 
     const dispatch = useDispatch();
     const {data: NFTBalances} = useNFTBalances();
-    const nfts = NFTBalances ? NFTBalances.result : [];
+    const [nfts, setNfts] = useState([]);
 
     const [height, setHeight] = useState(0);
 
@@ -39,6 +38,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const [duration, setDuration] = useState(0);
     const [tabKey, setTabKey] = useState("1");
     const { TabPane } = Tabs;
+
+    const [saleNFTs, setSaleNFTs] = useState([]);
+    const {account} = useMoralis();
 
     function onChangeDueDate(date, dateString) {
       setDueDate(date);
@@ -169,6 +171,76 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         modal.destroy();
       }, secondsToGo * 1000);
     }
+
+    useEffect(() => {
+      if (NFTBalances && NFTBalances.result) {
+        setNfts(NFTBalances.result);
+      }
+    }, [NFTBalances]);
+
+    useEffect(() => {
+      async function getSalesOf(seller) {
+        const ops = {
+          contractAddress: marketAddress,
+          functionName: 'getSaleInfo',
+          abi: contractABI,
+          params: {
+            startIdx: 0,
+            count: 100000
+          },
+        };
+        await contractProcessor.fetch({
+          params: ops,
+          onSuccess: (result) => {
+            let nftsArray = [];
+            result.map((salesInfo, index) => {
+              if (salesInfo.seller.toLowerCase() === seller.toLowerCase()) {
+                const temp = nfts.filter((nft, idx) => {
+                  return (nft.token_address.toLowerCase() === salesInfo.sc.toLowerCase() && 
+                      nft.token_id === salesInfo.tokenId.toString());
+                });
+                if (temp !== []) {
+                  nftsArray.push(salesInfo);
+                }
+              }
+            });
+            
+            setSaleNFTs(nftsArray);
+          },
+          onError: (error) => {
+            console.log("failed:", error);
+            setSaleNFTs([]);
+          },
+        });
+      }
+      getSalesOf(account);
+    }, [nfts]);
+
+    useEffect(() => {
+      nfts.map((nft, index) => {
+        const sale = saleNFTs.find(e => e.sc.toLowerCase() === nft.token_address.toLowerCase() && new BigNumber(e.tokenId._hex).toNumber() === parseInt(nft.token_id));
+        
+        if (sale !== undefined) {
+          if (sale.method._hex === 0x00) {
+            nft.onAuction = false;
+            nft.onSale = true;
+            nft.onOffer = false;
+          } else if (sale.method._hex === 0x01) {
+            nft.onAuction = true;
+            nft.onSale = false;
+            nft.onOffer = false;
+          } else {
+            nft.onAuction = false;
+            nft.onSale = false;
+            nft.onOffer = true;
+          }
+        } else {
+          nft.onAuction = false;
+          nft.onSale = false;
+          nft.onOffer = false;
+        }
+      });
+    }, [saleNFTs]);
     
     //will run when component unmounted
     useEffect(() => {
@@ -196,7 +268,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   setNftToSend={setNftToSend}
                   setVisibility1={setVisibility1}
                   setVisibility2={setVisibility2}
-                  onSale={false}
                 />
             ))}
             { showLoadMore && nfts.length <= 20 &&

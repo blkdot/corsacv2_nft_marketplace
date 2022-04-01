@@ -37,7 +37,7 @@ const MyNFT = function({ collectionId = 1 }) {
   const hotCollectionsState = useSelector(selectors.hotCollectionsState);
   const hotCollections = hotCollectionsState.data ? hotCollectionsState.data[0] : {};
 
-  const {data: NFTBalances} = useNFTBalances();
+  // const {data: NFTBalances} = useNFTBalances();
   const {account} = useMoralis();
   const [copied, setCopied] = useState(false);
   const {marketAddress, contractABI} = useMoralisDapp();
@@ -47,7 +47,6 @@ const MyNFT = function({ collectionId = 1 }) {
   const inputColorStyle = {
     color: '#111'
   };
-
 
   useEffect(() => {
     const connectorId = window.localStorage.getItem("connectorId");
@@ -59,13 +58,6 @@ const MyNFT = function({ collectionId = 1 }) {
     dispatch(fetchHotCollections(collectionId));
   }, [dispatch, collectionId]);
 
-  useEffect(() => {
-    if (NFTBalances && NFTBalances.result)
-      dispatch(setNFTBalances(NFTBalances.result));
-  }, [dispatch, NFTBalances]);
-
-  console.log("my NFT balance111:", NFTBalances);
-  
   return (
     <div className="greyscheme">
       <StyledHeader theme={theme} />

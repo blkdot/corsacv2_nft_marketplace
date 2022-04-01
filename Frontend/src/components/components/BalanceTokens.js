@@ -12,7 +12,7 @@ const BalanceTokens = () => {
     const [nativeBalance, setNativeBalance] = useState(null);
     const [balances, setBalances] = useState([]);
 
-    const [tokens, setTokens] = useState([]);
+    // const [tokens, setTokens] = useState([]);
     const [native, setNative] = useState(null);
 
     useEffect(() => {
@@ -39,14 +39,14 @@ const BalanceTokens = () => {
         nb.symbol = getSymbolByChainId(chainId);
         nb.balance = new BigNumber(nativeBalance.balance).dividedBy(new BigNumber(10).pow(18)).toNumber()
 
-        balances.map((b, index) => {
+        balances.map((b) => {
           ts.push({
             symbol: b.symbol, 
             balance: new BigNumber(b.balance).dividedBy(new BigNumber(10).pow(b.decimals)).toNumber()
           });
         });
 
-        setTokens(ts);
+        // setTokens(ts);
         setNative(nb);
       }
     }, [balances, nativeBalance]);

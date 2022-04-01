@@ -1,13 +1,12 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo } from 'react';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import styled from "styled-components";
 // import Clock from "./Clock";
 import { navigate } from '@reach/router';
 
-import {useMoralis, useWeb3ExecuteFunction} from "react-moralis";
-import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {} from "react-moralis";
+import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
+import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import Countdown from 'react-countdown';
 
 const renderer = props => {
@@ -39,13 +38,13 @@ const MyNftCard = ({
                   setNftToSend,
                   setVisibility1,
                   setVisibility2,
-                  onSale = false
+                  page = ''
                  }) => {
-    const {account} = useMoralis();
+    const { account } = useMoralis();
     
     const dispatch = useDispatch();
 
-    const {marketAddress, contractABI} = useMoralisDapp();
+    const { marketAddress } = useMoralisDapp();
     const contractProcessor = useWeb3ExecuteFunction();
     
     const navigateTo = (link) => {
@@ -62,9 +61,17 @@ const MyNftCard = ({
     };
 
     const handleBuyClick = (nft) => {
-        dispatch(actions.setBuyNFT(nft));
-        navigateTo('/item-detail');
-      };
+      dispatch(actions.setBuyNFT(nft));
+      navigateTo('/item-detail');
+    };
+
+    const handleCancelSaleClick = (nft) => {
+      alert("cancel sale");
+    };
+
+    const handlePlaceBidClick = (nft) => {
+      alert("place a bid");
+    }
 
     async function isApprovedForAll(nft) {
       const ops = {
@@ -158,12 +165,23 @@ const MyNftCard = ({
                         )
                     }
                     <div className="nft__item_action">
-                        { !onSale ? (
-                            <span onClick={() => handleSellClick(nft)}>Create Sale</span>
-                        ) : (
-                            <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
+                      { page && page === 'explore' ? (
+                      <>
+                        {(nft.onSale || nft.onOffer) && (
+                          <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
                         )}
-                        {/* { nft.status && nft.status === 'on_auction' ? 'Place a bid' : 'Buy Now' } */}
+                        {(nft.onAuction) && (
+                          <span onClick={() => handlePlaceBidClick(nft)}>Place a bid</span>
+                        )}
+                      </>
+                      ) : (
+                        (nft.onSale || nft.onOffer || nft.onAuction) ? (
+                          <span onClick={() => handleCancelSaleClick(nft)}>Cancel Sale</span>
+                        )
+                        : (
+                          <span onClick={() => handleSellClick(nft)}>Create Sale</span>
+                        )
+                      )}
                     </div>
                     <div className="nft__item_like">
                         <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>

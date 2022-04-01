@@ -1,26 +1,22 @@
 import React, { memo, useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import * as selectors from '../../store/selectors';
+import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import MyNftCard from './MyNftCard';
 import NftMusicCard from './NftMusicCard';
 import { clearNfts, clearFilter } from '../../store/actions';
-import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {useChain, useMoralis, useWeb3ExecuteFunction, useNFTBalances, useMoralisQuery} from "react-moralis";
+import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
+import { useChain, useMoralis, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
 
 const Explore3Cols = ({showLoadMore = true}) => {
 
     const dispatch = useDispatch();
-    // const {data: NFTBalances} = useNFTBalances();
-    // const nftItems = useSelector(selectors.nftItems);
-    // const nfts = NFTBalances ? NFTBalances.result : [];
     const [nfts, setNFTs] = useState([]);
     const [saleNFTs, setSaleNFTs] = useState([]);
     const contractProcessor = useWeb3ExecuteFunction();
-    const {marketAddress, contractABI} = useMoralisDapp();
+    const { marketAddress, contractABI } = useMoralisDapp();
     const listItemFunction = "getSaleInfo";
-    const {Moralis, account} = useMoralis();
-    const {chainId} = useChain();
+    const { Moralis } = useMoralis();
+    const { chainId } = useChain();
     const queryMarketItems = useMoralisQuery("SalesList");
     const fetchMarketItems = JSON.parse(
       JSON.stringify(queryMarketItems.data, [
@@ -64,7 +60,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
 
     useEffect(() => {
       async function getSalesInfo() {
-        if (window.web3 == undefined && window.ethereum == undefined)
+        if (window.web3 === undefined && window.ethereum === undefined)
           return;
         const web3 = await Moralis.enableWeb3();
         const ops = {
@@ -94,8 +90,6 @@ const Explore3Cols = ({showLoadMore = true}) => {
 
     useEffect(() => {
       async function fetchAPIData() {
-        console.log(chainId);
-        console.log(saleNFTs);
         // const web3 = await Moralis.enableWeb3();
         if (saleNFTs && saleNFTs.length > 0) {
           const promises = [];
@@ -109,7 +103,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
               const result = await Moralis.Web3API.token.getAllTokenIds(options);
               
               const temp = result?.result.filter((nft, index) => {
-                return nft.token_id == saleInfo.tokenId.toString();
+                return nft.token_id === saleInfo.tokenId.toString();
               });
               
               promises.push(...temp);
@@ -118,7 +112,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
             }
           }
 
-          console.log("NFTs:", promises);
+          // console.log("NFTs:", promises);
 
           for (let nft of promises) {
             if (!nft.metadata) {
@@ -152,15 +146,32 @@ const Explore3Cols = ({showLoadMore = true}) => {
             }
 
             const marketItem = getMarketItem(nft);
-            console.log(marketItem);
-            if (marketItem != undefined && marketItem != null) {
-              nft.method = marketItem.method;
-              nft.endTime = marketItem.endTime;
-              nft.confirmed = marketItem.confirmed;
+            console.log("marketItem from Moralis:", marketItem);
+            
+            if (marketItem !== undefined && marketItem !== null) {
+              if (parseInt(marketItem.method) === 0x00) {
+                nft.onAuction = false;
+                nft.onSale = true;
+                nft.onOffer = false;
+              } else if (parseInt(marketItem.method) === 0x01) {
+                nft.onAuction = true;
+                nft.onSale = false;
+                nft.onOffer = false;
+                nft.endTime = marketItem.endTime;
+                nft.confirmed = marketItem.confirmed;
+              } else {
+                nft.onAuction = false;
+                nft.onSale = false;
+                nft.onOffer = true;
+              }
+            } else {
+              nft.onAuction = false;
+              nft.onSale = false;
+              nft.onOffer = false;
             }
           }
 
-          console.log("NFTs111:", promises);
+          console.log("NFTs:", promises);
           setNFTs(promises);
         }
       }
@@ -197,7 +208,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
                   onImgLoad={onImgLoad} 
                   height={height} 
                   className="d-item col-lg-4 col-md-6 col-sm-6 col-xs-12 mb-4"
-                  onSale={true}
+                  page="explore"
                 />
             ))}
         { showLoadMore && nfts.length <= 20 &&
