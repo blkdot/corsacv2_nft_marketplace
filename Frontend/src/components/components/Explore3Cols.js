@@ -17,9 +17,9 @@ const Explore3Cols = ({showLoadMore = true}) => {
     const listItemFunction = "getSaleInfo";
     const { Moralis } = useMoralis();
     const { chainId } = useChain();
-    const queryMarketItems = useMoralisQuery("SalesList");
+    const {data, error, isLoading} = useMoralisQuery("SalesList");
     const fetchMarketItems = JSON.parse(
-      JSON.stringify(queryMarketItems.data, [
+      JSON.stringify(data, [
         "saleId",
         "creator",
         "seller",
@@ -86,7 +86,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
       }
       
       getSalesInfo();
-    },[]);
+    }, []);
 
     useEffect(() => {
       async function fetchAPIData() {
@@ -146,7 +146,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
             }
 
             const marketItem = getMarketItem(nft);
-            console.log("marketItem from Moralis:", marketItem);
+            // console.log("marketItem from Moralis:", marketItem);
             
             if (marketItem !== undefined && marketItem !== null) {
               if (parseInt(marketItem.method) === 0x00) {
@@ -176,12 +176,8 @@ const Explore3Cols = ({showLoadMore = true}) => {
         }
       }
 
-      fetchAPIData();
-    }, [saleNFTs]);
-    
-    // useEffect(() => {
-    //     dispatch(actions.fetchNftsBreakdown());
-    // }, [dispatch]);
+      if (fetchMarketItems.length > 0) fetchAPIData();
+    }, [saleNFTs, fetchMarketItems.length]);
 
     //will run when component unmounted
     useEffect(() => {
