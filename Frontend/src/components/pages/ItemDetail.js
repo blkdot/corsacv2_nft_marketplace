@@ -13,11 +13,22 @@ import BigNumber from 'bignumber.js';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import {useChain, useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction, useNFTBalances, useMoralisQuery} from "react-moralis";
+import Countdown from 'react-countdown';
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
+
+const renderer = props => {
+  if (props.completed) {
+    // Render a completed state
+    return <span>Ended</span>;
+  } else {
+    // Render a countdown
+    return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
+  }
+};
 
 const ItemDetail = ({ nftId }) => {
     const inputColorStyle = {
@@ -50,6 +61,15 @@ const ItemDetail = ({ nftId }) => {
 		const [symbol, setSymbol] = useState("BNB");
 		const [tokenApproved, setTokenApproved] = useState(false);
 
+		const [openCheckout, setOpenCheckout] = useState(false);
+    const [openCheckoutbid, setOpenCheckoutbid] = useState(false);
+		const [notAvailableBalance, setNotAvailableBalance] = useState(false);
+
+		const [invalidBidAmount, setInvalidBidAmount] = useState(false);
+		const [openInvalidBidAmount, setOpenInvalidBidAmount] = useState(false);
+
+		const [bidAmount, setBidAmount] = useState(0);
+
 		const handleBtnClick0 = () => {
 			setOpenMenu0(!openMenu0);
 			setOpenMenu(false);
@@ -58,6 +78,7 @@ const ItemDetail = ({ nftId }) => {
 			document.getElementById("Mainbtn").classList.remove("active");
 			document.getElementById("Mainbtn1").classList.remove("active");
 		};
+
 		const handleBtnClick = () => {
 			setOpenMenu(!openMenu);
 			setOpenMenu1(false);
@@ -66,6 +87,7 @@ const ItemDetail = ({ nftId }) => {
 			document.getElementById("Mainbtn1").classList.remove("active");
 			document.getElementById("Mainbtn0").classList.remove("active");
 		};
+
 		const handleBtnClick1 = () => {
 			setOpenMenu1(!openMenu1);
 			setOpenMenu(false);
@@ -74,40 +96,9 @@ const ItemDetail = ({ nftId }) => {
 			document.getElementById("Mainbtn").classList.remove("active");
 			document.getElementById("Mainbtn0").classList.remove("active");
 		};
+
 		const handleBuyClick = async () => {
-			const options = {
-				chain: chainId,
-				address: account
-			};
-			
-			const balances = await Web3Api.account.getTokenBalances(options);
-			console.log(balances);
-			const nativeBalance = await Web3Api.account.getNativeBalance(options);
-			
-			const token = balances.filter((t, index) => {
-				return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
-			});
-			
-			setDecimals(token[0].decimals);
-			setSymbol(token[0].symbol);
-			
-			const bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-			const yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-			// const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
-			// const yBalance = new BigNumber(token[0].balance).toNumber();
-			const sFeePercent = (new BigNumber(saleInfo.feeRatio._hex, 16)) / 100;
-			const sFee = bPrice * (new BigNumber(saleInfo.feeRatio._hex, 16)) / 10000;
-
-			setBasePrice(bPrice);
-			setYourBalance(yBalance);
-			setServiceFeePercent(sFeePercent);
-			setServiceFee(sFee);
-						
-			console.log("base price:", bPrice);
-			console.log("your balance:", yBalance);
-			console.log("service fee:", sFee);
-
-			if ((bPrice + sFee) > yBalance) {
+			if ((basePrice + serviceFee) > yourBalance) {
 				setNotAvailableBalance(true);
 			}
 			
@@ -132,7 +123,7 @@ const ItemDetail = ({ nftId }) => {
 						const allowance = (new BigNumber(result._hex, 16)).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
 						console.log("allowance:", allowance);
 
-						if (bPrice + sFee > allowance) {
+						if (basePrice + serviceFee > allowance) {
 							setTokenApproved(false);
 						} else {
 							setTokenApproved(true);
@@ -143,8 +134,30 @@ const ItemDetail = ({ nftId }) => {
 					},
 				});
 			}
-			setOpenCheckout(true);
+
+			setOpenCheckout(true);			
 		};
+
+		const handlePlacebidClick = async () => {
+			if ((basePrice + serviceFee) > yourBalance) {
+				setNotAvailableBalance(true);
+			}
+			
+			setOpenCheckoutbid(true);
+		};
+
+		const closeInvalidBidAmount = () => {
+			setInvalidBidAmount(false);
+			setOpenInvalidBidAmount(false);
+			setOpenCheckoutbid(true);
+		};
+
+		const changeBidAmount = (event) => {
+			setBidAmount(parseFloat(event.target.value));
+			setInvalidBidAmount(false);
+			setTokenApproved(false);
+		}
+
 		const handleCheckoutClick = async () => {
 			if (payment != 0x0) {
 				// in case ERC-20 token, not stable coin
@@ -159,10 +172,67 @@ const ItemDetail = ({ nftId }) => {
 			}
 		};
 
-		const approveToken = async () => {
+		const handleCheckoutbidClick = async () => {
+			// check bidAmount
+			const amount = bidAmount + bidAmount * serviceFeePercent / 100;
+			if (bidAmount < basePrice || amount >= yourBalance) {
+				setInvalidBidAmount(true);
+				setOpenInvalidBidAmount(true);
+				setOpenCheckoutbid(false);
+				return;
+			}
+
+			setInvalidBidAmount(false);
+
+			// check allowance
+			if (payment != 0x0) {
+				// in case ERC-20 token, not stable coin
+				const ops = {
+					contractAddress: corsacTokenAddress,
+					functionName: "allowance",
+					abi: corsacTokenABI,
+					params: {
+						owner: account,
+						spender: marketAddress
+					},
+				};
+				console.log("checking allowance...");
+				await contractProcessor.fetch({
+					params: ops,
+					onSuccess: async (result) => {
+						console.log("success");
+						
+						const allowance = (new BigNumber(result._hex, 16)).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
+						console.log("allowance:", allowance);
+
+						if (bidAmount + serviceFee > allowance) {
+							approveToken('bid');
+						} else {
+							await placeBid();
+						}
+					},
+					onError: (error) => {
+						console.log("failed:", error);
+					},
+				});
+			} else {
+				await placeBid();
+			}
+		};
+
+		const approveToken = async (type='buy') => {
 			// const amount = (new BigNumber(2)).pow(256) - 1;
-			const amount = (basePrice + serviceFee) * (new BigNumber(10).pow(decimals)).toNumber();
-			console.log("amount:", amount);
+			let amount = 0;
+			if (type === 'buy') {
+				amount = (basePrice + serviceFee) * (new BigNumber(10).pow(decimals)).toNumber();
+			} else if (type === 'bid') {
+				amount = (bidAmount + bidAmount * serviceFeePercent / 100) * (new BigNumber(10).pow(decimals)).toNumber();
+			} else {
+				return;
+			}
+			// console.log("bidAmount:", typeof(bidAmount));
+			// console.log(bidAmount * serviceFeePercent / 100);
+			// console.log("amount:", amount);
 			const ops = {
 				contractAddress: corsacTokenAddress,
 				functionName: "approve",
@@ -212,6 +282,32 @@ const ItemDetail = ({ nftId }) => {
 			});
 		};
 
+		const placeBid = async () => {
+			console.log("placeBid");
+			const totalPrice = (bidAmount + bidAmount * serviceFeePercent / 100) * (new BigNumber(10).pow(decimals)).toNumber();
+			console.log("totalPrice:", totalPrice);
+			const ops = {
+				contractAddress: marketAddress,
+				functionName: "placeBid",
+				abi: contractABI,
+				params: {
+					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
+					price: totalPrice
+				},
+				// msgValue: totalPrice
+			};
+			await contractProcessor.fetch({
+				params: ops,
+				onSuccess: (result) => {
+					console.log("success:placeBid");
+					navigate('/mynft');
+				},
+				onError: (error) => {
+					console.log("failed:placeBid", error);
+				},
+			});
+		}
+
 		useEffect(() => {
 			if (nftDetailState == undefined) {
 				navigate('/');
@@ -252,14 +348,53 @@ const ItemDetail = ({ nftId }) => {
       }
 
 			if (nft) {
+				console.log("item detail:", nft);
 				getSalesInfo(nft);
 			}
 		}, [nft]);
 
-		
-    const [openCheckout, setOpenCheckout] = useState(false);
-    const [openCheckoutbid, setOpenCheckoutbid] = useState(false);
-		const [notAvailableBalance, setNotAvailableBalance] = useState(false);
+		useEffect(() => {
+			async function getAuctionInfo () {
+				const options = {
+					chain: chainId,
+					address: account
+				};
+				
+				const balances = await Web3Api.account.getTokenBalances(options);
+				console.log(balances);
+				// const nativeBalance = await Web3Api.account.getNativeBalance(options);
+				
+				const token = balances.filter((t, index) => {
+					return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+				});
+				
+				let bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
+				let yBalance = new BigNumber(token[0].balance).toNumber();
+	
+				// if payment is corsac token, not stable coin
+				if (saleInfo.payment._hex == 0x01) {
+					bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+					yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+
+					setDecimals(token[0].decimals);
+					setSymbol(token[0].symbol);
+				}
+				
+				// const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
+				// const yBalance = new BigNumber(token[0].balance).toNumber();
+				const sFeePercent = (new BigNumber(saleInfo.feeRatio._hex, 16)) / 100;
+				const sFee = bPrice * (new BigNumber(saleInfo.feeRatio._hex, 16)) / 10000;
+	
+				setBasePrice(bPrice);
+				setYourBalance(yBalance);
+				setServiceFeePercent(sFeePercent);
+				setServiceFee(sFee);
+			}
+
+			if (saleInfo) {
+				getAuctionInfo();
+			}
+		}, [saleInfo]);
 
     return (
 			<div className="greyscheme">
@@ -268,16 +403,20 @@ const ItemDetail = ({ nftId }) => {
 					<section className='container'>
 						<div className='row mt-md-5 pt-md-4'>
 							<div className="col-md-6 text-center">
-									<img src={ nft.preview_image && api.baseUrl + nft.preview_image.url} className="img-fluid img-rounded mb-sm-30" alt=""/>
+									{/* <img src={ nft.preview_image && api.baseUrl + nft.preview_image.url} className="img-fluid img-rounded mb-sm-30" alt=""/> */}
+									<img src={ nft.imagePath} className="img-fluid img-rounded mb-sm-30" alt=""/>
 							</div>
 							<div className="col-md-6">
 								<div className="item_info">
-									{nft.item_type === 'on_auction' &&
+									{nft.onAuction &&
 										<>
 											Auctions ends in 
 											<div className="de_countdown">
-													<Clock deadline={nft.deadline} />
-											</div>
+                        <Countdown
+                          date={parseInt(nft.endTime) * 1000}
+                          renderer={renderer}
+                        />
+                    	</div>
 										</>
 									}
 									{/* <h2>{nft.title}</h2> */}
@@ -457,11 +596,14 @@ const ItemDetail = ({ nftId }) => {
 												</div>
 												)}
 
-
 												{/* button for checkout */}
 												<div className="d-flex flex-row mt-5">
+													{(nft.onSale || nft.onOffer) && 
 														<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
-														<button className='btn-main btn2 lead mb-5' onClick={() => setOpenCheckoutbid(true)}>Place Bid</button>
+													}
+													{nft.onAuction && 
+														<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
+													}
 												</div>
 										</div>     
 									</div>          
@@ -515,7 +657,7 @@ const ItemDetail = ({ nftId }) => {
 									{basePrice + serviceFee} {symbol}
 								</div>
 							</div>
-							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick(nft)}>
+							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick()}>
 								{tokenApproved ? 'Checkout' : 'Approve'}
 							</button>
 						</div>
@@ -562,7 +704,7 @@ const ItemDetail = ({ nftId }) => {
 					</div>
 					)
 				}
-				{ openCheckoutbid &&
+				{ openCheckoutbid && !notAvailableBalance &&
 					<div className='checkout'>
 						<div className='maincheckout'>
 							<button className='btn-close' onClick={() => setOpenCheckoutbid(false)}>x</button>
@@ -570,42 +712,134 @@ const ItemDetail = ({ nftId }) => {
 									<h3>Place a Bid</h3>
 							</div>
 							<p>
-								You are about to purchase a <span className="bold">AnimeSailorClub #304</span> 
-								<span className="bold"> from Monica Lucas</span>
+								You are about to purchase a <span className="bold">{nft.name} #{nft.token_id}</span> 
+								<span className="bold"> from {nft.seller}</span>
 							</p>
 							<div className='detailcheckout mt-4'>
 								<div className='listcheckout'>
-									<h6>Your bid (ETH)</h6>
-									<input type="text" className="form-control" style={inputColorStyle} />
+									<h6>Your bid ({symbol})</h6>
+									<input 
+										type="number" 
+										className="form-control" 
+										style={inputColorStyle} 
+										value={bidAmount}
+										// onChange={(event) => {setBidAmount(event.target.value)}} 
+										onChange={changeBidAmount}
+										min={basePrice} 
+										step="0.00001"
+									/>
 								</div>
 							</div>
-							<div className='detailcheckout mt-3'>
+							{/* <div className='detailcheckout mt-3'>
 								<div className='listcheckout'>
 									<h6>
 										Enter quantity. <span className="color">10 available</span>
 									</h6>
 									<input type="text" name="buy_now_qty" id="buy_now_qty" className="form-control" style={inputColorStyle} />
 								</div>
-							</div>
+							</div> */}
 							<div className='heading mt-3'>
 								<p>Your balance</p>
 								<div className='subtotal'>
-									10.67856 ETH
+									{yourBalance} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
-								<p>Service fee 2.5%</p>
+								<p>Item Price</p>
 								<div className='subtotal'>
-									0.00325 ETH
+									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Service fee {serviceFeePercent}%</p>
+								<div className='subtotal'>
+									{bidAmount * serviceFeePercent / 100} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>You will pay</p>
 								<div className='subtotal'>
-									0.013325 ETH
+									{bidAmount * (100 + serviceFeePercent) / 100} {symbol}
 								</div>
 							</div>
-								<button className='btn-main lead mb-5'>Checkout</button>
+							{/* { (!invalidBidAmount && tokenApproved) ? (
+								<button className='btn-main lead mb-5' onClick={() => handleCheckoutbidClick()}>Place a bid</button>
+							) : (
+								<button className='btn-main lead mb-5' onClick={() => handleCheckBidAllowanceClick()}>Check Allowance</button>
+							)} */}
+							<button className='btn-main lead mb-5' onClick={() => handleCheckoutbidClick()}>
+								Place a bid
+							</button>
+						</div>
+					</div>
+				}
+				{ openCheckoutbid && notAvailableBalance &&
+					<div className='checkout'>
+						<div className='maincheckout'>
+							<button className='btn-close' onClick={() => setOpenCheckoutbid(false)}>x</button>
+							<div className='heading'>
+									<h3>Place a Bid</h3>
+							</div>
+							<p>
+								Your balance is <span className="bold">Not Enough</span> to bid this item.
+							</p>
+							<div className='heading mt-3'>
+								<p>Your balance</p>
+								<div className='subtotal'>
+									{yourBalance} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Item Price</p>
+								<div className='subtotal'>
+									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Service fee {serviceFeePercent}%</p>
+								<div className='subtotal'>
+									{serviceFee} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>You will pay minimum</p>
+								<div className='subtotal'>
+									{basePrice + serviceFee} {symbol}
+								</div>
+							</div>
+							<button className='btn-main lead mb-5' onClick={() => setOpenCheckoutbid(false)}>Okay, got it!</button>
+						</div>
+					</div>
+				}
+				{ openInvalidBidAmount && invalidBidAmount &&
+					<div className='checkout'>
+						<div className='maincheckout'>
+							<button className='btn-close' onClick={() => closeInvalidBidAmount()}>x</button>
+							<div className='heading'>
+									<h3>Error</h3>
+							</div>
+							<p>
+								Your bid amount should be <span className="bold">greater</span> than base price or <span className="bold">less</span> than your balance.
+							</p>
+							<div className='heading mt-3'>
+								<p>Your balance</p>
+								<div className='subtotal'>
+									{yourBalance} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Base Price</p>
+								<div className='subtotal'>
+									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Your bid amount</p>
+								<div className='subtotal'>
+									{bidAmount} {symbol}
+								</div>
+							</div>
+							<button className='btn-main lead mb-5' onClick={() => closeInvalidBidAmount()}>Okay, got it</button>
 						</div>
 					</div>
 				}

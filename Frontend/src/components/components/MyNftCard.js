@@ -69,9 +69,9 @@ const MyNftCard = ({
       alert("cancel sale");
     };
 
-    const handlePlaceBidClick = (nft) => {
-      alert("place a bid");
-    }
+    // const handlePlaceBidClick = (nft) => {
+    //   alert("place a bid");
+    // }
 
     async function isApprovedForAll(nft) {
       const ops = {
@@ -171,7 +171,7 @@ const MyNftCard = ({
                           <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
                         )}
                         {(nft.onAuction) && (
-                          <span onClick={() => handlePlaceBidClick(nft)}>Place a bid</span>
+                          <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
                         )}
                       </>
                       ) : (

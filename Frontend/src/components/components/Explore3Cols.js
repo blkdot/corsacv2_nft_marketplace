@@ -136,6 +136,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
                     nft.imagePath = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
                   }).catch(function() {
                     console.log("error: getting uri");
+                    nft.imagePath = fallbackImg;
                   });
               } else {
                 nft.imagePath = fallbackImg;
@@ -149,6 +150,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
             // console.log("marketItem from Moralis:", marketItem);
             
             if (marketItem !== undefined && marketItem !== null) {
+              nft.seller = marketItem.seller;
               if (parseInt(marketItem.method) === 0x00) {
                 nft.onAuction = false;
                 nft.onSale = true;
