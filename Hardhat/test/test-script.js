@@ -170,7 +170,7 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     const amount = 250 * 1e9;
     const createSaleTx = await nftFactory.connect(owner).createSale(
       peabotAddress, // sc, address of NFT collection contract
-      0, // token ID
+      2, // token ID
       1, // payment method, 0: BNB, 1: BUSD, 2: Corsac, ... (NOTE: will set by setPaymentToken and refer "set payment tokens" in this script)
       1, // copy, if type of sc is ERC721, copy should be 1 and if ERC1155, copy > 0
       0, // method of sale, 0: fixed price, 1: timed auction, 2: offer
@@ -391,6 +391,9 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     const bidTx2 = await nftFactory.connect(owner2).placeBid(2, String(500 * 1e9), {value: String(1000 * 1e9)});
     await bidTx2.wait();
     console.log("owner2 placed bid! price =", String(500 * 1e9));
+
+    const bidList = await nftFactory.getBidList(2);
+    console.log("bid list for sale ID = 2:", bidList);
 
     const finalizeAuctionTx = await nftFactory.connect(owner).finalizeAuction(2);
     await finalizeAuctionTx.wait();

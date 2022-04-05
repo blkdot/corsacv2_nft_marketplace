@@ -820,26 +820,25 @@ contract CorsacNFTFactory is
         uint256 startingPrice = csns.copy * csns.basePrice;
         uint256 bidPrice = csns.copy * price;
         uint256 serviceFee = bidPrice * csns.feeRatio / 10000;
-        uint256 totalPay = bidPrice + serviceFee;
-
+        
         BookInfo[] storage bi = bookInfo[saleId];
         require((bi.length == 0 && startingPrice < bidPrice) || bi[0].totalPrice < bidPrice, "bid price is not larger than the last bid's");
 
         if (csns.payment == 0) {
             if (bi.length > 0) {
                 address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice + bi[0].serviceFee);
+                pyLast.transfer(bi[0].totalPrice);
             }
-            if (msg.value > totalPay) {
+            if (msg.value > bidPrice) {
                 address payable py = payable(msg.sender);
-                py.transfer(msg.value - totalPay);
+                py.transfer(msg.value - bidPrice);
             }
         } else {
             IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
             if (bi.length > 0) {
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice + bi[0].serviceFee);
+                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
             }
-            tokenInst.transferFrom(msg.sender, address(this), totalPay);
+            tokenInst.transferFrom(msg.sender, address(this), bidPrice);
         }
 
         if (bi.length == 0)  {
@@ -956,7 +955,7 @@ contract CorsacNFTFactory is
                     devFee = (biItem.totalPrice * 30) / 10000;
                 }
 
-                uint256 pySeller = biItem.totalPrice - royalty - devFee;
+                uint256 pySeller = biItem.totalPrice - royalty - devFee -fee;
 
                 if (csns.payment == 0) {
                     address payable py = payable(csns.seller);
@@ -1086,5 +1085,21 @@ contract CorsacNFTFactory is
         
         if (csns.seller == address(0)) return false;
         return true;
+    }
+
+    /**
+     * @dev this function returns bid list of the timed auction
+     * @param saleId - index of the sale
+     */
+    function getBidList(uint256 saleId) external view returns (BookInfo[] memory) {
+        require(isSaleValid(saleId), "sale is not valid");
+
+        // CorsacNFTSale storage csns = saleList[saleId];
+
+        //require(csns.startTime <= block.timestamp, "sale not started yet");
+        // finalize timed-auction anytime by owner of this factory contract.
+        require(saleList[saleId].method == 1, "bid not for timed-auction sale");
+
+        return bookInfo[saleId];
     }
 }

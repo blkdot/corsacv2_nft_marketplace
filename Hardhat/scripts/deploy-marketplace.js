@@ -39,6 +39,15 @@ async function main() {
   
   const tokens = await nftFactory.getPaymentToken();
   console.log("payment tokens:", tokens);
+
+  const user = "0x7E1325d452e472B81098c62F071D32Ee7f4e10d7";
+  await nftFactory.startPendingCreator(user, true);
+    
+  await new Promise(r => setTimeout(r, 4000));
+
+  await nftFactory.endPendingCreator(user);
+  console.log("address-%s as a creator", user);
+
   console.log('\nDone!!!');
 }
 

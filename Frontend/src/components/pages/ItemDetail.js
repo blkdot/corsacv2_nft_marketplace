@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useState } from "react";
 import { useSelector } from 'react-redux';
-import Clock from "../components/Clock";
 import Footer from '../components/footer';
 //import { createGlobalStyle } from 'styled-components';
 import * as selectors from '../../store/selectors';
@@ -12,11 +11,28 @@ import { navigate } from '@reach/router';
 import BigNumber from 'bignumber.js';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {useChain, useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction, useNFTBalances, useMoralisQuery} from "react-moralis";
+import {useChain, useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction, useMoralisQuery} from "react-moralis";
 import Countdown from 'react-countdown';
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
+
+import { Spin, Modal } from "antd";
+import styled from 'styled-components';
+
+const StyledSpin = styled(Spin)`
+  .ant-spin-dot-item {
+    background-color: #FF343F;
+  }
+  .ant-spin-text {
+    color: #FF343F;
+  }
+`
+const StyledModal = styled(Modal)`
+  .ant-modal-content {
+    background-color: transparent;
+  }
+`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
@@ -68,7 +84,16 @@ const ItemDetail = ({ nftId }) => {
 		const [invalidBidAmount, setInvalidBidAmount] = useState(false);
 		const [openInvalidBidAmount, setOpenInvalidBidAmount] = useState(false);
 
+		const [errorMessage, setErrorMessage] = useState('');
+		const [openErrorModal, setOpenErrorModal] = useState(false);
+
+		const [placeBidErrorMsg, setPlaceBidErrorMsg] = useState('');
+		const [placeBidError, setPlaceBidError] = useState(false);
+
 		const [bidAmount, setBidAmount] = useState(0);
+
+		const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+		const [isPageLoading, setIsPageLoading] = useState(true);
 
 		const handleBtnClick0 = () => {
 			setOpenMenu0(!openMenu0);
@@ -98,6 +123,8 @@ const ItemDetail = ({ nftId }) => {
 		};
 
 		const handleBuyClick = async () => {
+			setIsCheckoutLoading(true);
+
 			if ((basePrice + serviceFee) > yourBalance) {
 				setNotAvailableBalance(true);
 			}
@@ -135,14 +162,18 @@ const ItemDetail = ({ nftId }) => {
 				});
 			}
 
+			setIsCheckoutLoading(false);
 			setOpenCheckout(true);			
 		};
 
 		const handlePlacebidClick = async () => {
+			setIsCheckoutLoading(true);
+
 			if ((basePrice + serviceFee) > yourBalance) {
 				setNotAvailableBalance(true);
 			}
 			
+			setIsCheckoutLoading(false);
 			setOpenCheckoutbid(true);
 		};
 
@@ -152,11 +183,22 @@ const ItemDetail = ({ nftId }) => {
 			setOpenCheckoutbid(true);
 		};
 
+		const closeCheckoutbid = () => {
+			setPlaceBidErrorMsg('');
+			setPlaceBidError(false);
+			setOpenCheckoutbid(false);
+		};
+
 		const changeBidAmount = (event) => {
 			setBidAmount(parseFloat(event.target.value));
 			setInvalidBidAmount(false);
 			setTokenApproved(false);
-		}
+		};
+
+		const closeErrorModal = () => {
+			setErrorMessage('');
+			setOpenErrorModal(false);
+		};
 
 		const handleCheckoutClick = async () => {
 			if (payment != 0x0) {
@@ -173,9 +215,12 @@ const ItemDetail = ({ nftId }) => {
 		};
 
 		const handleCheckoutbidClick = async () => {
+			setIsCheckoutLoading(true);
+
 			// check bidAmount
 			const amount = bidAmount + bidAmount * serviceFeePercent / 100;
 			if (bidAmount < basePrice || amount >= yourBalance) {
+				setIsCheckoutLoading(false);
 				setInvalidBidAmount(true);
 				setOpenInvalidBidAmount(true);
 				setOpenCheckoutbid(false);
@@ -213,6 +258,9 @@ const ItemDetail = ({ nftId }) => {
 					},
 					onError: (error) => {
 						console.log("failed:", error);
+						setIsCheckoutLoading(false);
+						setPlaceBidErrorMsg(error.data.message);
+						setPlaceBidError(true);
 					},
 				});
 			} else {
@@ -221,6 +269,8 @@ const ItemDetail = ({ nftId }) => {
 		};
 
 		const approveToken = async (type='buy') => {
+			setIsCheckoutLoading(true);
+
 			// const amount = (new BigNumber(2)).pow(256) - 1;
 			let amount = 0;
 			if (type === 'buy') {
@@ -247,11 +297,13 @@ const ItemDetail = ({ nftId }) => {
 				onSuccess: (result) => {
 					console.log("success:approved");
 					setTokenApproved(true);
+					setIsCheckoutLoading(false);
 					return true;
 				},
 				onError: (error) => {
 					console.log("failed:approved", error);
 					setTokenApproved(false);
+					setIsCheckoutLoading(false);
 					return false;
 				},
 			});
@@ -283,8 +335,13 @@ const ItemDetail = ({ nftId }) => {
 		};
 
 		const placeBid = async () => {
+			setPlaceBidErrorMsg('');
+			setPlaceBidError(false);
+
 			console.log("placeBid");
+			const price = bidAmount * (new BigNumber(10).pow(decimals)).toNumber();
 			const totalPrice = (bidAmount + bidAmount * serviceFeePercent / 100) * (new BigNumber(10).pow(decimals)).toNumber();
+			console.log("bid Amount:", price);
 			console.log("totalPrice:", totalPrice);
 			const ops = {
 				contractAddress: marketAddress,
@@ -292,18 +349,32 @@ const ItemDetail = ({ nftId }) => {
 				abi: contractABI,
 				params: {
 					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
-					price: totalPrice
+					// price: bidAmount * (new BigNumber(10).pow(decimals)).toNumber()
+					price: price
 				},
 				// msgValue: totalPrice
 			};
+			console.log(ops);
 			await contractProcessor.fetch({
 				params: ops,
 				onSuccess: (result) => {
 					console.log("success:placeBid");
+					setIsCheckoutLoading(false);
 					navigate('/mynft');
 				},
 				onError: (error) => {
 					console.log("failed:placeBid", error);
+					// setErrorMessage(error.data.message);
+					// setOpenErrorModal(true);
+					if (error.data) {
+						setPlaceBidErrorMsg(error.data.message);
+					} else if (error.message) {
+						setPlaceBidErrorMsg(error.message);
+					} else {
+						setPlaceBidErrorMsg(error.toString());
+					}
+					setPlaceBidError(true);
+					setIsCheckoutLoading(false);
 				},
 			});
 		}
@@ -389,6 +460,7 @@ const ItemDetail = ({ nftId }) => {
 				setYourBalance(yBalance);
 				setServiceFeePercent(sFeePercent);
 				setServiceFee(sFee);
+				setIsPageLoading(false);
 			}
 
 			if (saleInfo) {
@@ -399,219 +471,253 @@ const ItemDetail = ({ nftId }) => {
     return (
 			<div className="greyscheme">
 				<StyledHeader theme={theme} />
-				{ nft && 
-					<section className='container'>
-						<div className='row mt-md-5 pt-md-4'>
-							<div className="col-md-6 text-center">
-									{/* <img src={ nft.preview_image && api.baseUrl + nft.preview_image.url} className="img-fluid img-rounded mb-sm-30" alt=""/> */}
-									<img src={ nft.imagePath} className="img-fluid img-rounded mb-sm-30" alt=""/>
-							</div>
-							<div className="col-md-6">
-								<div className="item_info">
-									{nft.onAuction &&
-										<>
-											Auctions ends in 
-											<div className="de_countdown">
-                        <Countdown
-                          date={parseInt(nft.endTime) * 1000}
-                          renderer={renderer}
-                        />
-                    	</div>
-										</>
-									}
-									{/* <h2>{nft.title}</h2> */}
-									<h2>{nft.name}</h2>
-									<div className="item_info_counts">
-										<div className="item_info_type"><i className="fa fa-image"></i>{nft.category}</div>
-										<div className="item_info_views"><i className="fa fa-eye"></i>{nft.views}</div>
-										<div className="item_info_like"><i className="fa fa-heart"></i>{nft.likes}</div>
-									</div>
-									<p>{nft.description}</p>
+				
+				<section className='container'>
+				{/* {isCheckoutLoading && 
+					<div className="row mt-md-5 pt-md-4">
+          	<StyledSpin tip="Loading..." size="large" />
+					</div>
+        } */}
+				
+				<StyledModal
+					key="1"
+					title=''
+					visible={isPageLoading}
+					centered
+					footer={null}
+					closable={false}
+				>
+					<div className="row">
+					<StyledSpin tip="Loading..." size="large" />
+					</div>
+				</StyledModal>
 
-									<div className="d-flex flex-row">
-											<div className="mr40">
-													<h6>Creator</h6>
-													<div className="item_author">                                    
-															<div className="author_list_pp">
-																	<span>
-																			<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
-																			<i className="fa fa-check"></i>
-																	</span>
-															</div>                                    
-															<div className="author_list_info">
-																	<span>{nft.author && nft.author.username}</span>
-															</div>
-													</div>
-											</div>
-											<div className="mr40">
-													<h6>Collection</h6>
-													<div className="item_author">                                    
-															<div className="author_list_pp">
-																	<span>
-																			<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
-																			<i className="fa fa-check"></i>
-																	</span>
-															</div>                                    
-															<div className="author_list_info">
-																	<span>{nft.author && nft.author.username}</span>
-															</div>
-													</div>
-											</div>
-									</div>
+				<StyledModal
+					key="2"
+					title=''
+					visible={isCheckoutLoading}
+					centered
+					footer={null}
+					closable={false}
+				>
+					<div className="row">
+					<StyledSpin tip="Loading..." size="large" />
+					</div>
+				</StyledModal>
+				
+				{ !isPageLoading && nft && 
+					<div className='row mt-md-5 pt-md-4'>
+						<div className="col-md-6 text-center">
+								{/* <img src={ nft.preview_image && api.baseUrl + nft.preview_image.url} className="img-fluid img-rounded mb-sm-30" alt=""/> */}
+								<img src={ nft.imagePath} className="img-fluid img-rounded mb-sm-30" alt=""/>
+						</div>
+						<div className="col-md-6">
+							<div className="item_info">
+								{nft.onAuction &&
+									<>
+										Auctions ends in 
+										<div className="de_countdown">
+											<Countdown
+												date={parseInt(nft.endTime) * 1000}
+												renderer={renderer}
+											/>
+										</div>
+									</>
+								}
+								{/* <h2>{nft.title}</h2> */}
+								<h2>{nft.name}</h2>
+								<div className="item_info_counts">
+									<div className="item_info_type"><i className="fa fa-image"></i>{nft.category}</div>
+									<div className="item_info_views"><i className="fa fa-eye"></i>{nft.views}</div>
+									<div className="item_info_like"><i className="fa fa-heart"></i>{nft.likes}</div>
+								</div>
+								<p>{nft.description}</p>
 
-									<div className="spacer-40"></div>
-
-									<div className="de_tab">
-
-										<ul className="de_nav">
-												<li id='Mainbtn0' className="active"><span onClick={handleBtnClick0}>Details</span></li>
-												<li id='Mainbtn' ><span onClick={handleBtnClick}>Bids</span></li>
-												<li id='Mainbtn1' className=''><span onClick={handleBtnClick1}>History</span></li>
-										</ul>
-																				
-										<div className="de_tab_content">
-												{openMenu0  && (  
-												<div className="tab-1 onStep fadeIn">
-														<div className="d-block mb-3">
-																<div className="mr40">
-																		<h6>Owner</h6>
-																		<div className="item_author">                                    
-																				<div className="author_list_pp">
-																						<span>
-																								<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
-																								<i className="fa fa-check"></i>
-																						</span>
-																				</div>                                    
-																				<div className="author_list_info">
-																						<span>{nft.author && nft.author.username}</span>
-																				</div>
-																		</div>
-																</div>
-
-																<div className="row mt-5">
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Background</h5>
-																						<h4>Yellowish Sky</h4>
-																						<span>85% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Eyes</h5>
-																						<h4>Purple Eyes</h4>
-																						<span>14% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Nose</h5>
-																						<h4>Small Nose</h4>
-																						<span>45% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Mouth</h5>
-																						<h4>Smile Red Lip</h4>
-																						<span>61% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Neck</h5>
-																						<h4>Pink Ribbon</h4>
-																						<span>27% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Hair</h5>
-																						<h4>Pink Short</h4>
-																						<span>35% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Accessories</h5>
-																						<h4>Heart Necklace</h4>
-																						<span>33% have this trait</span>
-																				</div>
-																		</div>
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Hat</h5>
-																						<h4>Cute Panda</h4>
-																						<span>62% have this trait</span>
-																				</div>
-																		</div>      
-																		<div className="col-lg-4 col-md-6 col-sm-6">
-																				<div className="nft_attr">
-																						<h5>Clothes</h5>
-																						<h4>Casual Purple</h4>
-																						<span>78% have this trait</span>
-																				</div>
-																		</div>                                   
-																</div>
-
+								<div className="d-flex flex-row">
+										<div className="mr40">
+												<h6>Creator</h6>
+												<div className="item_author">                                    
+														<div className="author_list_pp">
+																<span>
+																		<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
+																		<i className="fa fa-check"></i>
+																</span>
+														</div>                                    
+														<div className="author_list_info">
+																<span>{nft.author && nft.author.username}</span>
 														</div>
 												</div>
-												)}
-
-												{openMenu  && (  
-												<div className="tab-1 onStep fadeIn">
-														{nft.bids && nft.bids.map((bid, index) => (
-																<div className="p_list" key={index}>
-																		<div className="p_list_pp">
-																				<span>
-																						<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
-																						<i className="fa fa-check"></i>
-																				</span>
-																		</div>                                    
-																		<div className="p_list_info">
-																				Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
-																				<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
-																		</div>
-																</div>
-														))}
+										</div>
+										<div className="mr40">
+												<h6>Collection</h6>
+												<div className="item_author">                                    
+														<div className="author_list_pp">
+																<span>
+																		<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
+																		<i className="fa fa-check"></i>
+																</span>
+														</div>                                    
+														<div className="author_list_info">
+																<span>{nft.author && nft.author.username}</span>
+														</div>
 												</div>
-												)}
-
-												{openMenu1 && ( 
-												<div className="tab-2 onStep fadeIn">
-														{nft.history && nft.history.map((bid, index) => (
-																<div className="p_list" key={index}>
-																		<div className="p_list_pp">
-																				<span>
-																						<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
-																						<i className="fa fa-check"></i>
-																				</span>
-																		</div>                                    
-																		<div className="p_list_info">
-																				Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
-																				<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
-																		</div>
-																</div>
-														))}
-												</div>
-												)}
-
-												{/* button for checkout */}
-												<div className="d-flex flex-row mt-5">
-													{(nft.onSale || nft.onOffer) && 
-														<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
-													}
-													{nft.onAuction && 
-														<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
-													}
-												</div>
-										</div>     
-									</div>          
+										</div>
 								</div>
+
+								<div className="spacer-40"></div>
+
+								<div className="de_tab">
+
+									<ul className="de_nav">
+											<li id='Mainbtn0' className="active"><span onClick={handleBtnClick0}>Details</span></li>
+											<li id='Mainbtn' ><span onClick={handleBtnClick}>Bids</span></li>
+											<li id='Mainbtn1' className=''><span onClick={handleBtnClick1}>History</span></li>
+									</ul>
+																			
+									<div className="de_tab_content">
+											{openMenu0  && (  
+											<div className="tab-1 onStep fadeIn">
+													<div className="d-block mb-3">
+															<div className="mr40">
+																	<h6>Owner</h6>
+																	<div className="item_author">                                    
+																			<div className="author_list_pp">
+																					<span>
+																							<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
+																							<i className="fa fa-check"></i>
+																					</span>
+																			</div>                                    
+																			<div className="author_list_info">
+																					<span>{nft.author && nft.author.username}</span>
+																			</div>
+																	</div>
+															</div>
+
+															<div className="row mt-5">
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Background</h5>
+																					<h4>Yellowish Sky</h4>
+																					<span>85% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Eyes</h5>
+																					<h4>Purple Eyes</h4>
+																					<span>14% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Nose</h5>
+																					<h4>Small Nose</h4>
+																					<span>45% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Mouth</h5>
+																					<h4>Smile Red Lip</h4>
+																					<span>61% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Neck</h5>
+																					<h4>Pink Ribbon</h4>
+																					<span>27% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Hair</h5>
+																					<h4>Pink Short</h4>
+																					<span>35% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Accessories</h5>
+																					<h4>Heart Necklace</h4>
+																					<span>33% have this trait</span>
+																			</div>
+																	</div>
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Hat</h5>
+																					<h4>Cute Panda</h4>
+																					<span>62% have this trait</span>
+																			</div>
+																	</div>      
+																	<div className="col-lg-4 col-md-6 col-sm-6">
+																			<div className="nft_attr">
+																					<h5>Clothes</h5>
+																					<h4>Casual Purple</h4>
+																					<span>78% have this trait</span>
+																			</div>
+																	</div>                                   
+															</div>
+
+													</div>
+											</div>
+											)}
+
+											{openMenu  && (  
+											<div className="tab-1 onStep fadeIn">
+													{nft.bids && nft.bids.map((bid, index) => (
+															<div className="p_list" key={index}>
+																	<div className="p_list_pp">
+																			<span>
+																					<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
+																					<i className="fa fa-check"></i>
+																			</span>
+																	</div>                                    
+																	<div className="p_list_info">
+																			Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
+																			<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
+																	</div>
+															</div>
+													))}
+											</div>
+											)}
+
+											{openMenu1 && ( 
+											<div className="tab-2 onStep fadeIn">
+													{nft.history && nft.history.map((bid, index) => (
+															<div className="p_list" key={index}>
+																	<div className="p_list_pp">
+																			<span>
+																					<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
+																					<i className="fa fa-check"></i>
+																			</span>
+																	</div>                                    
+																	<div className="p_list_info">
+																			Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
+																			<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
+																	</div>
+															</div>
+													))}
+											</div>
+											)}
+
+											{/* button for checkout */}
+											<div className="d-flex flex-row mt-5">
+												{(nft.onSale || nft.onOffer) && 
+													<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
+												}
+												{nft.onAuction && 
+													<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
+												}
+											</div>
+									</div>     
+								</div>          
 							</div>
 						</div>
-					</section>
+					</div>
 				}
+				</section>
+				
 				<Footer /> 
 				{ openCheckout && !notAvailableBalance &&
 					(
@@ -707,10 +813,15 @@ const ItemDetail = ({ nftId }) => {
 				{ openCheckoutbid && !notAvailableBalance &&
 					<div className='checkout'>
 						<div className='maincheckout'>
-							<button className='btn-close' onClick={() => setOpenCheckoutbid(false)}>x</button>
+							<button className='btn-close' onClick={() => closeCheckoutbid()}>x</button>
 							<div className='heading'>
 									<h3>Place a Bid</h3>
 							</div>
+							{placeBidError &&
+								<div className="alert alert-danger" role="alert">
+									{placeBidErrorMsg}
+								</div>
+							}
 							<p>
 								You are about to purchase a <span className="bold">{nft.name} #{nft.token_id}</span> 
 								<span className="bold"> from {nft.seller}</span>
@@ -840,6 +951,38 @@ const ItemDetail = ({ nftId }) => {
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => closeInvalidBidAmount()}>Okay, got it</button>
+						</div>
+					</div>
+				}
+				{ openErrorModal && 
+					<div className='checkout'>
+						<div className='maincheckout'>
+							<button className='btn-close' onClick={() => closeErrorModal()}>x</button>
+							<div className='heading'>
+									<h3>Error</h3>
+							</div>
+							<p>
+								<span className="bold">{errorMessage}</span>
+							</p>
+							<div className='heading mt-3'>
+								<p>Your balance</p>
+								<div className='subtotal'>
+									{yourBalance} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Base Price</p>
+								<div className='subtotal'>
+									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
+								<p>Your bid amount</p>
+								<div className='subtotal'>
+									{bidAmount} {symbol}
+								</div>
+							</div>
+							<button className='btn-main lead mb-5' onClick={() => closeErrorModal()}>Okay, got it</button>
 						</div>
 					</div>
 				}

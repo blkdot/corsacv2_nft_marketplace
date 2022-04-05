@@ -6,12 +6,24 @@ import NftMusicCard from './NftMusicCard';
 import { clearNfts, clearFilter } from '../../store/actions';
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralis, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import { Spin, Alert } from "antd";
+import styled from 'styled-components';
+
+const StyledSpin = styled(Spin)`
+  .ant-spin-dot-item {
+    background-color: #FF343F;
+  }
+  .ant-spin-text {
+    color: #FF343F;
+  }
+`
 
 const Explore3Cols = ({showLoadMore = true}) => {
 
     const dispatch = useDispatch();
     const [nfts, setNFTs] = useState([]);
     const [saleNFTs, setSaleNFTs] = useState([]);
+    const [isExplorerLoading, setIsExplorerLoading] = useState(true);
     const contractProcessor = useWeb3ExecuteFunction();
     const { marketAddress, contractABI } = useMoralisDapp();
     const listItemFunction = "getSaleInfo";
@@ -176,10 +188,19 @@ const Explore3Cols = ({showLoadMore = true}) => {
           console.log("NFTs:", promises);
           setNFTs(promises);
         }
+        setIsExplorerLoading(false);
       }
+      console.log("isLoading:", isLoading);
 
-      if (fetchMarketItems.length > 0) fetchAPIData();
-    }, [saleNFTs, fetchMarketItems.length]);
+      if (isLoading && nfts.length == 0) {
+        setIsExplorerLoading(true);
+      } else {
+        if (fetchMarketItems.length > 0) {
+          fetchAPIData();
+        }
+      }
+      
+    }, [saleNFTs, isLoading, fetchMarketItems.length]);
 
     //will run when component unmounted
     useEffect(() => {
@@ -195,7 +216,15 @@ const Explore3Cols = ({showLoadMore = true}) => {
     
   return (
     <div className='row'>
-        {nfts && nfts.map( (nft, index) => (
+        {isExplorerLoading && 
+          <StyledSpin tip="Loading..." size="large" />
+        }
+        {!isExplorerLoading && nfts.length == 0 &&
+          <div className="alert alert-danger" role="alert">
+            No items
+          </div>
+        }
+        {!isExplorerLoading && nfts && nfts.map( (nft, index) => (
                 // <NftCard nft={nft} key={index} onImgLoad={onImgLoad} height={height} className="d-item col-lg-4 col-md-6 col-sm-6 col-xs-12 mb-4" />
                 nft.category === 'music' ?
                 <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
