@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import styled from "styled-components";
@@ -8,7 +8,22 @@ import { navigate } from '@reach/router';
 import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import Countdown from 'react-countdown';
+import { Modal, Spin } from "antd";
+import BigNumber from 'bignumber.js';
 
+const StyledSpin = styled(Spin)`
+  .ant-spin-dot-item {
+    background-color: #FF343F;
+  }
+  .ant-spin-text {
+    color: #FF343F;
+  }
+`
+const StyledModal = styled(Modal)`
+  .ant-modal-content {
+    background-color: transparent;
+  }
+`
 const renderer = props => {
   if (props.completed) {
     // Render a completed state
@@ -44,18 +59,22 @@ const MyNftCard = ({
     
     const dispatch = useDispatch();
 
-    const { marketAddress } = useMoralisDapp();
+    const { contractABI, marketAddress } = useMoralisDapp();
     const contractProcessor = useWeb3ExecuteFunction();
     
     const navigateTo = (link) => {
         navigate(link);
     }
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSellClick = async (nft) => {
+      setIsLoading(true);
       setNftToSend(nft);
-      
+            
       let flag = await isApprovedForAll(nft);
       
+      setIsLoading(false);
       if (flag) setVisibility2(true);
       else setVisibility1(true);
     };
@@ -65,8 +84,96 @@ const MyNftCard = ({
       navigateTo('/item-detail');
     };
 
-    const handleCancelSaleClick = (nft) => {
-      alert("cancel sale");
+    const handleCancelSaleClick = async (nft) => {
+      setIsLoading(true);
+      
+      let saleCount = 0;
+      let saleId = null;
+
+      let ops = {
+        contractAddress: marketAddress,
+        functionName: "saleCount",
+        abi: contractABI,
+        params: {},
+      };
+      
+      await contractProcessor.fetch({
+        params: ops,
+        onSuccess: (result) => {
+          saleCount = new BigNumber(result._hex).toNumber();
+        },
+        onError: (error) => {
+          console.log(error);
+          setIsLoading(false);
+        },
+      });
+
+      ops = {
+        contractAddress: marketAddress,
+        functionName: "getSaleInfo",
+        abi: contractABI,
+        params: {
+          startIdx: 0,
+          count: saleCount
+        },
+      };
+      
+      await contractProcessor.fetch({
+        params: ops,
+        onSuccess: async (result) => {
+          // get saleId from sale list
+          for (let sale of result) {
+            const tokenId = new BigNumber(sale.tokenId._hex).toNumber();
+            const tokenAddress = sale.sc.toLowerCase();
+
+            if (parseInt(nft.token_id) === tokenId && 
+                nft.token_address.toLowerCase() === tokenAddress) {
+              saleId = new BigNumber(sale.saleId._hex).toNumber();
+              break;
+            }
+          }
+
+          // remove sale
+          if (saleId) {
+            if (await removeSale(saleId)) {
+              nft.onSale = false;
+              nft.onAuction = false;
+              nft.onOffer = false;
+            }
+          }
+          setIsLoading(false);
+        },
+        onError: (error) => {
+          console.log(error);
+          setIsLoading(false);
+        },
+      });
+    };
+
+    const removeSale = async (saleId)=> {
+      let flag = true;
+      const ops = {
+        contractAddress: marketAddress,
+        functionName: "removeSale",
+        abi: contractABI,
+        params: {
+          saleId: saleId
+        },
+      };
+      
+      await contractProcessor.fetch({
+        params: ops,
+        onSuccess: () => {
+          console.log("success:removeSale");
+          flag = true;
+        },
+        onError: (error) => {
+          console.log(error);
+          flag = false;
+        },
+      });
+
+      return flag;
     };
 
     // const handlePlaceBidClick = (nft) => {
@@ -106,88 +213,101 @@ const MyNftCard = ({
 
     return (
         <div className={className}>
-            <div className="nft__item m-0">
-            { nft.item_type && nft.item_type === 'single_items' ? (
-             <div className='icontype'><i className="fa fa-bookmark"></i></div>   
-             ) : (  
-             <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
-                )
-            }
-                { nft.endTime && clockTop &&
-                    <div className="de_countdown">
-                        {/* <Clock deadline={nft.deadline} /> */}
-                        <Countdown
-                          date={parseInt(nft.endTime) * 1000}
-                          // zeroPadTime={2}
-                          renderer={renderer}
-                        />
-                    </div>
-                }
-                {/* <div className="author_list_pp">
-                    <span onClick={()=> navigateTo(nft.author_link ? nft.author_link : '')}>                                    
-                        <img className="lazy" src="" alt=""/>
-                        <i className="fa fa-check"></i>
-                    </span>
-                </div> */}
-                <div className="nft__item_wrap" style={{height: `${height}px`}}>
-                    <Outer>
-                        <span>
-                            <img onLoad={onImgLoad} src={ nftImageUrl } className="lazy nft__item_preview" alt=""/>
-                        </span>
-                    </Outer>
-                </div>
-                { nft.endTime && !clockTop &&
-                    // <div className="de_countdown">
-                    //     <Clock deadline={nft.deadline} />
-                    // </div>
-                    <Countdown
+          <StyledModal
+            key="100"
+            title=''
+            visible={isLoading}
+            centered
+            footer={null}
+            closable={false}
+          >
+            <div className="row">
+              <StyledSpin tip="Loading..." size="large" />
+            </div>
+          </StyledModal>
+
+          <div className="nft__item m-0">
+          { nft.item_type && nft.item_type === 'single_items' ? (
+            <div className='icontype'><i className="fa fa-bookmark"></i></div>   
+            ) : (  
+            <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
+              )
+          }
+              { nft.endTime && clockTop &&
+                  <div className="de_countdown">
+                      {/* <Clock deadline={nft.deadline} /> */}
+                      <Countdown
                         date={parseInt(nft.endTime) * 1000}
                         // zeroPadTime={2}
                         renderer={renderer}
-                    />
-                }
-                <div className="nft__item_info">
-                    <span onClick={() => navigateTo(nft.nft_link ? `${nft.nft_link}/${nft.id}` : '')}>
-                        {/* <h4>{nft.title}</h4> */}
-                        <h4>{nftName}</h4>
-                    </span>
-                    { nft.status && nft.status === 'has_offers' ? (
-                            <div className="has_offers">
-                                <span className='through'>{nft.priceover}</span> {nft.price} ETH
-                            </div> 
-                        ) : (
-                            <div className="nft__item_price">
-                                {nft.price} ETH
-                                { nft.status === 'on_auction' && 
-                                    <span>{nft.bid}/{nft.max_bid}</span>
-                                }
-                            </div>
-                        )
-                    }
-                    <div className="nft__item_action">
-                      { page && page === 'explore' ? (
-                      <>
-                        {(nft.onSale || nft.onOffer) && (
-                          <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
-                        )}
-                        {(nft.onAuction) && (
-                          <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
-                        )}
-                      </>
+                      />
+                  </div>
+              }
+              {/* <div className="author_list_pp">
+                  <span onClick={()=> navigateTo(nft.author_link ? nft.author_link : '')}>                                    
+                      <img className="lazy" src="" alt=""/>
+                      <i className="fa fa-check"></i>
+                  </span>
+              </div> */}
+              <div className="nft__item_wrap" style={{height: `${height}px`}}>
+                  <Outer>
+                      <span>
+                          <img onLoad={onImgLoad} src={ nftImageUrl } className="lazy nft__item_preview" alt=""/>
+                      </span>
+                  </Outer>
+              </div>
+              { nft.endTime && !clockTop &&
+                  // <div className="de_countdown">
+                  //     <Clock deadline={nft.deadline} />
+                  // </div>
+                  <Countdown
+                      date={parseInt(nft.endTime) * 1000}
+                      // zeroPadTime={2}
+                      renderer={renderer}
+                  />
+              }
+              <div className="nft__item_info">
+                  <span onClick={() => navigateTo(nft.nft_link ? `${nft.nft_link}/${nft.id}` : '')}>
+                      {/* <h4>{nft.title}</h4> */}
+                      <h4>{nftName}</h4>
+                  </span>
+                  { nft.status && nft.status === 'has_offers' ? (
+                          <div className="has_offers">
+                              <span className='through'>{nft.priceover}</span> {nft.price} ETH
+                          </div> 
                       ) : (
-                        (nft.onSale || nft.onOffer || nft.onAuction) ? (
-                          <span onClick={() => handleCancelSaleClick(nft)}>Cancel Sale</span>
-                        )
-                        : (
-                          <span onClick={() => handleSellClick(nft)}>Create Sale</span>
-                        )
+                          <div className="nft__item_price">
+                              {nft.price} ETH
+                              { nft.status === 'on_auction' && 
+                                  <span>{nft.bid}/{nft.max_bid}</span>
+                              }
+                          </div>
+                      )
+                  }
+                  <div className="nft__item_action">
+                    { page && page === 'explore' ? (
+                    <>
+                      {(nft.onSale || nft.onOffer) && (
+                        <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
                       )}
-                    </div>
-                    <div className="nft__item_like">
-                        <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
-                    </div>                            
-                </div> 
-            </div>
+                      {(nft.onAuction) && (
+                        <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
+                      )}
+                    </>
+                    ) : (
+                      (nft.onSale || nft.onOffer || nft.onAuction) ? (
+                        <span onClick={() => handleCancelSaleClick(nft)}>Cancel Sale</span>
+                      )
+                      : (
+                        <span onClick={() => handleSellClick(nft)}>Create Sale</span>
+                      )
+                    )}
+                  </div>
+                  <div className="nft__item_like">
+                      <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
+                  </div>                            
+              </div> 
+          </div>
         </div>             
     );
 };

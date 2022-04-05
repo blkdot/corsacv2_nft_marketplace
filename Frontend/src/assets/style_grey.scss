@@ -3617,6 +3617,11 @@ img.img-rounded{
       width: 100%;
       margin: 30px auto;
       margin-bottom: 15px !important;
+      &.btn2 {
+        color: #212428 !important;
+        background-color: #f6f6f6;
+        margin-right: 15px;
+      }
     }
     .bold{
       color: $black;

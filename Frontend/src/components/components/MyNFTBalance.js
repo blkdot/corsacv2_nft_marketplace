@@ -8,12 +8,28 @@ import { Modal, Input, Spin, Button, Tabs, DatePicker } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useMoralis, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
 import BigNumber from "bignumber.js";
+import styled from 'styled-components';
+
+const StyledSpin = styled(Spin)`
+  .ant-spin-dot-item {
+    background-color: #FF343F;
+  }
+  .ant-spin-text {
+    color: #FF343F;
+  }
+`
+const StyledModal = styled(Modal)`
+  .ant-modal-content {
+    background-color: transparent;
+  }
+`
 
 //react functional component
 const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null }) => {
-
+    const mt100 = { marginTop: "100px" };
+        
     const dispatch = useDispatch();
-    const {data: NFTBalances} = useNFTBalances();
+    const {data: NFTBalances, isLoading} = useNFTBalances();
     const [nfts, setNfts] = useState([]);
 
     const [height, setHeight] = useState(0);
@@ -32,6 +48,10 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const [nftToSend, setNftToSend] = useState(null);
     const [price, setPrice] = useState(0);
     const [loading, setLoading] = useState(false);
+
+    const [errorTitle, setErrorTitle] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
+    const [openErrorModal, setOpenErrorModal] = useState(false);
 
     const listItemFunction = "createSale";
     const [dueDate, setDueDate] = useState(null);
@@ -83,6 +103,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           setVisibility2(false);
           // addItemImage();
           succList();
+          nft.onSale = true;
         },
         onError: (error) => {
           console.log(error);
@@ -94,12 +115,25 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     function succList() {
       let secondsToGo = 5;
-      const modal = Modal.success({
-        title: "Success!",
-        content: `Your NFT was listed on the marketplace`,
-      });
+      
+      setErrorTitle(`Success`);
+      setErrorMsg(`Your NFT was listed on the marketplace`);
+      setOpenErrorModal(true);
+      
       setTimeout(() => {
-        modal.destroy();
+        setOpenErrorModal(false);
+      }, secondsToGo * 1000);
+    }
+
+    function failList() {
+      let secondsToGo = 5;
+      
+      setErrorTitle(`Error`);
+      setErrorMsg(`There was a problem listing your NFT`);
+      setOpenErrorModal(true);
+      
+      setTimeout(() => {
+        setOpenErrorModal(false);
       }, secondsToGo * 1000);
     }
 
@@ -141,35 +175,31 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     function succApprove() {
       let secondsToGo = 5;
-      const modal = Modal.success({
-        title: "Success!",
-        content: `Approval is now set, you may list your NFT`,
-      });
+      
+      setErrorTitle(`Success`);
+      setErrorMsg(`Approval is now set, you may list your NFT`);
+      setOpenErrorModal(true);
+      
       setTimeout(() => {
-        modal.destroy();
-      }, secondsToGo * 1000);
-    }
-  
-    function failList() {
-      let secondsToGo = 5;
-      const modal = Modal.error({
-        title: "Error!",
-        content: `There was a problem listing your NFT`,
-      });
-      setTimeout(() => {
-        modal.destroy();
+        setOpenErrorModal(false);
       }, secondsToGo * 1000);
     }
   
     function failApprove() {
       let secondsToGo = 5;
-      const modal = Modal.error({
-        title: "Error!",
-        content: `There was a problem with setting approval`,
-      });
+      
+      setErrorTitle(`Error`);
+      setErrorMsg(`There was a problem with setting approval`);
+      setOpenErrorModal(true);
+      
       setTimeout(() => {
-        modal.destroy();
+        setOpenErrorModal(false);
       }, secondsToGo * 1000);
+    }
+
+    function closeCreateSaleModal() {
+      setVisibility2(false);
+      setLoading(false);
     }
 
     useEffect(() => {
@@ -221,11 +251,12 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         const sale = saleNFTs.find(e => e.sc.toLowerCase() === nft.token_address.toLowerCase() && new BigNumber(e.tokenId._hex).toNumber() === parseInt(nft.token_id));
         
         if (sale !== undefined) {
-          if (sale.method._hex === 0x00) {
+          const method = new BigNumber(sale.method._hex).toNumber();
+          if (method === 0x00) {
             nft.onAuction = false;
             nft.onSale = true;
             nft.onOffer = false;
-          } else if (sale.method._hex === 0x01) {
+          } else if (method === 0x01) {
             nft.onAuction = true;
             nft.onSale = false;
             nft.onOffer = false;
@@ -256,43 +287,47 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     return (
         <div className='row'>
-            {nfts && nfts.map( (nft, index) => (
-                nft.category === 'music' ?
-                <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
-                :
-                <MyNftCard 
-                  nft={nft} 
-                  key={`${nft.symbol}_${nft.token_id}`}
-                  onImgLoad={onImgLoad} 
-                  height={height} 
-                  setNftToSend={setNftToSend}
-                  setVisibility1={setVisibility1}
-                  setVisibility2={setVisibility2}
-                />
-            ))}
-            { showLoadMore && nfts.length <= 20 &&
-                <div className='col-lg-12'>
-                    <div className="spacer-single"></div>
-                    <span onClick={loadMore} className="btn-main lead m-auto">Load More</span>
-                </div>
-            }
-            <Modal
-              key="1"
-              title='Approve to list NFT in the market'
-              visible={visible1}
-              onCancel={() => setVisibility1(false)}
-              onOk={() => () => approveAll(nftToSend)}
-              okText="List"
-              footer={[
-                <Button onClick={() => setVisibility1(false)} key="1">
-                  Cancel
-                </Button>,
-                <Button onClick={() => approveAll(nftToSend)} type="primary" key="2">
-                  Approve
-                </Button>
-              ]}
-            >
-              <Spin spinning={loading}>
+          <StyledModal
+            key="100"
+            title=''
+            visible={isLoading}
+            centered
+            footer={null}
+            closable={false}
+          >
+            <div className="row">
+            <StyledSpin tip="Loading..." size="large" />
+            </div>
+          </StyledModal>
+
+          {!isLoading && nfts && nfts.map( (nft, index) => (
+              nft.category === 'music' ?
+              <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
+              :
+              <MyNftCard 
+                nft={nft} 
+                key={`${nft.symbol}_${nft.token_id}`}
+                onImgLoad={onImgLoad} 
+                height={height} 
+                setNftToSend={setNftToSend}
+                setVisibility1={setVisibility1}
+                setVisibility2={setVisibility2}
+              />
+          ))}
+          { showLoadMore && nfts.length <= 20 &&
+            <div className='col-lg-12'>
+                <div className="spacer-single"></div>
+                <span onClick={loadMore} className="btn-main lead m-auto">Load More</span>
+            </div>
+          }
+          { visible1 && 
+					<div className='checkout'>
+						<div className='maincheckout' style={mt100}>
+							<button className='btn-close' onClick={() => setVisibility1(false)}>x</button>
+							<div className='heading'>
+									<h3>Approve to list NFT in the market</h3>
+							</div>
+							<StyledSpin spinning={loading} tip="Approving">
                 <img
                   src={`${nftToSend?.image}`}
                   style={{
@@ -303,25 +338,22 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   }}
                   alt=""
                 />
-              </Spin>
-            </Modal>
-            <Modal
-              key="2"
-              title={`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}
-              visible={visible2}
-              onCancel={() => setVisibility2(false)}
-              onOk={() => list(nftToSend)}
-              okText="List"
-              footer={[
-                <Button onClick={() => setVisibility2(false)} key="1">
-                  Cancel
-                </Button>,
-                <Button onClick={() => list(nftToSend)} type="primary" key="2">
-                  List
-                </Button>
-              ]}
-            >
-              <Spin spinning={loading}>
+              </StyledSpin>
+							<div className="d-flex flex-row mt-5">
+                <button className='btn-main btn2' onClick={() => setVisibility1(false)}>Cancel</button>
+                <button className='btn-main' onClick={() => approveAll(nftToSend)}>Approve</button>
+              </div>
+						</div>
+					</div>
+				  }
+          { visible2 && 
+					<div className='checkout'>
+						<div className='maincheckout' style={mt100}>
+							<button className='btn-close' onClick={() => closeCreateSaleModal()}>x</button>
+							<div className='heading'>
+									<h3>{`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}</h3>
+							</div>
+							<StyledSpin spinning={loading} tip="Creating Sale">
                 <img
                   src={`${nftToSend?.image}`}
                   style={{
@@ -332,11 +364,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   }}
                   alt=""
                 />
-                {/* <Input
-                  autoFocus
-                  placeholder="Listing Price in the Market"
-                  onChange={(e) => setPrice(e.target.value)}
-                /> */}
                 <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
                   <TabPane tab="Fixed price" key="1">
                     <Input
@@ -356,8 +383,28 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                     <DatePicker onChange={onChangeDueDate} value={dueDate}/>
                   </TabPane>
                 </Tabs>
-              </Spin>
-            </Modal>
+              </StyledSpin>
+							<div className="d-flex flex-row mt-5">
+                <button className='btn-main btn2' onClick={() => closeCreateSaleModal()}>Cancel</button>
+                <button className='btn-main' onClick={() => list(nftToSend)}>List</button>
+              </div>
+						</div>
+					</div>
+				  }
+          { openErrorModal && 
+					<div className='checkout'>
+						<div className='maincheckout' style={mt100}>
+							<button className='btn-close' onClick={() => setOpenErrorModal(false)}>x</button>
+							<div className='heading'>
+									<h3>{errorTitle}</h3>
+							</div>
+							<p>{errorMsg}</p>
+							<div className="d-flex flex-row mt-5">
+                <button className='btn-main btn2' onClick={() => setOpenErrorModal(false)}>Close</button>
+              </div>
+						</div>
+					</div>
+				  }
         </div>              
     );
 };
