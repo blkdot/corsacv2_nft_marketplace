@@ -349,8 +349,7 @@ const ItemDetail = ({ nftId }) => {
 				abi: contractABI,
 				params: {
 					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
-					// price: bidAmount * (new BigNumber(10).pow(decimals)).toNumber()
-					price: price
+					price: totalPrice
 				},
 				// msgValue: totalPrice
 			};
