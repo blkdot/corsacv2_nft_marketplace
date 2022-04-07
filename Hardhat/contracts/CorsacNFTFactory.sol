@@ -1111,10 +1111,6 @@ contract CorsacNFTFactory is
     function getBidList(uint256 saleId) external view returns (BookInfo[] memory) {
         require(isSaleValid(saleId), "sale is not valid");
 
-        // CorsacNFTSale storage csns = saleList[saleId];
-
-        //require(csns.startTime <= block.timestamp, "sale not started yet");
-        // finalize timed-auction anytime by owner of this factory contract.
         require(saleList[saleId].method == 1, "bid not for timed-auction sale");
 
         return bookInfo[saleId];
@@ -1182,9 +1178,6 @@ contract CorsacNFTFactory is
                 address payable pyLast = payable(bi[0].user);
                 pyLast.transfer(bi[0].totalPrice);
 
-                // bi[0].user = address(0);
-                // bi[0].totalPrice = 0;
-                // bi[0].serviceFee = 0;
                 bi.pop();
             }
         } else {
@@ -1193,9 +1186,6 @@ contract CorsacNFTFactory is
                 require(msg.sender == bi[0].user, "Your bid rejected or canceled already");
                 tokenInst.transfer(bi[0].user, bi[0].totalPrice);
 
-                // bi[0].user = address(0);
-                // bi[0].totalPrice = 0;
-                // bi[0].serviceFee = 0;
                 bi.pop();
             }
         }
