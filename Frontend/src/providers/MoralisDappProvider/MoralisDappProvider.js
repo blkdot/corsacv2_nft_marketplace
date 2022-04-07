@@ -13,7 +13,7 @@ function MoralisDappProvider({ children }) {
   const corsacTokenABI = require("../../contracts/corsac-token.json");
   
   //Marketplace contract address and ABI here  
-  const [marketAddress, setMarketAddress] = useState("0xAD3a37891DE6046F5eE7F551812B7213C51d0a87");
+  const [marketAddress, setMarketAddress] = useState("0xf617E0782CAB05bdB4f8EB4307C83f3413E476d4");
   const contractABI = require("../../contracts/marketplace.json");
   
   // console.log(web3, Moralis, user);
