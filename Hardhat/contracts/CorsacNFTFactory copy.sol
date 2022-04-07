@@ -15,7 +15,7 @@ import "./ICorsacContract.sol";
 import "./IERC721Tradable.sol";
 import "hardhat/console.sol";
 
-contract CorsacNFTFactory is 
+contract CorsacNFTFactory111 is 
     ICorsacNFTFactory, 
     Ownable, 
     ReentrancyGuard 
@@ -149,18 +149,7 @@ contract CorsacNFTFactory is
      */
     event ListedOnSale(
         uint256 saleId,
-        address creator,
-        address seller,
-        address sc,
-        uint256 tokenId,
-        uint256 copy,
-        uint256 payment,
-        uint256 basePrice,
-        uint256 method,
-        uint256 startTime,
-        uint256 endTime,
-        uint256 feeRatio,
-        uint256 royaltyRatio
+        CorsacNFTSale saleInfo
     );
 
     /**
@@ -252,23 +241,6 @@ contract CorsacNFTFactory is
         address collection,
         uint256[] ids,
         uint256[] amounts
-    );
-
-    /**
-     * event when seller cancel his timed auction created
-     */
-    event CancelAuction(
-        address indexed user,
-        uint256 saleId,
-        CorsacNFTSale saleInfo
-    );
-
-    /**
-     * event when user cancel his bid from timed auction
-     */
-    event CancelBid(
-        address indexed user,
-        uint256 saleId
     );
 
     /**
@@ -638,18 +610,7 @@ contract CorsacNFTFactory is
 
         emit ListedOnSale(
             curSaleIndex,
-            csns.creator,
-            csns.seller,
-            csns.sc,
-            csns.tokenId,
-            csns.copy,
-            csns.payment,
-            csns.basePrice,
-            csns.method,
-            csns.startTime,
-            csns.endTime,
-            csns.feeRatio,
-            csns.royaltyRatio
+            csns
         );
     }
 
@@ -837,25 +798,26 @@ contract CorsacNFTFactory is
         uint256 startingPrice = csns.copy * csns.basePrice;
         uint256 bidPrice = csns.copy * price;
         uint256 serviceFee = bidPrice * csns.feeRatio / 10000;
-        
+        uint256 totalPay = bidPrice + serviceFee;
+
         BookInfo[] storage bi = bookInfo[saleId];
         require((bi.length == 0 && startingPrice < bidPrice) || bi[0].totalPrice < bidPrice, "bid price is not larger than the last bid's");
 
         if (csns.payment == 0) {
             if (bi.length > 0) {
                 address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice);
+                pyLast.transfer(bi[0].totalPrice + bi[0].serviceFee);
             }
-            if (msg.value > bidPrice) {
+            if (msg.value > totalPay) {
                 address payable py = payable(msg.sender);
-                py.transfer(msg.value - bidPrice);
+                py.transfer(msg.value - totalPay);
             }
         } else {
             IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
             if (bi.length > 0) {
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
+                tokenInst.transfer(bi[0].user, bi[0].totalPrice + bi[0].serviceFee);
             }
-            tokenInst.transferFrom(msg.sender, address(this), bidPrice);
+            tokenInst.transferFrom(msg.sender, address(this), totalPay);
         }
 
         if (bi.length == 0)  {
@@ -972,7 +934,7 @@ contract CorsacNFTFactory is
                     devFee = (biItem.totalPrice * 30) / 10000;
                 }
 
-                uint256 pySeller = biItem.totalPrice - royalty - devFee -fee;
+                uint256 pySeller = biItem.totalPrice - royalty - devFee;
 
                 if (csns.payment == 0) {
                     address payable py = payable(csns.seller);
@@ -1102,107 +1064,5 @@ contract CorsacNFTFactory is
         
         if (csns.seller == address(0)) return false;
         return true;
-    }
-
-    /**
-     * @dev this function returns bid list of the timed auction
-     * @param saleId - index of the sale
-     */
-    function getBidList(uint256 saleId) external view returns (BookInfo[] memory) {
-        require(isSaleValid(saleId), "sale is not valid");
-
-        // CorsacNFTSale storage csns = saleList[saleId];
-
-        //require(csns.startTime <= block.timestamp, "sale not started yet");
-        // finalize timed-auction anytime by owner of this factory contract.
-        require(saleList[saleId].method == 1, "bid not for timed-auction sale");
-
-        return bookInfo[saleId];
-    }
-
-    /**
-     * @dev this function cancels an auction from a seller
-     * @param saleId - index of the sale
-     */
-    function cancelAuction(uint256 saleId) external {
-        require(isSaleValid(saleId), "sale is not valid");
-
-        CorsacNFTSale storage csns = saleList[saleId];
-
-        require(
-            csns.endTime <= csns.startTime || csns.endTime >= block.timestamp,
-            "sale already ended"
-        );
-        require(csns.method == 1, "bid not for timed-auction sale");
-        require(msg.sender == csns.seller, "You are not allowed to cancel this auction");
-
-        BookInfo[] storage bi = bookInfo[saleId];
-        
-        if (csns.payment == 0) {
-            if (bi.length > 0) {
-                address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice);
-            }
-        } else {
-            IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
-            if (bi.length > 0) {
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
-            }
-        }
-
-        _removeSale(saleId);
-
-        emit CancelAuction(
-            msg.sender,
-            saleId,
-            csns
-        );
-    }
-
-    /**
-     * @dev this function cancels a bid placed from a user
-     * @param saleId - index of the sale
-     */
-    function cancelBid(uint256 saleId) external {
-        require(isSaleValid(saleId), "sale is not valid");
-
-        CorsacNFTSale storage csns = saleList[saleId];
-
-        require(
-            csns.endTime <= csns.startTime || csns.endTime >= block.timestamp,
-            "sale already ended"
-        );
-        require(csns.method == 1, "bid not for timed-auction sale");
-        
-        BookInfo[] storage bi = bookInfo[saleId];
-        
-        if (csns.payment == 0) {
-            if (bi.length > 0) {
-                require(msg.sender == bi[0].user, "Your bid rejected or canceled already");
-                address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice);
-
-                // bi[0].user = address(0);
-                // bi[0].totalPrice = 0;
-                // bi[0].serviceFee = 0;
-                bi.pop();
-            }
-        } else {
-            IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
-            if (bi.length > 0) {
-                require(msg.sender == bi[0].user, "Your bid rejected or canceled already");
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
-
-                // bi[0].user = address(0);
-                // bi[0].totalPrice = 0;
-                // bi[0].serviceFee = 0;
-                bi.pop();
-            }
-        }
-
-        emit CancelBid(
-            msg.sender,
-            saleId
-        );
     }
 }
