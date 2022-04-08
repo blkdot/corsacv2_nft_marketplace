@@ -47,6 +47,10 @@ const NFTItem = mongoose.model(
       type: Number,
       default: 0
     },
+    stars: {
+      type: Number,
+      default: 0
+    },
     collectionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Collection"

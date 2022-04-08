@@ -46,6 +46,7 @@ const PORT = process.env.PORT || 8080;
 require("./routes/collection.routes")(app);
 require("./routes/item.routes")(app);
 require("./routes/bid.routes")(app);
+require("./routes/user.routes")(app);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);

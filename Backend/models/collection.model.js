@@ -32,6 +32,10 @@ const Collection = mongoose.model(
       type: String,
       default: ''
     },
+    stars: {
+      type: Object,
+      default: {}
+    },
     created: {
       type: Number,
       default: 0

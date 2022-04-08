@@ -133,12 +133,24 @@ const MyNftCard = ({
             }
           }
 
-          // remove sale
-          if (saleId) {
-            if (await removeSale(saleId)) {
-              nft.onSale = false;
-              nft.onAuction = false;
-              nft.onOffer = false;
+          // cancel sale
+          if (saleId !== null && saleId !== undefined) {
+            let callFunctionName = '';
+            
+            if (nft.onAuction) {
+              callFunctionName = 'cancelAuction';
+            } else if (nft.onSale || nft.onOffer) {
+              callFunctionName = 'removeSale';
+            } else {
+              callFunctionName = '';
+            }
+            
+            if (callFunctionName !== '') {
+              if (await cancelSale(saleId, callFunctionName)) {
+                nft.onSale = false;
+                nft.onAuction = false;
+                nft.onOffer = false;
+              }
             }
           }
           setIsLoading(false);
@@ -150,11 +162,11 @@ const MyNftCard = ({
       });
     };
 
-    const removeSale = async (saleId)=> {
+    async function cancelSale(saleId, cfn) {
       let flag = true;
       const ops = {
         contractAddress: marketAddress,
-        functionName: "removeSale",
+        functionName: cfn,
         abi: contractABI,
         params: {
           saleId: saleId
@@ -164,7 +176,7 @@ const MyNftCard = ({
       await contractProcessor.fetch({
         params: ops,
         onSuccess: () => {
-          console.log("success:removeSale");
+          console.log("success:cancelSale");
           flag = true;
         },
         onError: (error) => {

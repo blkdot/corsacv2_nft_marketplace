@@ -34,5 +34,6 @@ module.exports = function(app) {
   app.get("/api/items/all", controller.getAllItems);
   app.get("/api/items/wallet", controller.getItems)
   app.get("/api/item", controller.getItem);
-  
+  app.post("/api/item/star/increase", controller.increaseItemStar);
+  app.post("/api/item/star/decrease", controller.decreaseItemStar);
 };

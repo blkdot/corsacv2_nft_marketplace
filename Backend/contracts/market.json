@@ -3,33 +3,209 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "feeAddress_",
+        "name": "singleCollectionDeployer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "multipleCollectionDeployer",
         "type": "address"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "constructor"
   },
   {
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "user",
+        "name": "winner",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "price",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "ti",
+        "type": "tuple"
+      }
+    ],
+    "name": "AcceptOffer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalPrice",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "id",
+        "name": "serviceFee",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "saleInfo",
+        "type": "tuple"
       }
     ],
     "name": "AuctionResult",
@@ -40,10 +216,96 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "id",
+        "name": "saleId",
         "type": "uint256"
       },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "saleInfo",
+        "type": "tuple"
+      }
+    ],
+    "name": "Buy",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
       {
         "indexed": true,
         "internalType": "address",
@@ -53,43 +315,84 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "price",
+        "name": "saleId",
         "type": "uint256"
-      }
-    ],
-    "name": "EvAcceptOffer",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "EvCancelOffer",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "contract IERC721",
-        "name": "nft",
-        "type": "address"
       },
       {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
         "indexed": false,
-        "internalType": "bool",
-        "name": "blacklisted",
-        "type": "bool"
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "saleInfo",
+        "type": "tuple"
       }
     ],
-    "name": "EvNFTBlacklistUpdate",
+    "name": "CancelAuction",
     "type": "event"
   },
   {
@@ -102,27 +405,127 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "CancelBid",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "enum ICorsacNFTFactory.CollectionType",
+        "name": "collectionType",
+        "type": "uint8"
+      },
+      {
         "indexed": true,
-        "internalType": "contract IERC721",
-        "name": "nft",
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      }
+    ],
+    "name": "CollectionAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "factory",
         "type": "address"
       },
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "newContract",
+        "type": "address"
+      }
+    ],
+    "name": "CreatedCorsacERC1155",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "factory",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newContract",
+        "type": "address"
+      }
+    ],
+    "name": "CreatedCorsacERC721",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sc",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint8",
-        "name": "method",
-        "type": "uint8"
+        "internalType": "uint256",
+        "name": "copy",
+        "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "price",
+        "name": "payment",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "basePrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "method",
         "type": "uint256"
       },
       {
@@ -139,18 +542,110 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
-        "name": "status",
-        "type": "uint8"
+        "internalType": "uint256",
+        "name": "feeRatio",
+        "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "id",
+        "name": "royaltyRatio",
         "type": "uint256"
       }
     ],
-    "name": "EvNewOffer",
+    "name": "ListedOnSale",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "ti",
+        "type": "tuple"
+      }
+    ],
+    "name": "MakeOffer",
     "type": "event"
   },
   {
@@ -158,12 +653,18 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "enum ICorsacNFTFactory.CollectionType",
+        "name": "collectionType",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
-        "name": "feeAddress",
+        "name": "to",
         "type": "address"
       }
     ],
-    "name": "EvSettingsUpdated",
+    "name": "NewCollectionCreated",
     "type": "event"
   },
   {
@@ -190,25 +691,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
-        "name": "account",
+        "name": "tokenAddress",
         "type": "address"
       }
     ],
-    "name": "Paused",
+    "name": "PaymentTokenSet",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "user",
         "type": "address"
@@ -216,8 +717,87 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "price",
+        "name": "bidPrice",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "saleInfo",
+        "type": "tuple"
       }
     ],
     "name": "PlaceBid",
@@ -228,12 +808,85 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "saleInfo",
+        "type": "tuple"
       }
     ],
-    "name": "Unpaused",
+    "name": "RemoveFromSale",
     "type": "event"
   },
   {
@@ -242,51 +895,255 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "deployer",
+        "name": "account",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "set",
+        "type": "bool"
       }
     ],
-    "name": "UpdateDeployer",
+    "name": "SetCreatorForFactory",
     "type": "event"
   },
   {
-    "stateMutability": "payable",
-    "type": "fallback"
-  },
-  {
-    "inputs": [],
-    "name": "STATUS_ACCEPTED",
-    "outputs": [
+    "anonymous": false,
+    "inputs": [
       {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
+        "indexed": false,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newFeeRatio",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "name": "SetDefaultFeeRatio",
+    "type": "event"
   },
   {
-    "inputs": [],
-    "name": "STATUS_CANCELLED",
-    "outputs": [
+    "anonymous": false,
+    "inputs": [
       {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
+        "indexed": false,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newRoyaltyRatio",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "name": "SetDefaultRoyaltyRatio",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
+        "name": "sale",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "paySeller",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "royalty",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "devAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "devFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "Trade",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collection",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "TransferNFTs",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "singleCollectionDeployer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "multipleCollectionDeployer",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateDeployers",
+    "type": "event"
   },
   {
     "inputs": [],
-    "name": "STATUS_OPEN",
+    "name": "DELAY_PERIOD",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint256",
         "name": "",
-        "type": "uint8"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -296,11 +1153,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "saleId",
         "type": "uint256"
       }
     ],
-    "name": "acceptSell",
+    "name": "acceptOffer",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -308,12 +1165,12 @@
   {
     "inputs": [
       {
-        "internalType": "contract IERC721[]",
-        "name": "nfts",
-        "type": "address[]"
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
       }
     ],
-    "name": "blacklistNFT",
+    "name": "addCollection",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -322,17 +1179,48 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "saleId",
         "type": "uint256"
       }
     ],
-    "name": "cancelSell",
+    "name": "buy",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelAuction",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICorsacNFTFactory.CollectionType",
+        "name": "collectionType",
+        "type": "uint8"
+      },
       {
         "internalType": "string",
         "name": "_name",
@@ -349,14 +1237,104 @@
         "type": "string"
       }
     ],
-    "name": "createCollection",
+    "name": "createNewCollection",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sc",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payment",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "copy",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "method",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "duration",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "basePrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "feeRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "royaltyRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "isOther",
+        "type": "uint256"
+      }
+    ],
+    "name": "createSale",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "feeAddress",
+    "name": "defaultFeeRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultRoyaltyRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "devAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -370,12 +1348,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
       }
     ],
-    "name": "finalizeAuction",
+    "name": "endPendingCreator",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -384,73 +1362,65 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "startIdx",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "count",
+        "name": "saleId",
         "type": "uint256"
       }
     ],
-    "name": "getBidOffersDump",
+    "name": "finalizeAuction",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getBidList",
     "outputs": [
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "offerId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "contract IERC721",
-            "name": "nft",
-            "type": "address"
-          },
-          {
-            "internalType": "uint8",
-            "name": "method",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "price",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          },
           {
             "internalType": "address",
             "name": "user",
             "type": "address"
           },
           {
-            "internalType": "address",
-            "name": "acceptUser",
-            "type": "address"
+            "internalType": "uint256",
+            "name": "totalPrice",
+            "type": "uint256"
           },
           {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
+            "internalType": "uint256",
+            "name": "serviceFee",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct Market.Offer[]",
+        "internalType": "struct CorsacNFTFactory.BookInfo[]",
         "name": "",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCollection",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -471,12 +1441,12 @@
   },
   {
     "inputs": [],
-    "name": "getOfferSize",
+    "name": "getPaymentToken",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "address[]",
         "name": "",
-        "type": "uint256"
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -490,6 +1460,97 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startIdx",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSaleInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "saleId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sc",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "method",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "royaltyRatio",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct CorsacNFTFactory.CorsacNFTSale[]",
+        "name": "",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -517,63 +1578,44 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getTokenOwner",
-    "outputs": [
-      {
         "internalType": "address",
-        "name": "",
+        "name": "sc",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256"
       },
       {
         "internalType": "address",
         "name": "owner",
         "type": "address"
-      }
-    ],
-    "name": "isTokenApproved",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "copy",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payment",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unitPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "duration",
         "type": "uint256"
       }
     ],
-    "name": "isValidSell",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "makeOffer",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -600,122 +1642,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "contract IERC721",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "nftBlacklist",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract IERC721",
-        "name": "nft",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint8",
-        "name": "method",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "duration",
-        "type": "uint256"
-      }
-    ],
-    "name": "offerSell",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "offers",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "offerId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "contract IERC721",
-        "name": "nft",
-        "type": "address"
-      },
-      {
-        "internalType": "uint8",
-        "name": "method",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "startTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "acceptUser",
-        "type": "address"
-      },
-      {
-        "internalType": "uint8",
-        "name": "status",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "owner",
     "outputs": [
@@ -729,36 +1655,34 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "pause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "paused",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
         "type": "uint256"
       }
     ],
     "name": "placeBid",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeSale",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -769,19 +1693,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "contract IERC721",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "tokenSellOffers",
+    "inputs": [],
+    "name": "saleCount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -795,17 +1708,74 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "newFeeRatio",
         "type": "uint256"
       }
     ],
-    "name": "transferMoney",
+    "name": "setDefaultFeeRatio",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newRoyaltyRatio",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDefaultRoyaltyRatio",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      }
+    ],
+    "name": "setDevAddr",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenAddr",
+        "type": "address"
+      }
+    ],
+    "name": "setPaymentToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "set",
+        "type": "bool"
+      }
+    ],
+    "name": "startPendingCreator",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -826,45 +1796,17 @@
   {
     "inputs": [
       {
-        "internalType": "contract IERC721[]",
-        "name": "nfts",
-        "type": "address[]"
-      }
-    ],
-    "name": "unblacklistNFT",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "unpause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+        "internalType": "address",
+        "name": "singleCollectionDeployer",
+        "type": "address"
+      },
       {
         "internalType": "address",
-        "name": "_deployer",
+        "name": "multipleCollectionDeployer",
         "type": "address"
       }
     ],
-    "name": "updateDeployer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "feeAddress_",
-        "type": "address"
-      }
-    ],
-    "name": "updateSettings",
+    "name": "updateDeployers",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -48,7 +48,6 @@
     "styled-components": "^5.3.1",
     "typesafe-actions": "^5.1.0",
     "web-vitals": "^2.1.0",
-    "web3": "^1.7.1",
     "webpack": "4.44.2",
     "yup": "^0.32.11"
   },

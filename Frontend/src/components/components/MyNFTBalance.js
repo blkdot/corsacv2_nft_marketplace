@@ -107,9 +107,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           // addItemImage();
           succList();
 
-          if (ops.method == 0) {
+          if (parseInt(ops.method) == 0) {
             nft.onSale = true;
-          } else if (ops.method == 1) {
+          } else if (parseInt(ops.method) == 1) {
             nft.onAuction = true;
           } else {
             nft.onOffer = true;

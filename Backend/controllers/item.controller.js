@@ -61,20 +61,29 @@ exports.getItems = (req, res) => {
   }).catch((e) => res.status(500).send({ message: e }));
 };
 
+// exports.getItem = (req, res) => {
+//   NFTItem.findOne({
+//     walletAddr: { $in: req.query.walletAddr },
+//     title: {$in: req.query.title }
+//   },
+//   (item) => {
+//     res.status(200).send({
+//       item: item
+//     })
+//   });
+// }
+
+
 exports.getItem = (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+  var good_id = new ObjectId(req.query._id);
   NFTItem.findOne({
-    walletAddr: { $in: req.query.walletAddr },
-    title: {$in: req.query.title }
-  },
-  (err, item) => {
-    if (err) {
-      res.status(500).send({ message: err });
-      return;
-    }
+    _id: { $in: good_id },
+  }).then((user) => {
     res.status(200).send({
-      item: item
+      user: user
     })
-  });
+  })
 }
 
 exports.buyItem =  (req, res) => {
@@ -99,11 +108,11 @@ exports.buyItem =  (req, res) => {
               NFTItem.findOne({
                 _id: item_id
               },
-              (err, item) => {
-                if (err) {
-                  res.status(500).send({ message: err });
-                  return;
-                }
+              (item) => {
+                // if (err) {
+                //   res.status(500).send({ message: err });
+                //   return;
+                // }
                 transferMoney(item.walletAddr, parseFloat(item.price.toString()) * 1e18);
                 item.status = 1;
                 item.save((err1) => {
@@ -131,7 +140,7 @@ exports.buyItem =  (req, res) => {
         NFTItem.findOne({
           _id: item_id
         },
-        (err, item) => {
+        (item) => {
           if (err) {
             res.status(500).send({ message: err });
             return;
@@ -156,4 +165,46 @@ exports.buyItem =  (req, res) => {
       return;
     });
   }
+}
+
+exports.increaseItemStar = (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+  var good_id = new ObjectId(req.body._id);
+  NFTItem.findOne({
+    _id: good_id,
+  }).then((item) => {
+    item.stars = item.stars + 1;
+    item.save((err1) => {
+      if (err1) {
+        res.status(500).send({ message: err1 });
+        return;
+      }
+
+      res.send({
+        message: "NFT item was updated successfully",
+      });
+      
+    })
+  });
+}
+
+exports.decreaseItemStar = (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+  var good_id = new ObjectId(req.body._id);
+  NFTItem.findOne({
+    _id: good_id,
+  }).then((item) => {
+    item.stars = item.stars - 1;
+    item.save((err1) => {
+      if (err1) {
+        res.status(500).send({ message: err1 });
+        return;
+      }
+
+      res.send({
+        message: "NFT item was updated successfully",
+      });
+      
+    })
+  });
 }

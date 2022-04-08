@@ -17,7 +17,6 @@ exports.createCollection = (req, res) => {
   collection.save((err) => {
     if (err) {
       res.status(500).send({ message: err });
-
       return;
     }
 
@@ -25,7 +24,7 @@ exports.createCollection = (req, res) => {
       message: "Collection was created successfully!",
     });
   });
-};
+}
 
 exports.getCollection = (req, res) => {
 
@@ -41,7 +40,43 @@ exports.getCollection = (req, res) => {
       collections: collections
     })
   });
-};
+}
+
+exports.getCollectionStars = (req, res) => {
+
+  Collection.find({
+    collectionAddr: { $in: req.query.collectionAddr },
+    created: 0
+  },
+  (err, collections) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      collections: collections
+    })
+  });
+}
+
+exports.updateCollectionStars = (req, res) => {
+  Collection.findOne({
+    collectionAddr: { $in: req.body.collectionAddr },
+    created: 0
+  }).then((collection) => {
+    collection.stars = req.body.stars;
+    collection.save((err1) => {
+      if (err1) {
+        res.status(500).send({ message: err1 });
+        return;
+      }
+      res.send({
+        message: "Collection was updated successfully",
+      })
+      
+    })
+  })
+}
 
 exports.getAllCollections = (req, res) => {
   Collection.find({}).then((collections) => {
