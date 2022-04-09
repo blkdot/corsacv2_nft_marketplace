@@ -107,14 +107,20 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           // addItemImage();
           succList();
 
-          if (parseInt(ops.method) == 0) {
+          if (parseInt(ops.params.method) === 0) {
             nft.onSale = true;
-          } else if (parseInt(ops.method) == 1) {
+            nft.onAuction = false;
+            nft.onOffer = false;
+          } else if (parseInt(ops.params.method) === 1) {
             nft.onAuction = true;
+            nft.onSale = false;
+            nft.onOffer = false;
+            nft.endTime = Math.floor(new Date().getTime() / 1000 + duration);
           } else {
             nft.onOffer = true;
+            nft.onSale = false;
+            nft.onAuction = false;
           }
-          
         },
         onError: (error) => {
           console.log(error);
@@ -304,6 +310,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.onAuction = true;
             nft.onSale = false;
             nft.onOffer = false;
+            nft.endTime = new BigNumber(sale.endTime._hex).toNumber();
           } else {
             nft.onAuction = false;
             nft.onSale = false;

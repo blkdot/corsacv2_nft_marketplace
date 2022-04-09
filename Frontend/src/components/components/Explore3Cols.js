@@ -51,6 +51,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
     const getMarketItem = (nft) => {
       const result = fetchMarketItems?.find(
         (e) =>
+          parseInt(e.saleId) === parseInt(nft?.saleId._hex) &&
           e.sc.toLowerCase() === nft?.token_address.toLowerCase() &&
           e.tokenId === nft?.token_id &&
           e.confirmed === true
@@ -118,6 +119,10 @@ const Explore3Cols = ({showLoadMore = true}) => {
                 return nft.token_id === saleInfo.tokenId.toString();
               });
               
+              if (temp.length > 0) {
+                temp[0].saleId = saleInfo.saleId;
+              }
+
               promises.push(...temp);
             } catch (e) {
               console.log(e);

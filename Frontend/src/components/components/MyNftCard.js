@@ -25,6 +25,7 @@ const StyledModal = styled(Modal)`
   }
 `
 const renderer = props => {
+  // console.log(props);
   if (props.completed) {
     // Render a completed state
     return <span>Ended</span>;
@@ -212,7 +213,7 @@ const MyNftCard = ({
       });
       return flag;
     }
-
+    
     return (
         <div className={className}>
           <StyledModal
@@ -299,7 +300,7 @@ const MyNftCard = ({
                     ) : (
                       (nft.onSale || nft.onOffer || nft.onAuction) ? (
                         <span onClick={() => handleCancelSaleClick(nft)}>
-                          Cancel {nft.onSale ? 'Sale' : nft.onOffer ? 'Offer' : 'Auction'}
+                          Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
                         </span>
                       )
                       : (
