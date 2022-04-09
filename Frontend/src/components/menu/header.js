@@ -175,12 +175,12 @@ const Header = function({ className }) {
                             <div className="dropdown" onClick={closeMenu1}>
                               <NavLink to="/explore" onClick={() => btn_icon(!showmenu)}>Explore</NavLink>
                               <NavLink to="/explore2" onClick={() => btn_icon(!showmenu)}>Explore 2</NavLink>
+                              {(isAuthenticated && account) && ( <NavLink to="/mynft" onClick={() => btn_icon(!showmenu)}>My NFTs</NavLink>)}
                               <NavLink to="/exploreOpensea" onClick={() => btn_icon(!showmenu)}>Explore OpenSea</NavLink>
                               <NavLink to="/rangking" onClick={() => btn_icon(!showmenu)}>Rangking</NavLink>
-                              <NavLink to="/colection/1" onClick={() => btn_icon(!showmenu)}>Collection</NavLink>
+                              <NavLink to="/colectionGrey/1" onClick={() => btn_icon(!showmenu)}>Collection</NavLink>
                               <NavLink to="/ItemDetail/1" onClick={() => btn_icon(!showmenu)}>Items Details</NavLink>
                               <NavLink to="/ItemDetailGrey/1" onClick={() => btn_icon(!showmenu)}>Items Details Grey</NavLink>
-                              <NavLink to="/Auction" onClick={() => btn_icon(!showmenu)}>Live Auction</NavLink>
                               <NavLink to="/AuctionGrey" onClick={() => btn_icon(!showmenu)}>Live Auction Grey</NavLink>
                               <NavLink to="/helpcenter" onClick={() => btn_icon(!showmenu)}>Help Center</NavLink>
                             </div>
@@ -279,18 +279,12 @@ const Header = function({ className }) {
                               <div className="dropdown" onClick={closeMenu1}>
                               <NavLink to="/explore">Explore</NavLink>
                               <NavLink to="/exploreGrey">Explore Grey</NavLink>
-                              <NavLink to="/explore2">Explore 2</NavLink>
                               <NavLink to="/explore2Grey">Explore 2 Grey</NavLink>
                               <NavLink to="/exploreOpensea">Explore OpenSea</NavLink>
-                              <NavLink to="/rangking">Rangking</NavLink>
-                              <NavLink to="/rangkingGrey">Rangking Grey</NavLink>
-                              <NavLink to="/colection/1">Collection</NavLink>
-                              <NavLink to="/colectionGrey/1">Collection Grey</NavLink>
-                              <NavLink to="/ItemDetail/1">Items Details</NavLink>
+                              <NavLink to="/rankingGrey">Ranking Grey</NavLink>
+                              <NavLink to="/collectionGrey/1">Collection Grey</NavLink>
                               <NavLink to="/ItemDetailGrey/1">Items Details Grey</NavLink>
-                              <NavLink to="/Auction">Live Auction</NavLink>
                               <NavLink to="/AuctionGrey">Live Auction Grey</NavLink>
-                              <NavLink to="/helpcenter">Help Center</NavLink>
                               <NavLink to="/helpcenterGrey">Help Center Grey</NavLink>
                               </div>
                             </div>
@@ -308,7 +302,6 @@ const Header = function({ className }) {
                             {openMenu2 && (
                             <div className='item-dropdown'>
                               <div className="dropdown" onClick={closeMenu2}>
-                              <NavLink to="/Author/1">Author</NavLink>
                               <NavLink to="/Profile/1">Profile</NavLink>
                               <NavLink to="/AuthorGrey/1">Author Grey</NavLink>
                               <NavLink to="/AuthorOpensea">Author OpenSea</NavLink>
