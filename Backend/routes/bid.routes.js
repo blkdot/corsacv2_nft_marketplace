@@ -14,5 +14,6 @@ module.exports = function(app) {
     "/api/bid/add",
     controller.addBid
   );
-  
+
+  app.get("/api/bid/getBids", controller.getBidsBySaleId);
 };

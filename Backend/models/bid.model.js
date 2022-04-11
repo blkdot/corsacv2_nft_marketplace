@@ -11,9 +11,17 @@ const Bid = mongoose.model(
       type: mongoose.Types.Decimal128,
       default: 0
     },
-    itemId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "NFTItem"
+    // itemId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "NFTItem"
+    // }
+    saleId: {
+      type: Number,
+      default: -1
+    },
+    created_at: {
+      type: Number,
+      default: 0
     }
   })
 );

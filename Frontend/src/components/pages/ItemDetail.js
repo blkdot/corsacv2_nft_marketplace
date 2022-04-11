@@ -6,6 +6,7 @@ import * as selectors from '../../store/selectors';
 
 /*import Checkout from "../components/Checkout";*/
 import api from "../../core/api";
+import axios from "axios";
 import moment from "moment";
 import { navigate } from '@reach/router';
 import BigNumber from 'bignumber.js';
@@ -356,9 +357,15 @@ const ItemDetail = ({ nftId }) => {
 			console.log(ops);
 			await contractProcessor.fetch({
 				params: ops,
-				onSuccess: (result) => {
+				onSuccess: async (result) => {
 					console.log("success:placeBid");
 					setIsCheckoutLoading(false);
+					const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/bid/add`, {
+						walletAddr: account,
+						price: price,
+						saleId: ops.params.saleId
+						// itemId: nft._id,
+					});
 					navigate('/mynft');
 				},
 				onError: (error) => {
@@ -431,7 +438,7 @@ const ItemDetail = ({ nftId }) => {
 				};
 				
 				const balances = await Web3Api.account.getTokenBalances(options);
-				console.log(balances);
+				// console.log(balances);
 				// const nativeBalance = await Web3Api.account.getNativeBalance(options);
 				
 				const token = balances.filter((t, index) => {
@@ -466,6 +473,33 @@ const ItemDetail = ({ nftId }) => {
 				getAuctionInfo();
 			}
 		}, [saleInfo]);
+
+		useEffect(() => {
+			async function getBidList() {
+				try {
+          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/bid/getBids`, {
+            params: {
+              saleId: new BigNumber(saleInfo.saleId._hex).toNumber()
+            }
+          }).then(async res => {
+						let bids = [];
+						for (let bid of res.data) {
+							let b = JSON.parse(JSON.stringify(bid));
+							b.price = new BigNumber(bid.price.$numberDecimal).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
+							bids.push(b);
+						}
+						
+						nft.bids = bids;
+          });
+        } catch {
+          console.log('error in fetching bids by saleId');
+        }
+			}
+
+			if (saleInfo) {
+				getBidList();
+			}
+		}, [symbol, decimals]);
 
     return (
 			<div className="greyscheme">
@@ -668,16 +702,21 @@ const ItemDetail = ({ nftId }) => {
 															<div className="p_list" key={index}>
 																	<div className="p_list_pp">
 																			<span>
-																					<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
+																					{/* <img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/> */}
 																					<i className="fa fa-check"></i>
 																			</span>
 																	</div>                                    
 																	<div className="p_list_info">
-																			Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
-																			<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
+																		<span class="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
+																		<span class="">by <b>{bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
+													{(nft.bids === undefined || nft.bids === null || nft.bids.length === 0) &&
+														<div className="p_list">
+															<span><b>No bids</b></span>
+														</div>
+													}
 											</div>
 											)}
 
