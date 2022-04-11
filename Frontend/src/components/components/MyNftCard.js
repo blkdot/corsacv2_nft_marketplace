@@ -62,7 +62,7 @@ const MyNftCard = ({
 
     const { contractABI, marketAddress } = useMoralisDapp();
     const contractProcessor = useWeb3ExecuteFunction();
-    
+
     const navigateTo = (link) => {
         navigate(link);
     }
@@ -151,6 +151,9 @@ const MyNftCard = ({
                 nft.onSale = false;
                 nft.onAuction = false;
                 nft.onOffer = false;
+                nft.price = null;
+                nft.price_symbol = null;
+                nft.endTime = null;
               }
             }
           }
@@ -213,7 +216,7 @@ const MyNftCard = ({
       });
       return flag;
     }
-    
+            
     return (
         <div className={className}>
           <StyledModal
@@ -229,23 +232,24 @@ const MyNftCard = ({
             </div>
           </StyledModal>
 
+          { nft &&
           <div className="nft__item m-0">
-          { nft.item_type && nft.item_type === 'single_items' ? (
-            <div className='icontype'><i className="fa fa-bookmark"></i></div>   
-            ) : (  
-            <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
-              )
-          }
-              { nft.endTime && clockTop &&
-                  <div className="de_countdown">
-                      {/* <Clock deadline={nft.deadline} /> */}
-                      <Countdown
-                        date={parseInt(nft.endTime) * 1000}
-                        // zeroPadTime={2}
-                        renderer={renderer}
-                      />
-                  </div>
-              }
+            { nft.item_type && nft.item_type === 'single_items' ? (
+              <div className='icontype'><i className="fa fa-bookmark"></i></div>   
+              ) : (  
+              <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
+                )
+            }
+            { nft.endTime && clockTop &&
+              <div className="de_countdown">
+                  {/* <Clock deadline={nft.deadline} /> */}
+                  <Countdown
+                    date={parseInt(nft.endTime) * 1000}
+                    // zeroPadTime={2}
+                    renderer={renderer}
+                  />
+              </div>
+            }
               {/* <div className="author_list_pp">
                   <span onClick={()=> navigateTo(nft.author_link ? nft.author_link : '')}>                                    
                       <img className="lazy" src="" alt=""/>
@@ -274,16 +278,19 @@ const MyNftCard = ({
                       {/* <h4>{nft.title}</h4> */}
                       <h4>{nft.name}</h4>
                   </span>
-                  { nft.status && nft.status === 'has_offers' ? (
-                          <div className="has_offers">
-                              <span className='through'>{nft.priceover}</span> {nft.price} ETH
-                          </div> 
+                  { nft.onSale || nft.onOffer || nft.onAuction ? (
+                          // <div className="has_offers">
+                          //   <span className='through'>{nft.priceover}</span> {nft.price} {nft.price_symbol}
+                          // </div> 
+                          <div className="nft__item_price">
+                            {nft.price} {nft.price_symbol}
+                            {/* { nft.onAuction && 
+                                <span>{nft.bid}/{nft.max_bid}</span>
+                            } */}
+                          </div>
                       ) : (
                           <div className="nft__item_price">
-                              {nft.price} ETH
-                              { nft.status === 'on_auction' && 
-                                  <span>{nft.bid}/{nft.max_bid}</span>
-                              }
+                            {nft.price} {nft.price_symbol}
                           </div>
                       )
                   }
@@ -313,6 +320,7 @@ const MyNftCard = ({
                   </div>                            
               </div> 
           </div>
+          }
         </div>             
     );
 };

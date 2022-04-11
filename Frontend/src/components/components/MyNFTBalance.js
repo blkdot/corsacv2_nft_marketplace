@@ -6,7 +6,7 @@ import MyNftCard from './MyNftCard';
 import NftMusicCard from './NftMusicCard';
 import { Modal, Input, Spin, Button, Tabs, DatePicker } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralis, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
+import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
 import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 
@@ -42,7 +42,11 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     }
 
     const contractProcessor = useWeb3ExecuteFunction();
-    const {marketAddress, contractABI} = useMoralisDapp();
+    const { account, Moralis } = useMoralis();
+    const { chainId } = useChain();
+    const Web3Api = useMoralisWeb3Api();
+    const { marketAddress, contractABI, corsacTokenAddress } = useMoralisDapp();
+
     const [visible1, setVisibility1] = useState(false);
     const [visible2, setVisibility2] = useState(false);
     const [nftToSend, setNftToSend] = useState(null);
@@ -61,8 +65,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const { TabPane } = Tabs;
 
     const [saleNFTs, setSaleNFTs] = useState([]);
-    const {account, Moralis} = useMoralis();
-    const { chainId } = useChain();
+    const [priceToken, setPriceToken] = useState([]);
+       
     const fallbackImg = 
       "data:image/png;base64,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";
 
@@ -100,12 +104,27 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       
       await contractProcessor.fetch({
         params: ops,
-        onSuccess: () => {
+        onSuccess: async () => {
           console.log("success");
           setLoading(false);
           setVisibility2(false);
           // addItemImage();
           succList();
+
+          const options = {
+            chain: chainId,
+            address: account
+          };
+          
+          const balances = await Web3Api.account.getTokenBalances(options);
+          const token = balances.filter((t, index) => {
+            return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+          });
+
+          if (token.length > 0) {
+            nft.price = new BigNumber(ops.params.basePrice).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+            nft.price_symbol = token[0].symbol;
+          }
 
           if (parseInt(ops.params.method) === 0) {
             nft.onSale = true;
@@ -220,6 +239,20 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     }
 
     useEffect(async () => {
+      const options = {
+        chain: chainId,
+        address: account
+      };
+
+      const tb = await Web3Api.account.getTokenBalances(options);
+      const token = tb.filter((t, index) => {
+        return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+      });
+
+      setPriceToken(token);
+    }, []);
+
+    useEffect(async () => {
       if (NFTBalances && NFTBalances.result) {
         for (let nft of NFTBalances.result) {
           if (!nft.metadata) {
@@ -254,7 +287,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           }
         }
         setNfts(NFTBalances.result);
-        setIsPageLoading(false);
       }
     }, [NFTBalances]);
 
@@ -273,7 +305,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           params: ops,
           onSuccess: (result) => {
             let nftsArray = [];
-            result.map((salesInfo, index) => {
+            for (let salesInfo of result) {
               if (salesInfo.seller.toLowerCase() === seller.toLowerCase()) {
                 const temp = nfts.filter((nft, idx) => {
                   return (nft.token_address.toLowerCase() === salesInfo.sc.toLowerCase() && 
@@ -283,7 +315,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   nftsArray.push(salesInfo);
                 }
               }
-            });
+            }
             
             setSaleNFTs(nftsArray);
           },
@@ -292,37 +324,55 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             setSaleNFTs([]);
           },
         });
+
+        setIsPageLoading(false);
       }
       getSalesOf(account);
     }, [nfts]);
 
     useEffect(() => {
-      nfts.map((nft, index) => {
-        const sale = saleNFTs.find(e => e.sc.toLowerCase() === nft.token_address.toLowerCase() && new BigNumber(e.tokenId._hex).toNumber() === parseInt(nft.token_id));
-        
-        if (sale !== undefined) {
-          const method = new BigNumber(sale.method._hex).toNumber();
-          if (method === 0x00) {
-            nft.onAuction = false;
-            nft.onSale = true;
-            nft.onOffer = false;
-          } else if (method === 0x01) {
-            nft.onAuction = true;
-            nft.onSale = false;
-            nft.onOffer = false;
-            nft.endTime = new BigNumber(sale.endTime._hex).toNumber();
+      if (nfts.length > 0 && saleNFTs.length > 0) {
+        for (let nft of nfts) {
+          const sale = saleNFTs.find(e => e.sc.toLowerCase() === nft.token_address.toLowerCase() && new BigNumber(e.tokenId._hex).toNumber() === parseInt(nft.token_id));
+          
+          if (sale !== undefined) {
+            if (priceToken.length > 0) {
+              nft.price = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(priceToken[0].decimals)).toNumber();
+              nft.price_symbol = priceToken[0].symbol;
+            }
+            
+            const method = new BigNumber(sale.method._hex).toNumber();
+            if (method === 0x00) {
+              nft.onAuction = false;
+              nft.onSale = true;
+              nft.onOffer = false;
+            } else if (method === 0x01) {
+              nft.onAuction = true;
+              nft.onSale = false;
+              nft.onOffer = false;
+              nft.endTime = new BigNumber(sale.endTime._hex).toNumber();
+            } else {
+              nft.onAuction = false;
+              nft.onSale = false;
+              nft.onOffer = true;
+            }
           } else {
             nft.onAuction = false;
             nft.onSale = false;
-            nft.onOffer = true;
+            nft.onOffer = false;
           }
-        } else {
-          nft.onAuction = false;
-          nft.onSale = false;
-          nft.onOffer = false;
         }
-      });
-    }, [saleNFTs]);
+      }
+    }, [saleNFTs, saleNFTs.length]);
+
+    const updateNFTs = (newNFT, index) => {
+      console.log("calling updateNFTs:", newNFT, index);
+      const tempNFTs = JSON.parse(JSON.stringify(nfts));
+      if (tempNFTs.length >= index + 1) {
+        tempNFTs[index] = newNFT;
+        setNfts(tempNFTs);
+      }
+    };
     
     //will run when component unmounted
     useEffect(() => {

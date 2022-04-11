@@ -5,9 +5,10 @@ import MyNftCard from './MyNftCard';
 import NftMusicCard from './NftMusicCard';
 import { clearNfts, clearFilter } from '../../store/actions';
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralis, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
 import { Spin, Alert } from "antd";
 import styled from 'styled-components';
+import BigNumber from 'bignumber.js';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -25,11 +26,12 @@ const Explore3Cols = ({showLoadMore = true}) => {
     const [saleNFTs, setSaleNFTs] = useState([]);
     const [isExplorerLoading, setIsExplorerLoading] = useState(true);
     const contractProcessor = useWeb3ExecuteFunction();
-    const { marketAddress, contractABI } = useMoralisDapp();
+    const { marketAddress, contractABI, corsacTokenAddress } = useMoralisDapp();
     const listItemFunction = "getSaleInfo";
-    const { Moralis } = useMoralis();
+    const Web3Api = useMoralisWeb3Api();
+    const { Moralis, account } = useMoralis();
     const { chainId } = useChain();
-    const {data, error, isLoading} = useMoralisQuery("SalesList");
+    const { data, error, isLoading } = useMoralisQuery("SalesList");
     const fetchMarketItems = JSON.parse(
       JSON.stringify(data, [
         "saleId",
@@ -104,6 +106,16 @@ const Explore3Cols = ({showLoadMore = true}) => {
     useEffect(() => {
       async function fetchAPIData() {
         // const web3 = await Moralis.enableWeb3();
+        const ops = {
+          chain: chainId,
+          address: account
+        };
+        
+        const balances = await Web3Api.account.getTokenBalances(ops);
+        const token = balances.filter((t, index) => {
+          return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+        });
+
         if (saleNFTs && saleNFTs.length > 0) {
           const promises = [];
           
@@ -121,6 +133,11 @@ const Explore3Cols = ({showLoadMore = true}) => {
               
               if (temp.length > 0) {
                 temp[0].saleId = saleInfo.saleId;
+
+                if (token.length > 0) {
+                  temp[0].price = new BigNumber(saleInfo.basePrice._hex).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+                  temp[0].price_symbol = token[0].symbol;
+                }
               }
 
               promises.push(...temp);
