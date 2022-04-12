@@ -713,8 +713,8 @@ const ItemDetail = ({ nftId }) => {
 																			</span>
 																	</div>                                    
 																	<div className="p_list_info">
-																		<span class="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
-																		<span class="">by <b>{bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
+																		<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
+																		<span>by <b>{bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
@@ -883,7 +883,7 @@ const ItemDetail = ({ nftId }) => {
 										min={basePrice} 
 										step="0.00001"
 									/>
-									<span class="text-danger">Last Bid Amount: {lastBidAmount} {symbol}</span>
+									<span className="text-danger">Last Bid Amount: {lastBidAmount} {symbol}</span>
 								</div>
 							</div>
 							{/* <div className='detailcheckout mt-3'>
