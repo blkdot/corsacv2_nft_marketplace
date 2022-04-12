@@ -316,7 +316,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                 }
               }
             }
-            
+
             setSaleNFTs(nftsArray);
           },
           onError: (error) => {
@@ -481,7 +481,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                       style={{marginBottom: "16px"
                     }}
                     />
-                    <DatePicker onChange={onChangeDueDate} value={dueDate}/>
+                    <DatePicker showTime onChange={onChangeDueDate} value={dueDate}/>
                   </TabPane>
                 </Tabs>
               </StyledSpin>

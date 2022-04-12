@@ -92,7 +92,7 @@ const ItemDetail = ({ nftId }) => {
 		const [placeBidError, setPlaceBidError] = useState(false);
 
 		const [bidAmount, setBidAmount] = useState(0);
-
+		const [lastBidAmount, setLastBidAmount] = useState(0);
 		const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 		const [isPageLoading, setIsPageLoading] = useState(true);
 
@@ -483,13 +483,19 @@ const ItemDetail = ({ nftId }) => {
             }
           }).then(async res => {
 						let bids = [];
+						let max = 0;
 						for (let bid of res.data) {
 							let b = JSON.parse(JSON.stringify(bid));
 							b.price = new BigNumber(bid.price.$numberDecimal).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
 							bids.push(b);
+
+							if (max < b.price) {
+								max = b.price;
+							}
 						}
 						
 						nft.bids = bids;
+						setLastBidAmount(max);
           });
         } catch {
           console.log('error in fetching bids by saleId');
@@ -877,6 +883,7 @@ const ItemDetail = ({ nftId }) => {
 										min={basePrice} 
 										step="0.00001"
 									/>
+									<span class="text-danger">Last Bid Amount: {lastBidAmount} {symbol}</span>
 								</div>
 							</div>
 							{/* <div className='detailcheckout mt-3'>
