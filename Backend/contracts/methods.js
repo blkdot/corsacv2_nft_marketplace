@@ -56,12 +56,38 @@ const poll_method = async () => {
   let contract = await new web3.eth.Contract(marketABI, process.env.CONTRACT_ADDRESS);
   const salesCount = await contract.methods.saleCount().call();
   const sales = await contract.methods.getSaleInfo(0, salesCount).call();
-  
+
   for (let i = 0; i < sales.length; i++) {
+    console.log(global.endedAuctionList);
+    const sIds = global.endedAuctionList.filter((id, index) => {
+      return parseInt(sales[i].saleId) === id;
+    });
+    if (sIds.length > 0) {
+      continue;
+    }
+
     console.log("saleId=", sales[i].saleId, nowTime, ":", sales[i].endTime, " - ", parseInt(sales[i].endTime) - nowTime);
+
     if (parseInt(sales[i].method) === 1 && parseInt(sales[i].endTime) < nowTime) {
       console.log("finalizing auction...saleId=", sales[i].saleId);
-      await contract.methods.finalizeAuction(parseInt(sales[i].saleId)).send({from: process.env.PUBLIC_KEY});
+      try {
+        const nonce = await web3.eth.getTransactionCount(process.env.PUBLIC_KEY);
+        
+        await contract.methods.finalizeAuction(parseInt(sales[i].saleId)).send({
+          from: process.env.PUBLIC_KEY,
+          nonce: nonce
+        });
+        
+        if (global.endedAuctionList.length > 10000) {
+          global.endedAuctionList = [];
+        }
+        global.endedAuctionList.push(parseInt(sales[i]));
+
+        console.log(".....ok");
+      } catch (e) {
+        console.log(e);
+      }
+      
     }
   }
 }

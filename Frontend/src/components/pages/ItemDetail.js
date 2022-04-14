@@ -37,16 +37,6 @@ const StyledModal = styled(Modal)`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-const renderer = props => {
-  if (props.completed) {
-    // Render a completed state
-    return <span>Ended</span>;
-  } else {
-    // Render a countdown
-    return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
-  }
-};
-
 const ItemDetail = ({ nftId }) => {
     const inputColorStyle = {
     	color: '#111'
@@ -95,6 +85,18 @@ const ItemDetail = ({ nftId }) => {
 		const [lastBidAmount, setLastBidAmount] = useState(0);
 		const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 		const [isPageLoading, setIsPageLoading] = useState(true);
+		const [isBidEnded, setIsBidEnded] = useState(false);
+
+		const renderer = props => {
+			if (props.completed) {
+				setIsBidEnded(true);
+				// Render a completed state
+				return <span>Ended</span>;
+			} else {
+				// Render a countdown
+				return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
+			}
+		};
 
 		const handleBtnClick0 = () => {
 			setOpenMenu0(!openMenu0);
@@ -361,11 +363,16 @@ const ItemDetail = ({ nftId }) => {
 					console.log("success:placeBid");
 					setIsCheckoutLoading(false);
 					const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/bid/add`, {
-						walletAddr: account,
-						price: price,
-						saleId: ops.params.saleId
-						// itemId: nft._id,
-					});
+							walletAddr: account,
+							price: price,
+							saleId: ops.params.saleId
+							// itemId: nft._id,
+						}, {
+							headers: {
+								'Content-Type': 'application/json',
+							}
+						}
+					);
 					navigate('/mynft');
 				},
 				onError: (error) => {
@@ -478,6 +485,9 @@ const ItemDetail = ({ nftId }) => {
 			async function getBidList() {
 				try {
           await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/bid/getBids`, {
+						headers: {
+							'Content-Type': 'application/json',
+						},
             params: {
               saleId: new BigNumber(saleInfo.saleId._hex).toNumber()
             }
@@ -750,7 +760,7 @@ const ItemDetail = ({ nftId }) => {
 												{(nft.onSale || nft.onOffer) && 
 													<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
 												}
-												{nft.onAuction && 
+												{!isBidEnded && nft.onAuction && 
 													<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
 												}
 											</div>

@@ -83,6 +83,17 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     async function list(nft) {
       setLoading(true);
+
+      if (parseInt(tabKey) - 1 === 1) {
+        if (duration < 1) {
+          setLoading(false);
+          setErrorTitle('Error');
+          setErrorMsg('Please enter auction end datetime!');
+          setOpenErrorModal(true);
+          return;
+        }
+      }
+
       const p = price * ("1e" + 9);
       const ops = {
         contractAddress: marketAddress,
