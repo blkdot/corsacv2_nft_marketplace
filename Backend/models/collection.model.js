@@ -7,10 +7,17 @@ const Collection = mongoose.model(
       type: String,
       default: ''
     },
+    collectionType: {
+      type: Number,
+      default: 0
+    },
     title: {
       type: String,
-      default: 'untitled title',
-      unique: true
+      default: 'untitled'
+    },
+    symbol: {
+      type: String,
+      default: 'untitled symbol'
     },
     url: {
       type: String,

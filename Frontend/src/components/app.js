@@ -67,6 +67,7 @@ import Minter from './pages/Minter';
 import Mintergrey from './pages/MinterGrey';
 import Profile from './pages/Profile';
 import MyNFT from './pages/MyNFT';
+import CreateCollection from './pages/createCollection';
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -181,6 +182,7 @@ const App = ({ isServerInfo }) => {
           <Minter path="/mint" />
           <Mintergrey path="/minter" />
           <MyNFT path="/mynft" />
+          <CreateCollection path="/createCollection" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

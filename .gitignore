@@ -8,3 +8,7 @@ typechain
 #Hardhat files
 cache
 artifacts
+
+#Backend collection & item images
+Backend/images/collections
+Backend/images/items

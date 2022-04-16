@@ -18,10 +18,10 @@ const feeAddress = async () => {
   let feeAddress = await contract.methods.feeAddress().call();
 }
 
-const createCollection = async (name, symbol, uri) => {
+const createCollection = async (type, name, symbol, uri) => {
   try {
     let contract = await new web3.eth.Contract(marketABI, process.env.CONTRACT_ADDRESS);
-    await contract.methods.createCollection(name, symbol, uri).send({from: process.env.PUBLIC_KEY});
+    await contract.methods.createNewCollection(type, name, symbol, uri).send({from: process.env.PUBLIC_KEY});
     let collection = await contract.methods.getRecentCollection().call();
     return collection;
   } catch (e) {

@@ -215,6 +215,7 @@ const Header = function({ className }) {
                               <NavLink to="/loginTwo" onClick={() => btn_icon(!showmenu)}>login 2</NavLink>
                               <NavLink to="/register" onClick={() => btn_icon(!showmenu)}>Register</NavLink>
                               <NavLink to="/contact" onClick={() => btn_icon(!showmenu)}>Contact Us</NavLink>
+                              <NavLink to="/createCollection" onClick={() => btn_icon(!showmenu)}>Create Collection</NavLink>
                             </div>
                           </div>
                         )}
@@ -319,6 +320,7 @@ const Header = function({ className }) {
                               <NavLink to="/loginTwo">login 2</NavLink>
                               <NavLink to="/register">Register</NavLink>
                               <NavLink to="/contact">Contact Us</NavLink>
+                              <NavLink to="/createCollection">Create Collection</NavLink>
                               </div>
                             </div>
                           )}
