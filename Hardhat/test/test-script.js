@@ -86,7 +86,8 @@ describe("Corsac V2 NFT Marketplace Testing...", function () {
     
     // 6. Deploy Corsac NFT Factory Contract with 1 ether
     const CorsacNFTFactory = await hre.ethers.getContractFactory("CorsacNFTFactory");
-    nftFactory = await CorsacNFTFactory.deploy(cERC721.address, cERC1155.address, {value: ethers.utils.parseUnits("1", "ether").toHexString()});
+    // nftFactory = await CorsacNFTFactory.deploy(cERC721.address, cERC1155.address, {value: ethers.utils.parseUnits("1", "ether").toHexString()});
+    nftFactory = await CorsacNFTFactory.deploy(cERC721.address, cERC1155.address);
 
     nftFactoryInst = await nftFactory.deployed();
 

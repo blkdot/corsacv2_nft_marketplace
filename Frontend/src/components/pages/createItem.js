@@ -12,6 +12,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
+import BigNumber from "bignumber.js";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -64,6 +65,7 @@ const CreateItem = () => {
     })
   };
 
+  const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
   const { account, Moralis } = useMoralis();
@@ -73,7 +75,9 @@ const CreateItem = () => {
   const imgInput = useRef(null);
   const [image, setImage] = useState({ preview: '', data: '' });
   const [collections, setCollections] = useState([]);
-  const [collection, setCollection] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [collection, setCollection] = useState(null);
+  const [payment, setPayment] = useState(null);
   const [itemName, setItemName] = useState('');
   const [description, setDescription] = useState('');
   const [royalty, setRoyalty] = useState(0);
@@ -81,7 +85,7 @@ const CreateItem = () => {
 
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
-  const [openModal, setopenModal] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
   const handleFileChange = (e) => {
     try {
@@ -107,97 +111,224 @@ const CreateItem = () => {
     setCollection(selectedOption);
   };
 
+  const handlePaymentChange = (selectedOption) => {
+    setPayment(selectedOption);
+  };
+
   const handleCreateItem = async (e) => {
     //check form data
     e.preventDefault();
     if (account == '') {
       setModalTitle('Error');
       setModalMessage("Please connect your wallet");
-      setopenModal(true);
+      setOpenModal(true);
       return;
     }
     if (image.preview == '') {
       setModalTitle('Error');
       setModalMessage("Choose one image for your item");
-      setopenModal(true);
+      setOpenModal(true);
       return;
     }
     if (collection.value == undefined || collection.value == '') {
       setModalTitle('Error');
       setModalMessage("Choose collection for your item");
-      setopenModal(true);
+      setOpenModal(true);
+      return;
+    }
+    if (payment.value == undefined || payment.value == '') {
+      setModalTitle('Error');
+      setModalMessage("Choose payment for your item");
+      setOpenModal(true);
       return;
     }
     if (itemName == '') {
       setModalTitle('Error');
       setModalMessage("Enter name for your item");
-      setopenModal(true);
+      setOpenModal(true);
       return;
     }
     if (parseInt(royalty) < 0 || parseInt(royalty) > 40) {
       setModalTitle('Error');
       setModalMessage("Enter royalty for your item (max 40%)");
-      setopenModal(true);
+      setOpenModal(true);
       return;
     }
 
-    //save image to ipfs using moralis
-    const metadata = {
-      "name": itemName,
-      "description": description,
-      "collection": collection
-    };
-    const file = new Moralis.File("file.json", {base64: btoa(JSON.stringify(metadata))});
+    setLoading(true);
+
+    //save image and metadata to ipfs using moralis
+    const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+    const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+    const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
+    
+    Moralis.initialize(APP_ID);
+    Moralis.serverURL = SERVER_URL;
+
     // const file = new Moralis.File(image.data.name, image.data);
-    await file.saveIPFS();
-    console.log(file.ipfs(), file.hash());
-    // let fileIpfs = await saveFile(image.data.name, image.data, { saveIPFS: true });
-    // console.log(fileIpfs);
+    // await file.saveIPFS();
+    // console.log(file.ipfs(), file.hash());
+    let imageFileIpfs = null;
+    await saveFile(
+      image.data.name, 
+      image.data, 
+      { 
+        saveIPFS: true,
+        onSuccess: (result) => {
+          imageFileIpfs = result;
+        },
+        onError: (error) => {
+          setLoading(false);
 
-    //check if collection name exists
-    // if (isExistCollection() === true) {
-    //   setModalTitle('Error');
-    //   setModalMessage("Collection name was duplicated!");
-    //   setopenModal(true);
-    //   return;
-    // }
+          setModalTitle('Error');
+          if (error.message) {
+            setModalMessage(error.message);
+          } else {
+            setModalMessage(error);
+          }
+          setOpenModal(true);
+        }
+      }
+    );
+    // console.log(imageFileIpfs);
+    // console.log("imagePath:", GATEWAY_URL + imageFileIpfs.hash());
 
-    //create and save collection into db
-    // let formData = new FormData();
-    // formData.append('walletAddr', account.toLowerCase());
-    // formData.append('collectionType', collectionType);
-    // formData.append('title', title);
-    // formData.append('symbol', symbol);
-    // formData.append('url', url);
-    // formData.append('category', category.value);
-    // formData.append('description', description);
-    // formData.append('file', image.data);
-    // try {
-    //   setLoading(true);
-    //   const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/collection/create`, formData);
-    //   setLoading(false);
+    const metadata = {
+      name: itemName,
+      description: description,
+      collection: collection,
+      image: GATEWAY_URL + imageFileIpfs.hash(),
+      payment: payment,
+      royalty: royalty
+    };
+    let metadataFileIpfs = null;
+    await saveFile(
+      "metadata.json", 
+      {
+        base64: btoa(JSON.stringify(metadata))
+      }, 
+      { 
+        type: "base64",
+        saveIPFS: true,
+        onSuccess: (result) => {
+          metadataFileIpfs = result;
+        },
+        onError: (error) => {
+          setLoading(false);
 
-    //   if (res) {
-    //     if (res.data.type === 'error') {
-    //       setModalTitle('Error');
-    //     } else {
-    //       setModalTitle('Success');
-    //     }
-    //     setModalMessage(res.data.message);
-    //     setopenModal(true);
-    //   }
-    // } catch(ex) {
-    //   console.log(ex);
-    //   setModalTitle('Error');
-    //   setModalMessage(ex.message);
-    //   setopenModal(true);
-    //   return;
-    // }
+          setModalTitle('Error');
+          if (error.message) {
+            setModalMessage(error.message);
+          } else {
+            setModalMessage(error);
+          }
+          setOpenModal(true);
+        }
+      }
+    );
+    // console.log(metadataFileIpfs);
+    
+    const metadataUrl = GATEWAY_URL + metadataFileIpfs.hash();
+    // console.log("metadataUrl:", metadataUrl);
+
+    // const response = await fetch(metadataUrl);
+    // console.log(await response.json());
+
+    //mint NFT
+    let ops = {
+      contractAddress: marketAddress,
+      functionName: "mintTo",
+      abi: contractABI,
+      params: {
+        collectionAddr: collection.addr,
+        _to: account,
+        uri: metadataUrl
+      }
+    };
+    await contractProcessor.fetch({
+      params: ops,
+      onSuccess: (result) => {
+        console.log("success:mintToByUser");
+        setLoading(false);
+        navigate('/mynft');
+      },
+      onError: (error) => {
+        console.log("failed:mintToByUser", error);
+        setLoading(false);
+
+        setModalTitle('Error');
+        if (error.message) {
+          setModalMessage(error.message);
+        } else {
+          setModalMessage(error);
+        }
+        setOpenModal(true);
+      },
+    });
+
+    //get token id
+    let token_id = null;
+    ops.functionName = "getTokenId";
+    ops.params = {collectionAddr: collection.addr};
+    await contractProcessor.fetch({
+      params: ops,
+      onSuccess: (result) => {
+        console.log("success:getTokenId");
+        setLoading(false);
+        console.log("getTokenId:", result);
+        token_id = new BigNumber(result._hex).toNumber();
+      },
+      onError: (error) => {
+        console.log("failed:getTokenId", error);
+        setLoading(false);
+
+        setModalTitle('Error');
+        if (error.message) {
+          setModalMessage(error.message);
+        } else {
+          setModalMessage(error);
+        }
+        setOpenModal(true);
+      },
+    });
+
+    //save item into db
+    let formData = new FormData();
+    formData.append('walletAddr', account.toLowerCase());
+    formData.append('collection', collection.value);
+    formData.append('payment', payment.value);
+    formData.append('title', itemName);
+    formData.append('description', description);
+    formData.append('image', GATEWAY_URL + imageFileIpfs.hash());
+    formData.append('royalty', royalty);
+    formData.append('timeStamp', Math.floor(new Date().getTime() / 1000));
+    try {
+      setLoading(true);
+      const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/item/create`, formData);
+      setLoading(false);
+
+      if (res) {
+        if (res.data.type === 'error') {
+          setModalTitle('Error');
+        } else {
+          setModalTitle('Success');
+        }
+        setModalMessage(res.data.message);
+        setOpenModal(true);
+      }
+    } catch(ex) {
+      console.log(ex);
+      setModalTitle('Error');
+      setModalMessage(ex.message);
+      setOpenModal(true);
+      return;
+    }
     // navigate("/");
+    setLoading(false);
   }
 
   const closeModal = () => {
-    setopenModal(false);
+    setOpenModal(false);
     setModalTitle('');
     setModalMessage('');
   }
@@ -218,7 +349,7 @@ const CreateItem = () => {
 
         let myCollections = [];
         for (let c of erc721Collections) {
-          myCollections.push({value: c._id, label: c.title});
+          myCollections.push({value: c._id, label: c.title, addr: c.collectionAddr, symbol: c.symbol});
         }
         setCollections(myCollections);
       });
@@ -227,9 +358,31 @@ const CreateItem = () => {
     }
   }
 
+  async function getPayments() {
+    try {
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {
+          allowed: 1
+        }
+      }).then(async res => {
+        let payments = [];
+        for (let p of res.data.payments) {
+          payments.push({value: p.id, label: p.title + " (" + p.symbol + ")", addr: p.addr, title: p.title, type: p.type});
+        }
+        setPayments(payments);
+      });
+    } catch {
+      console.log('error in fetching payments');
+    }
+  }
+
   useEffect(() => {
     if (account != undefined && account != '') {
       getCollections();
+      getPayments();
     }
   }, [account]);
   
@@ -281,6 +434,15 @@ const CreateItem = () => {
                   styles={customStyles}
                   options={[defaultValue, ...collections]}
                   onChange={handleCollectionChange}
+              />
+              
+              <div className="spacer-30"></div>
+
+              <h5>Choose payment <span className="text-muted">(Required)</span></h5>
+              <Select 
+                  styles={customStyles}
+                  options={[defaultValue, ...payments]}
+                  onChange={handlePaymentChange}
               />
               
               <div className="spacer-30"></div>

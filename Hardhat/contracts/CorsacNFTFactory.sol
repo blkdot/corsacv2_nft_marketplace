@@ -272,6 +272,15 @@ contract CorsacNFTFactory is
     );
 
     /**
+     * event when owner mint NFT
+     */
+    event MintTo(
+        address collectionAddr,
+        address _to,
+        string uri
+    );
+
+    /**
      * this modifier restricts some privileged action
      */
     modifier creatorOnly() {
@@ -381,7 +390,7 @@ contract CorsacNFTFactory is
         string memory _name,
         string memory _symbol,
         string memory _uri
-    ) external creatorOnly override returns (address) {
+    ) external override returns (address) {
         if (collectionType == ICorsacNFTFactory.CollectionType.ERC721) {
             // create a new ERC721 contract and returns its address
             address newContract = ICorsacERC721(singleDeployer).createContract(_name, _symbol, _uri, address(this));
@@ -413,7 +422,7 @@ contract CorsacNFTFactory is
      * @dev this function adds a collection of ERC721, ERC1155 to the factory
      * @param from - address of NFT collection contract
      */
-    function addCollection(address from) external creatorOnly override {
+    function addCollection(address from) external override {
         require(from.isContract());
 
         if (IERC165(from).supportsInterface(type(IERC721).interfaceId)) {
@@ -441,14 +450,16 @@ contract CorsacNFTFactory is
     }
 
     /**
-     * @dev this function creates/mints new NFT
+     * @dev this function creates/mints new NFT by owner
      * @param collectionAddr - collection
      * @param _to - to account
      * @param uri - uri for NFT
      */
-    function mintTo(address collectionAddr, address _to, string memory uri) external onlyOwner {
+    function mintTo(address collectionAddr, address _to, string memory uri) external {
         require(collectionOccupation[collectionAddr] == true);
         IERC721Tradable(collectionAddr).mintTo(_to, uri);
+
+        emit MintTo(collectionAddr, _to, uri);
     }
 
     /**
@@ -517,7 +528,7 @@ contract CorsacNFTFactory is
      * @dev this function returns token ID from collection
      * @param collectionAddr - collection address
      */
-    function getTokenId(address collectionAddr) external view onlyOwner returns (uint256) {
+    function getTokenId(address collectionAddr) external view returns (uint256) {
         return IERC721Tradable(collectionAddr).getTokenId();
     }
 

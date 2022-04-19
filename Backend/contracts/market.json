@@ -653,6 +653,31 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "collectionAddr",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
+      }
+    ],
+    "name": "MintTo",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "enum ICorsacNFTFactory.CollectionType",
         "name": "collectionType",
         "type": "uint8"

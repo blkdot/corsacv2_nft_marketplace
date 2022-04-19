@@ -91,6 +91,8 @@ const Explore3Cols = ({showLoadMore = true}) => {
           params: ops,
           onSuccess: (result) => {
             console.log("success");
+            console.log(ops);
+            console.log(result);
             setSaleNFTs(result);
           },
           onError: (error) => {
@@ -167,17 +169,17 @@ const Explore3Cols = ({showLoadMore = true}) => {
                 await fetch((tokenIdMetadata.token_uri))
                   .then((response) => response.json())
                   .then((data) => {
-                    nft.imagePath = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                    nft.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
                   }).catch(function() {
                     console.log("error: getting uri");
-                    nft.imagePath = fallbackImg;
+                    nft.image = fallbackImg;
                   });
               } else {
-                nft.imagePath = fallbackImg;
+                nft.image = fallbackImg;
               }
-              // nft.imagePath = fallbackImg;
+              // nft.image = fallbackImg;
             } else {
-              nft.imagePath = JSON.parse(nft.metadata).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+              nft.image = JSON.parse(nft.metadata).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
             }
 
             const marketItem = getMarketItem(nft);

@@ -456,7 +456,7 @@ const ItemDetail = ({ nftId }) => {
 				let yBalance = new BigNumber(token[0].balance).toNumber();
 	
 				// if payment is corsac token, not stable coin
-				if (saleInfo.payment._hex == 0x01) {
+				if (saleInfo.payment._hex !== 0x00) {
 					bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
 					yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
 
@@ -558,7 +558,7 @@ const ItemDetail = ({ nftId }) => {
 					<div className='row mt-md-5 pt-md-4'>
 						<div className="col-md-6 text-center">
 								{/* <img src={ nft.preview_image && api.baseUrl + nft.preview_image.url} className="img-fluid img-rounded mb-sm-30" alt=""/> */}
-								<img src={ nft.imagePath} className="img-fluid img-rounded mb-sm-30" alt=""/>
+								<img src={ nft.image} className="img-fluid img-rounded mb-sm-30" alt=""/>
 						</div>
 						<div className="col-md-6">
 							<div className="item_info">

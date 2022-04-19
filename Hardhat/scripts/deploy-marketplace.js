@@ -31,8 +31,17 @@ async function main() {
 
   console.log('\nstarting set payment tokens------------------------------------------------');
   [owner] = await ethers.getSigners();
-  const setPaymentTokenTx = await nftFactory.connect(owner).setPaymentToken(
-    1, // 0: Default Ether
+  // 0: Default BNB
+  // 1: Wrapped BNB (WBNB)
+  let setPaymentTokenTx = await nftFactory.connect(owner).setPaymentToken(
+    1, 
+    '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
+  );
+  await setPaymentTokenTx.wait();
+
+  // 2: Test Token like corsac v2 token
+  setPaymentTokenTx = await nftFactory.connect(owner).setPaymentToken(
+    2, 
     ubaToken
   );
   await setPaymentTokenTx.wait();
@@ -40,13 +49,8 @@ async function main() {
   const tokens = await nftFactory.getPaymentToken();
   console.log("payment tokens:", tokens);
 
-  const user = "0x7E1325d452e472B81098c62F071D32Ee7f4e10d7";
-  await nftFactory.startPendingCreator(user, true);
-    
-  await new Promise(r => setTimeout(r, 4000));
-
-  await nftFactory.endPendingCreator(user);
-  console.log("address-%s as a creator", user);
+  // Don't forget to set new nftFactory address to factory contract of Tradable 721, 1155
+  // after deployed this marketplace contract
 
   console.log('\nDone!!!');
 }

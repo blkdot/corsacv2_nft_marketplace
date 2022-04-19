@@ -29,7 +29,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const mt100 = { marginTop: "100px" };
         
     const dispatch = useDispatch();
-    const {data: NFTBalances, isLoading} = useNFTBalances();
+    const {getNFTBalances, data: NFTBalances, isLoading} = useNFTBalances();
     const [nfts, setNfts] = useState([]);
 
     const [height, setHeight] = useState(0);
@@ -102,7 +102,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         params: {
           sc: nft.token_address,
           tokenId: parseInt(nft.token_id),
-          payment: 1,
+          payment: 2,
           copy: 1,
           method: parseInt(tabKey) - 1,
           duration: duration,
@@ -265,6 +265,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     useEffect(async () => {
       if (NFTBalances && NFTBalances.result) {
+        console.log(NFTBalances.result);
         for (let nft of NFTBalances.result) {
           if (!nft.metadata) {
             // const options = {
@@ -284,17 +285,19 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               await fetch((tokenIdMetadata.token_uri))
                 .then((response) => response.json())
                 .then((data) => {
-                  nft.imagePath = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                  nft.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
                 }).catch(function() {
                   console.log("error: getting uri");
-                  nft.imagePath = fallbackImg;
+                  nft.image = fallbackImg;
                 });
             } else {
-              nft.imagePath = fallbackImg;
+              nft.image = fallbackImg;
             }
-            // nft.imagePath = fallbackImg;
+            // nft.image = fallbackImg;
           } else {
-            nft.imagePath = JSON.parse(nft.metadata).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+            if (!nft.image) {
+              nft.image = JSON.parse(JSON.stringify(nft.metadata)).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+            }
           }
         }
         setNfts(NFTBalances.result);

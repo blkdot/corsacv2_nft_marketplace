@@ -58,7 +58,7 @@ const poll_method = async () => {
   const sales = await contract.methods.getSaleInfo(0, salesCount).call();
 
   for (let i = 0; i < sales.length; i++) {
-    console.log(global.endedAuctionList);
+    // console.log(global.endedAuctionList);
     const sIds = global.endedAuctionList.filter((id, index) => {
       return parseInt(sales[i].saleId) === id;
     });
@@ -66,7 +66,7 @@ const poll_method = async () => {
       continue;
     }
 
-    console.log("saleId=", sales[i].saleId, nowTime, ":", sales[i].endTime, " - ", parseInt(sales[i].endTime) - nowTime);
+    // console.log("saleId=", sales[i].saleId, nowTime, ":", sales[i].endTime, " - ", parseInt(sales[i].endTime) - nowTime);
 
     if (parseInt(sales[i].method) === 1 && parseInt(sales[i].endTime) < nowTime) {
       console.log("finalizing auction...saleId=", sales[i].saleId);

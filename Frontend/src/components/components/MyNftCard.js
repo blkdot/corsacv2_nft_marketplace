@@ -259,7 +259,7 @@ const MyNftCard = ({
               <div className="nft__item_wrap" style={{height: `${height}px`}}>
                   <Outer>
                       <span>
-                          <img onLoad={onImgLoad} src={ nft.imagePath } className="lazy nft__item_preview" alt=""/>
+                          <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/>
                       </span>
                   </Outer>
               </div>
