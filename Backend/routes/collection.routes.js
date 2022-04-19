@@ -27,7 +27,7 @@ module.exports = function(app) {
   
   app.post(
     "/api/collection/create",
-    upload.single('file'),
+    // upload.single('file'),
     controller.createCollection
   )
 

@@ -281,6 +281,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               chain: chainId
             };
             const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options1);
+            // console.log('TokenIdMetadata:', tokenIdMetadata);
             if (tokenIdMetadata.token_uri) {
               await fetch((tokenIdMetadata.token_uri))
                 .then((response) => response.json())

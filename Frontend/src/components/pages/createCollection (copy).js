@@ -5,14 +5,13 @@ import axios from "axios";
 import moment from "moment";
 import { navigate } from '@reach/router';
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralisWeb3Api, useMoralis, useMoralisFile, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import { useChain, useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
-import { categoris } from "../components/constants/cateogries";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -30,12 +29,21 @@ const StyledModal = styled(Modal)`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-//Moralis config
-const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
-const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
-const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
-
 const CreateCollection = () => {
+  const inputColorStyle = {
+    color: '#111'
+  };
+
+  const itemsType = [
+    {value: 'Art', label: 'Art'},
+    {value: 'Collectibles', label: 'Collectibles'},
+    {value: 'Game Items', label: 'Game Items'},
+    {value: 'Music', label: 'Music'},
+    {value: 'Domains', label: 'Domains'},
+    {value: 'Templates', label: 'Templates'},
+    {value: 'Videos', label: 'Videos'},
+  ];
+
   const defaultValue = {
     value: null,
     label: 'Select Filter'
@@ -66,11 +74,9 @@ const CreateCollection = () => {
     })
   };
 
-  const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
-  const { account, Moralis } = useMoralis();
-  const { saveFile, moralisFile } = useMoralisFile();
+  const { account } = useMoralis();
   const { chainId } = useChain();
 
   const imgInput = useRef(null);
@@ -82,10 +88,9 @@ const CreateCollection = () => {
   const [image, setImage] = useState({ preview: '', data: '' });
   const [url, setURL] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loadingTitle, setLoadingTitle] = useState("Loading...");
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
-  const [openModal, setOpenModal] = useState(false);
+  const [openModal, setopenModal] = useState(false);
 
   const handleFileChange = (e) => {
     try {
@@ -154,37 +159,37 @@ const CreateCollection = () => {
     if (account == '') {
       setModalTitle('Error');
       setModalMessage("Please connect your wallet");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
     if (title == '') {
       setModalTitle('Error');
       setModalMessage("Enter name for collection");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
     if (image.preview == '') {
       setModalTitle('Error');
       setModalMessage("Choose one image for collection");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
     if (symbol == '') {
       setModalTitle('Error');
       setModalMessage("Enter symbol for your collection");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
     if (category.value == undefined || category.value == '') {
       setModalTitle('Error');
       setModalMessage("Choose category for your collection");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
     if (url == '') {
       setModalTitle('Error');
       setModalMessage("Enter URL for your collection");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
 
@@ -192,195 +197,49 @@ const CreateCollection = () => {
     if (isExistCollection() === true) {
       setModalTitle('Error');
       setModalMessage("Collection name was duplicated!");
-      setOpenModal(true);
+      setopenModal(true);
       return;
     }
 
-    setLoading(true);
+    //create and save collection into db
+    let formData = new FormData();
+    formData.append('walletAddr', account.toLowerCase());
+    formData.append('collectionType', collectionType);
+    formData.append('title', title);
+    formData.append('symbol', symbol);
+    formData.append('url', url);
+    formData.append('category', category.value);
+    formData.append('description', description);
+    formData.append('file', image.data);
+    try {
+      setLoading(true);
+      const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/collection/create`, formData);
+      setLoading(false);
 
-    //save image and metadata to ipfs using moralis
-    Moralis.initialize(APP_ID);
-    Moralis.serverURL = SERVER_URL;
-
-    // const file = new Moralis.File(image.data.name, image.data);
-    // await file.saveIPFS();
-    // console.log(file.ipfs(), file.hash());
-    let imageFileIpfs = null;
-    await saveFile(
-      image.data.name, 
-      image.data, 
-      { 
-        saveIPFS: true,
-        onSuccess: (result) => {
-          imageFileIpfs = result;
-        },
-        onError: (error) => {
-          setLoading(false);
-
+      if (res) {
+        if (res.data.type === 'error') {
           setModalTitle('Error');
-          if (error.message) {
-            setModalMessage(error.message);
-          } else {
-            setModalMessage(error);
-          }
-          setOpenModal(true);
-        }
-      }
-    );
-    // console.log(imageFileIpfs);
-    // console.log("imagePath:", GATEWAY_URL + imageFileIpfs.hash());
-
-    const metadata = {
-      name: title,
-      description: description,
-      category: category,
-      image: GATEWAY_URL + imageFileIpfs.hash(),
-      symbol: symbol,
-      url: url
-    };
-    let metadataFileIpfs = null;
-    await saveFile(
-      "metadata.json", 
-      {
-        base64: btoa(JSON.stringify(metadata))
-      }, 
-      { 
-        type: "base64",
-        saveIPFS: true,
-        onSuccess: (result) => {
-          metadataFileIpfs = result;
-        },
-        onError: (error) => {
-          setLoading(false);
-
-          setModalTitle('Error');
-          if (error.message) {
-            setModalMessage(error.message);
-          } else {
-            setModalMessage(error);
-          }
-          setOpenModal(true);
-        }
-      }
-    );
-    // console.log(metadataFileIpfs);
-    
-    const metadataUrl = GATEWAY_URL + metadataFileIpfs.hash();
-    // console.log("metadataUrl:", metadataUrl);
-
-    // const response = await fetch(metadataUrl);
-    // console.log(await response.json());
-
-    //create collection
-    let ops = {
-      contractAddress: marketAddress,
-      functionName: "createNewCollection",
-      abi: contractABI,
-      params: {
-        collectionType: collectionType,
-        _name: title,
-        _symbol: symbol,
-        _uri: metadataUrl
-      }
-    };
-    await contractProcessor.fetch({
-      params: ops,
-      onSuccess: async (result) => {
-        console.log("success:createNewCollection");
-        
-        let collectionAddr = null;
-
-        //get collection address created
-        ops.functionName = "getRecentCollection";
-        ops.params = {};
-        await contractProcessor.fetch({
-          params: ops,
-          onSuccess: async (result) => {
-            collectionAddr = result;
-            console.log(collectionAddr);
-            //save collection into db
-            try {
-              const res = await axios.post(
-                `${process.env.REACT_APP_SERVER_URL}/api/collection/create`, 
-                {
-                  'walletAddr': account.toLowerCase(),
-                  'collectionType': collectionType,
-                  'collectionAddr': collectionAddr,
-                  'title': title,
-                  'symbol': symbol,
-                  'url': url,
-                  'category': category.value,
-                  'description': description,
-                  'image': GATEWAY_URL + imageFileIpfs.hash(),
-                  'timeStamp': Math.floor(new Date().getTime() / 1000)
-                },
-                {
-                  headers: {
-                    'Content-Type': 'application/json',
-                  }
-                }
-              );
-              setLoading(false);
-
-              if (res) {
-                if (res.data.type === 'error') {
-                  setModalTitle('Error');
-                } else {
-                  setModalTitle('Success');
-                }
-                setModalMessage(res.data.message);
-                setOpenModal(true);
-              }
-            } catch(ex) {
-              console.log(ex);
-              setLoading(false);
-
-              setModalTitle('Error');
-              setModalMessage(ex.message);
-              setOpenModal(true);
-              return;
-            }
-          },
-          onError: (error) => {
-            console.log("failed:getRecentCollection", error);
-            setLoading(false);
-
-            setModalTitle('Error');
-            if (error.message) {
-              setModalMessage(error.message);
-            } else {
-              setModalMessage(error);
-            }
-            setOpenModal(true);
-            return;
-          }
-        });
-      },
-      onError: (error) => {
-        console.log("failed:createNewCollection", error);
-        setLoading(false);
-
-        setModalTitle('Error');
-        if (error.message) {
-          setModalMessage(error.message);
         } else {
-          setModalMessage(error);
+          setModalTitle('Success');
         }
-        setOpenModal(true);
-        return;
-      },
-    });
+        setModalMessage(res.data.message);
+        setopenModal(true);
+      }
+    } catch(ex) {
+      console.log(ex);
+      setModalTitle('Error');
+      setModalMessage(ex.message);
+      setopenModal(true);
+      return;
+    }
+    // navigate("/");
   }
 
   const closeModal = () => {
-    setOpenModal(false);
+    setopenModal(false);
     setModalTitle('');
     setModalMessage('');
   }
-
-  useEffect(() => {
-    setLoadingTitle("Creating your collection...");
-  }, []);
   
   return (
     <div className="greyscheme">
@@ -394,7 +253,7 @@ const CreateCollection = () => {
         closable={false}
       >
         <div className="row">
-        <StyledSpin tip={loadingTitle} size="large" />
+        <StyledSpin tip="Loading..." size="large" />
         </div>
       </StyledModal>
 
@@ -465,7 +324,7 @@ const CreateCollection = () => {
               <h5>Category <span className="text-muted">(Required)</span></h5>
               <Select 
                   styles={customStyles}
-                  options={[defaultValue, ...categoris]}
+                  options={[defaultValue, ...itemsType]}
                   onChange={handleCategoryChange}
               />
               

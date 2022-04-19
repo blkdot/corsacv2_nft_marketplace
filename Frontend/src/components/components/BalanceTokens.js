@@ -29,7 +29,7 @@ const BalanceTokens = () => {
       }
       
       getTokens();
-    }, []);
+    }, [account]);
 
     useEffect(() => {
       if (nativeBalance) {

@@ -11,18 +11,18 @@ module.exports = function(app) {
     next();
   });
 
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = 'images/items'
-      if (!fs.existsSync(dir)) fs.mkdir(dir, err => cb(err, dir))
-      cb(null, 'images/items/')
-    },
-    filename: (req, file, cb) => {
-      cb(null, file.originalname + "-" + Date.now())
-    },
-  })
+  // const storage = multer.diskStorage({
+  //   destination: (req, file, cb) => {
+  //     const dir = 'images/items'
+  //     if (!fs.existsSync(dir)) fs.mkdir(dir, err => cb(err, dir))
+  //     cb(null, 'images/items/')
+  //   },
+  //   filename: (req, file, cb) => {
+  //     cb(null, file.originalname + "-" + Date.now())
+  //   },
+  // })
 
-  const upload = multer({ storage: storage })
+  // const upload = multer({ storage: storage })
 
   app.post(
     "/api/item/create",

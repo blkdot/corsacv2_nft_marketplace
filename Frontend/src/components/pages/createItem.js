@@ -30,11 +30,11 @@ const StyledModal = styled(Modal)`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-const CreateItem = () => {
-  const inputColorStyle = {
-    color: '#111'
-  };
+const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
 
+const CreateItem = () => {
   const defaultValue = {
     value: null,
     label: 'Select Filter'
@@ -82,6 +82,7 @@ const CreateItem = () => {
   const [description, setDescription] = useState('');
   const [royalty, setRoyalty] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingTitle, setLoadingTitle] = useState("Loading...");
 
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
@@ -124,19 +125,19 @@ const CreateItem = () => {
       setOpenModal(true);
       return;
     }
-    if (image.preview == '') {
+    if (!image || image.preview == '') {
       setModalTitle('Error');
       setModalMessage("Choose one image for your item");
       setOpenModal(true);
       return;
     }
-    if (collection.value == undefined || collection.value == '') {
+    if (!collection || collection.value == undefined || collection.value == '') {
       setModalTitle('Error');
       setModalMessage("Choose collection for your item");
       setOpenModal(true);
       return;
     }
-    if (payment.value == undefined || payment.value == '') {
+    if (!payment || payment.value == undefined || payment.value == null || payment.value == '') {
       setModalTitle('Error');
       setModalMessage("Choose payment for your item");
       setOpenModal(true);
@@ -158,10 +159,6 @@ const CreateItem = () => {
     setLoading(true);
 
     //save image and metadata to ipfs using moralis
-    const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
-    const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
-    const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
-    
     Moralis.initialize(APP_ID);
     Moralis.serverURL = SERVER_URL;
 
@@ -247,13 +244,82 @@ const CreateItem = () => {
     };
     await contractProcessor.fetch({
       params: ops,
-      onSuccess: (result) => {
-        console.log("success:mintToByUser");
-        setLoading(false);
-        navigate('/mynft');
+      onSuccess: async (result) => {
+        console.log("success:mintTo");
+        //get token id
+        let token_id = null;
+        ops.functionName = "getTokenId";
+        ops.params = {collectionAddr: collection.addr};
+        await contractProcessor.fetch({
+          params: ops,
+          onSuccess: async (result) => {
+            console.log("success:getTokenId");
+            console.log("getTokenId:", result);
+            token_id = new BigNumber(result._hex).toNumber();
+
+            console.log("minted tokenID:", token_id);
+
+            //save item into db
+            try {
+              const res = await axios.post(
+                `${process.env.REACT_APP_SERVER_URL}/api/item/create`, 
+                {
+                  'walletAddr': account.toLowerCase(),
+                  'collectionId': collection.value,
+                  'tokenId': token_id,
+                  'payment': payment.value,
+                  'title': itemName,
+                  'description': description,
+                  'image': GATEWAY_URL + imageFileIpfs.hash(),
+                  'royalty': royalty,
+                  'timeStamp': Math.floor(new Date().getTime() / 1000)
+                },
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                  }
+                }
+              );
+              setLoading(false);
+
+              if (res) {
+                if (res.data.type === 'error') {
+                  setModalTitle('Error');
+                } else {
+                  setModalTitle('Success');
+                }
+                setModalMessage(res.data.message);
+                setOpenModal(true);
+              }
+            } catch(ex) {
+              console.log(ex);
+              setLoading(false);
+
+              setModalTitle('Error');
+              setModalMessage(ex.message);
+              setOpenModal(true);
+              return;
+            }
+            // navigate("/");
+            setLoading(false);
+          },
+          onError: (error) => {
+            console.log("failed:getTokenId", error);
+            setLoading(false);
+
+            setModalTitle('Error');
+            if (error.message) {
+              setModalMessage(error.message);
+            } else {
+              setModalMessage(error);
+            }
+            setOpenModal(true);
+            return;
+          }
+        });
       },
       onError: (error) => {
-        console.log("failed:mintToByUser", error);
+        console.log("failed:mintTo", error);
         setLoading(false);
 
         setModalTitle('Error');
@@ -263,68 +329,9 @@ const CreateItem = () => {
           setModalMessage(error);
         }
         setOpenModal(true);
+        return;
       },
     });
-
-    //get token id
-    let token_id = null;
-    ops.functionName = "getTokenId";
-    ops.params = {collectionAddr: collection.addr};
-    await contractProcessor.fetch({
-      params: ops,
-      onSuccess: (result) => {
-        console.log("success:getTokenId");
-        setLoading(false);
-        console.log("getTokenId:", result);
-        token_id = new BigNumber(result._hex).toNumber();
-      },
-      onError: (error) => {
-        console.log("failed:getTokenId", error);
-        setLoading(false);
-
-        setModalTitle('Error');
-        if (error.message) {
-          setModalMessage(error.message);
-        } else {
-          setModalMessage(error);
-        }
-        setOpenModal(true);
-      },
-    });
-
-    //save item into db
-    let formData = new FormData();
-    formData.append('walletAddr', account.toLowerCase());
-    formData.append('collection', collection.value);
-    formData.append('payment', payment.value);
-    formData.append('title', itemName);
-    formData.append('description', description);
-    formData.append('image', GATEWAY_URL + imageFileIpfs.hash());
-    formData.append('royalty', royalty);
-    formData.append('timeStamp', Math.floor(new Date().getTime() / 1000));
-    try {
-      setLoading(true);
-      const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/item/create`, formData);
-      setLoading(false);
-
-      if (res) {
-        if (res.data.type === 'error') {
-          setModalTitle('Error');
-        } else {
-          setModalTitle('Success');
-        }
-        setModalMessage(res.data.message);
-        setOpenModal(true);
-      }
-    } catch(ex) {
-      console.log(ex);
-      setModalTitle('Error');
-      setModalMessage(ex.message);
-      setOpenModal(true);
-      return;
-    }
-    // navigate("/");
-    setLoading(false);
   }
 
   const closeModal = () => {
@@ -383,6 +390,7 @@ const CreateItem = () => {
     if (account != undefined && account != '') {
       getCollections();
       getPayments();
+      setLoadingTitle("Creating your item...");
     }
   }, [account]);
   
@@ -398,7 +406,7 @@ const CreateItem = () => {
         closable={false}
       >
         <div className="row">
-        <StyledSpin tip="Loading..." size="large" />
+        <StyledSpin tip={loadingTitle} size="large" />
         </div>
       </StyledModal>
 

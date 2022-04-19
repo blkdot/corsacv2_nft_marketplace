@@ -1,12 +1,13 @@
 const db = require("../models");
+const mongoose = require("mongoose");
 const NFTItem = db.item;
 const Collection = db.collection;
 const { createCollection, getTokenId, mintTo, transferMoney } = require('../contracts/methods');
 
 exports.createItem = (req, res) => {
-  if (req.body.collection) {
+  if (req.body.collectionId) {
     Collection.find({
-      _id: req.body.collection
+      _id: new mongoose.Types.ObjectId(req.body.collectionId)
     },
     (err, collection) => {
       if (err) {
@@ -17,33 +18,48 @@ exports.createItem = (req, res) => {
         return;
       }
 
-      let item = new NFTItem({
-        walletAddr: req.body.walletAddr,
-        collection: req.body.collection,
-        payment: req.body.payment,
-        title: req.body.title,
-        description: req.body.description,
-        image: req.body.image,
-        royalty: req.body.royalty,
-        timeStamp: req.body.timeStamp
-      });
-      
-      item.save((err1) => {
-        if (err1) {
-          res.status(500).send({
-            type: 'error',
-            message: "Internal database server error!",
-          });
-          return;
-        }
-
-        res.send({
-          type: 'success',
-          message: "NFT item was created successfully",
+      if (collection) {
+        let item = new NFTItem({
+          walletAddr: req.body.walletAddr,
+          collectionId: req.body.collectionId,
+          payment: req.body.payment,
+          tokenId: req.body.tokenId,
+          title: req.body.title,
+          description: req.body.description,
+          image: req.body.image,
+          royalty: req.body.royalty,
+          timeStamp: req.body.timeStamp
         });
         
-      })
-    })
+        item.save((err1) => {
+          if (err1) {
+            res.status(500).send({
+              type: 'error',
+              message: "Internal database server error!",
+            });
+            return;
+          }
+  
+          res.send({
+            type: 'success',
+            message: "NFT item was created successfully",
+          });
+          return;
+        });
+      } else {
+        res.status(500).send({
+          type: 'error',
+          message: "Cannot find collection!",
+        });
+        return;
+      }
+    });
+  } else {
+    res.status(500).send({
+      type: 'error',
+      message: "Cannot find collection!",
+    });
+    return;
   }
 };
 

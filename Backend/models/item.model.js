@@ -7,11 +7,15 @@ const NFTItem = mongoose.model(
       type: String,
       default: ''
     },
-    // collection: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Collection"
-    // },
+    collectionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null
+    },
     payment: {
+      type: Number,
+      default: 0
+    },
+    tokenId: {
       type: Number,
       default: 0
     },

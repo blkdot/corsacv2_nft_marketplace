@@ -39,6 +39,10 @@ const Collection = mongoose.model(
       type: String,
       default: ''
     },
+    timeStamp: {
+      type: Number,
+      default: 0
+    },
     stars: {
       type: Object,
       default: {}
