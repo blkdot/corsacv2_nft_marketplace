@@ -105,8 +105,8 @@ const MyNFT = function({ collectionId = 1 }) {
           <div className='col-lg-12'>
               <div className="items_filter">
                 <ul className="de_nav">
-                    <li id='Mainbtn' className="active"><span onClick={handleBtnClick}>Owned</span></li>
-                    <li id='Mainbtn1' className=""><span onClick={handleBtnClick1}>On Sale</span></li>
+                    {/* <li id='Mainbtn' className="active"><span onClick={handleBtnClick}>Owned</span></li> */}
+                    {/* <li id='Mainbtn1' className=""><span onClick={handleBtnClick1}>On Sale</span></li> */}
                 </ul>
             </div>
           </div>

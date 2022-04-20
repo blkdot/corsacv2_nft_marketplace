@@ -279,7 +279,29 @@ const Header = function({ className }) {
                             <div className='item-dropdown'>
                               <div className="dropdown" onClick={closeMenu1}>
                               <NavLink to="/explore">Explore</NavLink>
-                              {/* <NavLink to="/exploreGrey">Explore Grey</NavLink> */}
+                              {/* <NavLink to="<div className='navbar-item'>
+                      <div ref={ref3}>
+                        <div className="dropdown-custom dropdown-toggle btn" 
+                          onClick={handleBtnClick3}
+                          >
+                          Element
+                        </div>
+                        {openMenu3 && (
+                          <div className='item-dropdown'>
+                            <div className="dropdown" onClick={closeMenu3}>
+                              <NavLink to="/elegantIcons" onClick={() => btn_icon(!showmenu)}>Elegant Icon</NavLink>
+                              <NavLink to="/etlineIcons" onClick={() => btn_icon(!showmenu)}>Etline Icon</NavLink>
+                              <NavLink to="/fontAwesomeIcons" onClick={() => btn_icon(!showmenu)}>Font Awesome Icon</NavLink>
+                              <NavLink to="/accordion" onClick={() => btn_icon(!showmenu)}>Accordion</NavLink>
+                              <NavLink to="/alerts" onClick={() => btn_icon(!showmenu)}>Alerts</NavLink>
+                              <NavLink to="/price" onClick={() => btn_icon(!showmenu)}>Pricing Table</NavLink>
+                              <NavLink to="/progressbar" onClick={() => btn_icon(!showmenu)}>Progress bar</NavLink>
+                              <NavLink to="/tabs" onClick={() => btn_icon(!showmenu)}>Tabs</NavLink>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>/exploreGrey">Explore Grey</NavLink> */}
                               {/* <NavLink to="/explore2Grey">Explore 2 Grey</NavLink> */}
                               {/* <NavLink to="/exploreOpensea">Explore OpenSea</NavLink> */}
                               <NavLink to="/rankingGrey">Ranking Grey</NavLink>
@@ -303,7 +325,7 @@ const Header = function({ className }) {
                             {openMenu2 && (
                             <div className='item-dropdown'>
                               <div className="dropdown" onClick={closeMenu2}>
-                                <NavLink to="/createCollection">Create Collection</NavLink>
+                                <NavLink to="/collections">Collections</NavLink>
                                 <NavLink to="/Profile/1">Profile</NavLink>
                                 <NavLink to="/AuthorGrey/1">Author Grey</NavLink>
                                 {/* <NavLink to="/AuthorOpensea">Author OpenSea</NavLink> */}

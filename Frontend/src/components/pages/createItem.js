@@ -334,6 +334,10 @@ const CreateItem = () => {
     });
   }
 
+  const handleCreateCollection = async (e) => {
+    navigate("/createCollection");
+  }
+
   const closeModal = () => {
     setOpenModal(false);
     setModalTitle('');
@@ -437,7 +441,10 @@ const CreateItem = () => {
 
               <div className="spacer-single"></div>
 
-              <h5>Choose collection <span className="text-muted">(Required)</span></h5>
+              <h5>
+                Choose collection <span className="text-muted">(Required)</span>
+                &nbsp;<span aria-hidden="true" className="icon_plus" title="Create New Collection" onClick={handleCreateCollection}></span>
+              </h5>
               <Select 
                   styles={customStyles}
                   options={[defaultValue, ...collections]}
