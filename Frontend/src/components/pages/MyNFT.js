@@ -62,7 +62,7 @@ const MyNFT = function({ collectionId = 1 }) {
     <div className="greyscheme">
       <StyledHeader theme={theme} />
       { hotCollections.author &&  hotCollections.author.banner &&
-          <section id='profile_banner' className='jumbotron breadcumb no-bg' style={{backgroundImage: `url(${api.baseUrl + hotCollections.author.banner.url})`}}>
+          <section id='profile_banner' className='jumbotron breadcumb no-bg' style={{backgroundImage: `url(${api.baseUrl + '/uploads/medium_2_770d4f4fa5.jpg'})`}}>
             <div className='mainbreadcumb'>
             </div>
           </section>
@@ -75,7 +75,7 @@ const MyNFT = function({ collectionId = 1 }) {
                 <div className="profile_avatar">
                 { hotCollections.author &&  hotCollections.author.avatar &&
                   <div className="d_profile_img">
-                    <img src={api.baseUrl + hotCollections.author.avatar.url} alt=""/>
+                    <img src={api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg'} alt=""/>
                     <i className="fa fa-check"></i>
                   </div>
                 }

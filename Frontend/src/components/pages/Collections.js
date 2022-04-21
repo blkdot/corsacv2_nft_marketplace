@@ -12,7 +12,7 @@ import axios from "axios";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
-import { navigate } from "@reach/router";
+import { navigate, useParams } from "@reach/router";
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
@@ -46,7 +46,9 @@ const Outer = styled.div`
   border-radius: 8px;
 `
 
-const Collections = function() {
+const Collections = props => {
+  const routerParams = useParams();
+
   const { account, Moralis } = useMoralis();
   const { chainId } = useChain();
   const { marketAddress, contractABI } = useMoralisDapp();
@@ -55,6 +57,8 @@ const Collections = function() {
   const Web3Api = useMoralisWeb3Api();
 
   const [collections, setCollections] = useState([]);
+
+  const [pageTitle, setPageTitle] = useState("Collections");
 
   const [loading, setLoading] = useState(true);
   const [loadingTitle, setLoadingTitle] = useState("Loading...");
@@ -82,6 +86,20 @@ const Collections = function() {
   }
   
   useEffect(async () => {
+    let apiUrl = null;
+    let apiParams = {};
+    if (props.user && props.user === "me") {
+      if (!isAuthenticated || !account) {
+        navigate('/');
+      }
+      
+      setPageTitle("My Collections");
+      apiUrl = `${process.env.REACT_APP_SERVER_URL}/api/collection`;
+      apiParams.walletAddr = account ? account.toLowerCase() : '';
+    } else {
+      apiUrl = `${process.env.REACT_APP_SERVER_URL}/api/collection/all`;
+    }
+    
     setOpenModal(false);
     setLoading(true);
     const isWeb3Active = Moralis.ensureWeb3IsInstalled();
@@ -99,13 +117,14 @@ const Collections = function() {
       onSuccess: async (chainCollections) => {
         console.log("success:getCollections");
         console.log(chainCollections);
-        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
+        await axios.get(apiUrl, {
           headers: {
             'Content-Type': 'application/json',
           },
-          params: {}
+          params: apiParams
         }).then(async res => {
           let cs = [];
+          console.log(res.data.collections);
           for (let c of chainCollections) {
             const dcs = res.data.collections.filter((e, index) => {
               return e.collectionAddr.toLowerCase() == c.toLowerCase() && e.created === 1;
@@ -114,6 +133,10 @@ const Collections = function() {
             if (dcs.length > 0) {
               cs.push(dcs[0]);
             } else {
+              if (props.user && props.user === "me") {
+                continue;
+              }
+
               const options = {
                 address: c,
                 chain: chainId,
@@ -211,7 +234,7 @@ const Collections = function() {
           <div className='container'>
             <div className='row m-10-hor'>
               <div className='col-12'>
-                <h1 className='text-center'>Collections</h1>
+                <h1 className='text-center'>{pageTitle}</h1>
               </div>
             </div>
           </div>
@@ -229,13 +252,13 @@ const Collections = function() {
           </div>
           <div className="row">
             { collections && collections.map((collection, index) => (
-              <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4">
+              <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
                 <div className="nft__item m-0">
                   { collection.collectionType && collection.collectionType === 1 ? (
                     <div className='icontype'><i className="fa fa-bookmark"></i></div>   
                     ) : (  
                     <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
-                      )
+                    )
                   }
                   
                   {/* <div className="author_list_pp">
@@ -245,11 +268,11 @@ const Collections = function() {
                       </span>
                   </div> */}
                   <div className="nft__item_wrap" style={{height: `${height}px`}}>
-                      <Outer>
-                          <span>
-                              <img onLoad={onImgLoad} src={ collection.image ? collection.image : fallbackImg } className="lazy nft__item_preview" alt=""/>
-                          </span>
-                      </Outer>
+                    <Outer>
+                      <span>
+                          <img onLoad={onImgLoad} src={ collection.image ? collection.image : fallbackImg } className="lazy nft__item_preview" alt=""/>
+                      </span>
+                    </Outer>
                   </div>
                   
                   <div className="nft__item_info">

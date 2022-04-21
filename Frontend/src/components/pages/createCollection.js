@@ -69,7 +69,7 @@ const CreateCollection = () => {
   const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
-  const { account, Moralis } = useMoralis();
+  const { authenticate, account, Moralis, isAuthenticated } = useMoralis();
   const { saveFile, moralisFile } = useMoralisFile();
   const { chainId } = useChain();
 
@@ -151,7 +151,7 @@ const CreateCollection = () => {
   const handleCreateCollection = async (e) => {
     //check form data
     e.preventDefault();
-    if (account == '') {
+    if (!isAuthenticated || !account || account == '') {
       setModalTitle('Error');
       setModalMessage("Please connect your wallet");
       setOpenModal(true);
@@ -378,7 +378,11 @@ const CreateCollection = () => {
     setModalMessage('');
   }
 
-  useEffect(() => {
+  useEffect(async () => {
+    if (!isAuthenticated || !account) {
+      navigate('/');
+    }
+
     setLoadingTitle("Creating your collection...");
   }, []);
   

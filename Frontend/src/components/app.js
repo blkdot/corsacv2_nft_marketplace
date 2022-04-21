@@ -187,6 +187,7 @@ const App = ({ isServerInfo }) => {
           <CreateCollection path="/createCollection" />
           <CreateItem path="/createItem" />
           <Collections path="/collections" />
+          <Collections path="/myCollections" user="me" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

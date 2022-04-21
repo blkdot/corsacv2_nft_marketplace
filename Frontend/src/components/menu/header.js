@@ -458,7 +458,7 @@ const Header = function({ className }) {
                           }
                     </div>
                     <div id="de-click-menu-profile" className="de-menu-profile" onClick={() => btn_icon_pop(!showpop)} ref={refpop}>                           
-                        <img src="../../img/author_single/author_thumbnail.jpg" alt=""/>
+                        <img src="../../img/author/author-4.jpg" alt=""/>
                         {showpop && 
                           <div className="popshow">
                             <div className="d-name">
@@ -487,6 +487,11 @@ const Header = function({ className }) {
                               <li>
                                 <span>
                                   <i className="fa fa-pencil"></i> Edit profile
+                                </span>
+                              </li>
+                              <li onClick={() => navigate("/myCollections")}>
+                                <span>
+                                  <i className="fa fa-table"></i> My Collections
                                 </span>
                               </li>
                               <li onClick={disconnect}>

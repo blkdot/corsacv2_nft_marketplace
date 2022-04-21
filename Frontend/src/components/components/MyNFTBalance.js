@@ -255,6 +255,11 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         address: account
       };
 
+      const isWeb3Active = Moralis.ensureWeb3IsInstalled();
+      if (!isWeb3Active) {
+        await Moralis.enableWeb3();
+      }
+      
       const tb = await Web3Api.account.getTokenBalances(options);
       const token = tb.filter((t, index) => {
         return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();

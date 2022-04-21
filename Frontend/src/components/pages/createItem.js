@@ -68,7 +68,7 @@ const CreateItem = () => {
   const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
-  const { account, Moralis } = useMoralis();
+  const { account, Moralis, isAuthenticated } = useMoralis();
   const { saveFile, moralisFile } = useMoralisFile();
   const { chainId } = useChain();
 
@@ -397,6 +397,12 @@ const CreateItem = () => {
       setLoadingTitle("Creating your item...");
     }
   }, [account]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !account) {
+      navigate('/');
+    }
+  }, []);
   
   return (
     <div className="greyscheme">
