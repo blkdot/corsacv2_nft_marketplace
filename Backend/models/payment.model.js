@@ -24,6 +24,10 @@ const Payment = mongoose.model(
       type: String,
       default: 'untitled symbol'
     },
+    decimals: {
+      type: Number,
+      default: 0
+    },
     allowed: {
       type: Number,
       default: 0

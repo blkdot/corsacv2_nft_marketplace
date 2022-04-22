@@ -57,7 +57,6 @@ exports.createCollection = (req, res) => {
 }
 
 exports.getCollection = (req, res) => {
-
   Collection.find({
     walletAddr: { $in: req.query.walletAddr }
   },
@@ -68,6 +67,21 @@ exports.getCollection = (req, res) => {
     }
     res.status(200).send({
       collections: collections
+    })
+  });
+}
+
+exports.getCollectionByAddress = (req, res) => {
+  Collection.find({
+    collectionAddr: { $in: req.query.collectionAddr }
+  },
+  (err, collections) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      collection: collections.length > 0 ? collections[0] : {}
     })
   });
 }

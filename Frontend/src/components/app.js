@@ -70,6 +70,8 @@ import MyNFT from './pages/MyNFT';
 import CreateCollection from './pages/createCollection';
 import CreateItem from './pages/createItem';
 import Collections from './pages/Collections';
+import Collection from './pages/collectionDetail';
+import MyCollections from "./pages/myCollections";
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -187,7 +189,8 @@ const App = ({ isServerInfo }) => {
           <CreateCollection path="/createCollection" />
           <CreateItem path="/createItem" />
           <Collections path="/collections" />
-          <Collections path="/myCollections" user="me" />
+          <MyCollections path="/myCollections" />
+          <Collection path="/collection/:address" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

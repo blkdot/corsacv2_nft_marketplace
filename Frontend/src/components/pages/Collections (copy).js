@@ -1,19 +1,24 @@
 import React, { memo, useEffect, useState } from "react";
-import {useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
+import {useChain, useMoralis, useNFTBalances, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
 import Footer from '../components/footer';
+import * as selectors from '../../store/selectors';
+import { fetchHotCollections, setNFTBalances } from "../../store/actions/thunks";
+import api from "../../core/api";
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
+import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 import axios from "axios";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
-import { navigate } from "@reach/router";
+import { navigate, useParams } from "@reach/router";
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
 
 import moment from "moment";
+import BigNumber from "bignumber.js";
 
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
@@ -31,6 +36,7 @@ const StyledModal = styled(Modal)`
     background-color: transparent;
   }
 `
+
 const Outer = styled.div`
   display: flex;
   justify-content: center;
@@ -39,7 +45,10 @@ const Outer = styled.div`
   overflow: hidden;
   border-radius: 8px;
 `
+
 const Collections = props => {
+  const routerParams = useParams();
+
   const { account, Moralis } = useMoralis();
   const { chainId } = useChain();
   const { marketAddress, contractABI } = useMoralisDapp();
@@ -77,53 +86,160 @@ const Collections = props => {
   }
   
   useEffect(async () => {
-    setPageTitle("Collections");
+    let apiUrl = null;
+    let apiParams = {};
+    if (props.user && props.user === "me") {
+      if (!isAuthenticated || !account) {
+        navigate('/');
+      }
+      
+      setPageTitle("My Collections");
 
+      //set API url
+      apiUrl = `${process.env.REACT_APP_SERVER_URL}/api/collection`;
+      apiParams.walletAddr = account ? account.toLowerCase() : '';
+    } else {
+      setPageTitle("Collections");
+
+      //set API url
+      apiUrl = `${process.env.REACT_APP_SERVER_URL}/api/collection/all`;
+    }
+    
     setOpenModal(false);
     setLoading(true);
     
-    //get collections from backend
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    //get all collections from marketplaces
+    const isWeb3Active = Moralis.ensureWeb3IsInstalled();
+    if (!isWeb3Active) {
+      await Moralis.enableWeb3();
+    }
+    const ops = {
+      contractAddress: marketAddress,
+      functionName: "getCollections",
+      abi: contractABI,
       params: {}
-    }).then(async res => {
-      let cs = [];
-      
-      for (let c of res.data.collections) {
-        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/collection`, {
+    };
+    await contractProcessor.fetch({
+      params: ops,
+      onSuccess: async (chainCollections) => {
+        console.log("success:getCollections");
+        console.log(chainCollections);
+
+        //get collections from backend
+        await axios.get(apiUrl, {
           headers: {
             'Content-Type': 'application/json',
           },
-          params: {
-            collectionId: c._id
+          params: apiParams
+        }).then(async res => {
+          let cs = [];
+          console.log(res.data.collections);
+
+          for (let c of chainCollections) {
+            const dcs = res.data.collections.filter((e, index) => {
+              return e.collectionAddr.toLowerCase() == c.toLowerCase() && e.created === 1;
+            });
+
+            const options = {
+              address: c,
+              chain: chainId,
+            };
+
+            //get numbers of items of collection
+            const NFTs = await Web3Api.token.getAllTokenIds(options);
+            const itemCount = NFTs.result.length;
+            console.log("NFTs:", NFTs);
+
+            const url = `/collection/${c}`;
+
+            if (dcs.length > 0) {
+              let temp = dcs[0];
+              temp.itemCount = itemCount;
+              temp.url = url;
+              cs.push(temp);
+            } else {
+              if (props.user && props.user === "me") {
+                continue;
+              }
+
+              if (NFTs.result.length > 0) {
+                const nft = NFTs.result[0];
+                if (nft.image) {
+                  cs.push({
+                    collectionAddr: c,
+                    title: nft.name ? nft.name : 'Unknown',
+                    symbol: nft.symbol ? nft.symbol : 'Unknown',
+                    image: nft.image,
+                    itemCount: itemCount,
+                    url: url
+                  });
+                  continue;
+                }
+                if (nft.metadata) {
+                  if (nft.metadata.image) {
+                    cs.push({
+                      collectionAddr: c,
+                      title: nft.name ? nft.name : nft.metadata.name,
+                      symbol: nft.symbol ? nft.symbol : nft.metadata.symbol,
+                      image: nft.metadata.image,
+                      itemCount: itemCount,
+                      url: url
+                    });
+                    continue;
+                  }
+                }
+                if (nft.token_uri) {
+                  const response = await fetch(nft.token_uri);
+                  const metadata = await response.json();
+                  if (metadata.image) {
+                    cs.push({
+                      collectionAddr: c,
+                      title: nft.name ? nft.name : metadata.name,
+                      symbol: nft.symbol ? nft.symbol : metadata.symbol,
+                      image: metadata.image,
+                      itemCount: itemCount,
+                      url: url
+                    });
+                    continue;
+                  }
+                }
+                cs.push({
+                  collectionAddr: c,
+                  title: nft.name ? nft.name : 'Unknown',
+                  symbol: nft.symbol ? nft.symbol : 'Unknown',
+                  itemCount: itemCount,
+                  url: url
+                });
+              } else {
+                cs.push({
+                  collectionAddr: c,
+                  title: 'Unknown',
+                  symbol: 'Unknown',
+                  itemCount: itemCount,
+                  url: url
+                });
+              }
+            }
           }
-        }).then(items => {
-          let temp = c;
-          temp.itemsCount = items.data.length;
-          temp.url = `/collection/${c.collectionAddr}`;
-
-          cs.push(temp);
-        }).catch((e) => {
+          console.log("collections:", cs);
+          setCollections(cs);
           setLoading(false);
-
-          setOpenModal(false);
-          setModalTitle('Error');
-          setModalMessage('Error occurs while fetching data from backend');
         });
-      }
-      console.log(cs);
-      setCollections(cs);
-      setLoading(false);
-    }).catch((e) => {
-      setLoading(false);
+      },
+      onError: (error) => {
+        console.log("failed:getCollections", error);
+        setLoading(false);
 
-      setOpenModal(false);
-      setModalTitle('Error');
-      setModalMessage('Error occurs while fetching data from backend');
+        setModalTitle('Error');
+        if (error.message) {
+          setModalMessage(error.message);
+        } else {
+          setModalMessage(error);
+        }
+        setOpenModal(true);
+        return;
+      },
     });
-    
   }, [account]);
 
   return (
@@ -163,13 +279,6 @@ const Collections = props => {
               </button>
             </div>
           </div>
-          {!loading && collections.length == 0 &&
-          <div className="row">
-            <div className="alert alert-danger" role="alert">
-              No collections
-            </div>
-          </div>
-          }
           <div className="row">
             { collections && collections.map((collection, index) => (
               <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
@@ -209,9 +318,9 @@ const Collections = props => {
                           Category: {collection.category}
                         </div>
                       }
-                      { collection.itemsCount >= 0 && 
+                      { collection.itemCount >= 0 && 
                         <div className="nft__item_price">
-                          Items: {collection.itemsCount}
+                          Items: {collection.itemCount}
                         </div>
                       }
                       { collection.timeStamp && 

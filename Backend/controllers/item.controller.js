@@ -69,14 +69,21 @@ exports.createItem = (req, res) => {
 //   }).catch((e) => console.log('error', e));
 // };
 
-// exports.getItems = (req, res) => {
-//   NFTItem.find({
-//     walletAddr: { $in: req.query.walletAddr },
-//     status: { $in: 0 }
-//   }).then((items) => {
-//     res.send(items);
-//   }).catch((e) => res.status(500).send({ message: e }));
-// };
+exports.getItemsByWallet = (req, res) => {
+  NFTItem.find({
+    walletAddr: { $in: req.query.walletAddr }
+  }).then((items) => {
+    res.send(items);
+  }).catch((e) => res.status(500).send({ message: e }));
+};
+
+exports.getItemsByCollection = (req, res) => {
+  NFTItem.find({
+    collectionId: { $in: new mongoose.Types.ObjectId(req.query.collectionId) }
+  }).then((items) => {
+    res.send(items);
+  }).catch((e) => res.status(500).send({ message: e }));
+};
 
 // exports.getItem = (req, res) => {
 //   NFTItem.findOne({

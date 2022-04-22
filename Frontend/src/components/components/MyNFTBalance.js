@@ -7,6 +7,7 @@ import NftMusicCard from './NftMusicCard';
 import { Modal, Input, Spin, Button, Tabs, DatePicker } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
+import axios from "axios";
 import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 
@@ -269,9 +270,50 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     }, []);
 
     useEffect(async () => {
+      let collections = [];
+
+      //get collections from contract
+      // const ops = {
+      //   contractAddress: marketAddress,
+      //   functionName: "getCollections",
+      //   abi: contractABI,
+      //   params: {}
+      // };
+      // await contractProcessor.fetch({
+      //   params: ops,
+      //   onSuccess: (chainCollections) => {
+      //     collections = chainCollections;
+      //   },
+      //   onError: (error) => {
+      //     console.log("failed:", error);
+      //   },
+      // });
+      
+      //get collections from backend
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {}
+      }).then(async res => {
+        for (let c of res.data.collections) {
+          collections.push(c.collectionAddr);
+        }
+      }).catch((error) => {
+        console.log("failed:getAllCollection");
+      });
+
       if (NFTBalances && NFTBalances.result) {
         console.log(NFTBalances.result);
+        
+        let myNFTs = [];
         for (let nft of NFTBalances.result) {
+          let cs = collections.filter((c, index) => {
+            return c.toLowerCase() === nft.token_address;
+          });
+          if (cs.length === 0) {
+            continue;
+          }
           if (!nft.metadata) {
             // const options = {
             //   address: nft.token_address,
@@ -305,8 +347,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               nft.image = JSON.parse(JSON.stringify(nft.metadata)).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
             }
           }
+          myNFTs.push(nft);
         }
-        setNfts(NFTBalances.result);
+        setNfts(myNFTs);
       }
     }, [NFTBalances]);
 

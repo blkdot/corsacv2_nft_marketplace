@@ -37,6 +37,7 @@ module.exports = function(app) {
   )
 
   app.get("/api/collection/all", controller.getAllCollections);
+  app.get("/api/collection/address", controller.getCollectionByAddress);
 
   app.get("/api/collection/stars", controller.getCollectionStars);
   app.post("/api/collection/star/update", controller.updateCollectionStars);

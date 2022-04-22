@@ -285,76 +285,72 @@ const CreateCollection = () => {
     };
     await contractProcessor.fetch({
       params: ops,
-      onSuccess: async (result) => {
+      onSuccess: async (tx) => {
         console.log("success:createNewCollection");
         
+        let result = await tx.wait();
         let collectionAddr = null;
-
-        //get collection address created
-        ops.functionName = "getRecentCollection";
-        ops.params = {};
-        await contractProcessor.fetch({
-          params: ops,
-          onSuccess: async (result) => {
+        switch (typeof result) {
+          case "string":
             collectionAddr = result;
-            console.log(collectionAddr);
-            //save collection into db
-            try {
-              const res = await axios.post(
-                `${process.env.REACT_APP_SERVER_URL}/api/collection/create`, 
-                {
-                  'walletAddr': account.toLowerCase(),
-                  'collectionType': collectionType,
-                  'collectionAddr': collectionAddr,
-                  'title': title,
-                  'symbol': symbol,
-                  'url': url,
-                  'category': category.value,
-                  'description': description,
-                  'image': GATEWAY_URL + imageFileIpfs.hash(),
-                  'timeStamp': Math.floor(new Date().getTime() / 1000)
-                },
-                {
-                  headers: {
-                    'Content-Type': 'application/json',
-                  }
-                }
-              );
-              setLoading(false);
+            break;
+          case "object":
+            collectionAddr = result.logs[0].address.toLowerCase();
+            break;
+        }
+        console.log("new collection address:", collectionAddr);
+        setLoading(false);
 
-              if (res) {
-                if (res.data.type === 'error') {
-                  setModalTitle('Error');
-                } else {
-                  setModalTitle('Success');
-                }
-                setModalMessage(res.data.message);
-                setOpenModal(true);
+        // save collection into db
+        try {
+          const res = await axios.post(
+            `${process.env.REACT_APP_SERVER_URL}/api/collection/create`, 
+            {
+              'walletAddr': account.toLowerCase(),
+              'collectionType': collectionType,
+              'collectionAddr': collectionAddr,
+              'title': title,
+              'symbol': symbol,
+              'url': url,
+              'category': category.value,
+              'description': description,
+              'image': GATEWAY_URL + imageFileIpfs.hash(),
+              'timeStamp': Math.floor(new Date().getTime() / 1000)
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
               }
-            } catch(ex) {
-              console.log(ex);
-              setLoading(false);
+            }
+          );
+          setLoading(false);
 
+          if (res) {
+            if (res.data.type === 'error') {
               setModalTitle('Error');
-              setModalMessage(ex.message);
+              setModalMessage(res.data.message);
               setOpenModal(true);
-              return;
-            }
-          },
-          onError: (error) => {
-            console.log("failed:getRecentCollection", error);
-            setLoading(false);
-
-            setModalTitle('Error');
-            if (error.message) {
-              setModalMessage(error.message);
             } else {
-              setModalMessage(error);
+              setModalTitle('Success');
+              setModalMessage(res.data.message);
+              setOpenModal(true);
+
+              setTimeout(() => {
+                // navigate('/collection/' + collectionAddr);
+                navigate('/myCollections');
+              }, 2000);
             }
-            setOpenModal(true);
-            return;
+            
           }
-        });
+        } catch(ex) {
+          console.log(ex);
+          setLoading(false);
+
+          setModalTitle('Error');
+          setModalMessage(ex.message);
+          setOpenModal(true);
+          return;
+        }
       },
       onError: (error) => {
         console.log("failed:createNewCollection", error);

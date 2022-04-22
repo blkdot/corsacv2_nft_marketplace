@@ -246,6 +246,8 @@ const CreateItem = () => {
       params: ops,
       onSuccess: async (result) => {
         console.log("success:mintTo");
+        await result.wait();
+
         //get token id
         let token_id = null;
         ops.functionName = "getTokenId";
@@ -255,7 +257,7 @@ const CreateItem = () => {
           onSuccess: async (result) => {
             console.log("success:getTokenId");
             console.log("getTokenId:", result);
-            token_id = new BigNumber(result._hex).toNumber();
+            token_id = new BigNumber(result._hex).toNumber() - 1;
 
             console.log("minted tokenID:", token_id);
 
@@ -280,16 +282,33 @@ const CreateItem = () => {
                   }
                 }
               );
+
+              const options = {
+                address: collection.addr,
+                token_id: token_id,
+                flag: "uri",
+                chain: chainId
+              };
+              const result = await Moralis.Web3API.token.reSyncMetadata(options);
+              
               setLoading(false);
 
               if (res) {
                 if (res.data.type === 'error') {
                   setModalTitle('Error');
+                  setModalMessage(res.data.message);
+                  setOpenModal(true);
                 } else {
                   setModalTitle('Success');
+                  setModalMessage(res.data.message);
+                  setOpenModal(true);
+
+
+                  setTimeout(async () => {
+                    
+                    navigate('/collection/' + collection.addr);
+                  }, 2000);
                 }
-                setModalMessage(res.data.message);
-                setOpenModal(true);
               }
             } catch(ex) {
               console.log(ex);
@@ -381,7 +400,15 @@ const CreateItem = () => {
       }).then(async res => {
         let payments = [];
         for (let p of res.data.payments) {
-          payments.push({value: p.id, label: p.title + " (" + p.symbol + ")", addr: p.addr, title: p.title, type: p.type});
+          payments.push({
+            value: p.id, 
+            label: p.title + " (" + p.symbol + ")", 
+            addr: p.addr, 
+            title: p.title, 
+            type: p.type,
+            symbol: p.symbol,
+            decimals: p.decimals
+          });
         }
         setPayments(payments);
       });

@@ -32,6 +32,7 @@ exports.createPayment = (req, res) => {
       addr: req.body.addr,
       title: req.body.title,
       symbol: req.body.symbol,
+      decimals: req.body.decimals,
       allowed: req.body.allowed
     });
 
@@ -72,6 +73,7 @@ exports.updatePayment = (req, res) => {
     payment.addr = (req.body.addr != null) ? req.body.addr : payment.addr;
     payment.title = (req.body.title != null) ? req.body.title : payment.title;
     payment.symbol = (req.body.symbol != null) ? req.body.symbol : payment.symbol;
+    payment.decimals = (req.body.decimals != null) ? req.body.decimals : payment.decimals;
     payment.allowed = (req.body.allowed != null) ? req.body.allowed : payment.allowed;
     payment.save((err) => {
       if (err) {

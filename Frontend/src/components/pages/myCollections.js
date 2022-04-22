@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from "react";
-import {useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
+import {useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances} from "react-moralis";
 import Footer from '../components/footer';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
@@ -39,17 +39,18 @@ const Outer = styled.div`
   overflow: hidden;
   border-radius: 8px;
 `
-const Collections = props => {
+const MyCollections = props => {
   const { account, Moralis } = useMoralis();
   const { chainId } = useChain();
   const { marketAddress, contractABI } = useMoralisDapp();
   const contractProcessor = useWeb3ExecuteFunction();
   const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
   const Web3Api = useMoralisWeb3Api();
+  const { data: NFTBalances, isLoading} = useNFTBalances();
 
-  const [collections, setCollections] = useState([]);
+  const [myCollections, setMyCollections] = useState([]);
 
-  const [pageTitle, setPageTitle] = useState("Collections");
+  const [pageTitle, setPageTitle] = useState("My Collections");
 
   const [loading, setLoading] = useState(true);
   const [loadingTitle, setLoadingTitle] = useState("Loading...");
@@ -77,54 +78,78 @@ const Collections = props => {
   }
   
   useEffect(async () => {
-    setPageTitle("Collections");
-
-    setOpenModal(false);
-    setLoading(true);
-    
-    //get collections from backend
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {}
-    }).then(async res => {
-      let cs = [];
-      
-      for (let c of res.data.collections) {
-        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/collection`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          params: {
-            collectionId: c._id
-          }
-        }).then(items => {
-          let temp = c;
-          temp.itemsCount = items.data.length;
-          temp.url = `/collection/${c.collectionAddr}`;
-
-          cs.push(temp);
-        }).catch((e) => {
-          setLoading(false);
-
-          setOpenModal(false);
-          setModalTitle('Error');
-          setModalMessage('Error occurs while fetching data from backend');
-        });
-      }
-      console.log(cs);
-      setCollections(cs);
-      setLoading(false);
-    }).catch((e) => {
-      setLoading(false);
-
+    async function getMyCollections() {
       setOpenModal(false);
-      setModalTitle('Error');
-      setModalMessage('Error occurs while fetching data from backend');
-    });
-    
-  }, [account]);
+      setLoading(true);
+
+      let allCollections = [];
+      //get collections from backend
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {}
+      }).then(async res => {
+        allCollections = res.data.collections;
+
+        let collections = allCollections.filter((c, index) => {
+          return c.walletAddr.toLowerCase() === account.toLowerCase();
+        });
+        for (let c of collections) {
+          c.itemsCount = 0;
+          c.url = `/collection/${c.collectionAddr}`;
+        }
+
+        for (let nft of NFTBalances.result) {
+          let cs = allCollections.filter((c, index) => {
+            return c.collectionAddr.toLowerCase() === nft.token_address.toLowerCase();
+          });
+
+          if (cs.length === 0) {
+            continue;
+          }
+
+          const options = {
+            address: nft.token_address,
+            chain: chainId,
+          };
+
+          //get numbers of items of collection
+          const NFTs = await Web3Api.token.getAllTokenIds(options);
+          const itemsCount = NFTs.result.length;
+
+          cs[0].itemsCount = itemsCount;
+          cs[0].url = `/collection/${cs[0].collectionAddr}`;
+
+          let flag = false;
+          for (let c of collections) {
+            if (c.collectionAddr.toLowerCase() === cs[0].collectionAddr.toLowerCase()) {
+              c = cs[0];
+              flag = true;
+              continue;
+            }
+          }
+          if (!flag) {
+            collections.push(cs[0]);
+          }
+        }
+        console.log(collections);
+
+        setMyCollections(collections);
+        setLoading(false);
+      }).catch((error) => {
+        setLoading(false);
+
+        setModalTitle('Error');
+        setModalMessage('Error occurs while fetching data');
+        setOpenModal(true);
+      });
+    }
+
+    if (account && NFTBalances && NFTBalances.result.length > 0) {
+      getMyCollections();
+    }
+  }, [account, NFTBalances]);
 
   return (
     <div className="greyscheme">
@@ -163,7 +188,7 @@ const Collections = props => {
               </button>
             </div>
           </div>
-          {!loading && collections.length == 0 &&
+          {!loading && myCollections.length == 0 &&
           <div className="row">
             <div className="alert alert-danger" role="alert">
               No collections
@@ -171,7 +196,7 @@ const Collections = props => {
           </div>
           }
           <div className="row">
-            { collections && collections.map((collection, index) => (
+            { myCollections && myCollections.map((collection, index) => (
               <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
                 <div className="nft__item m-0">
                   { collection.collectionType && collection.collectionType === 1 ? (
@@ -248,4 +273,4 @@ const Collections = props => {
     </div>
   );
 }
-export default memo(Collections);
+export default memo(MyCollections);
