@@ -285,11 +285,11 @@ const Collection = props => {
       });
     }
 
-    if (fetchMarketItems.length > 0) {
+    if (account) {
       getFetchItems();
       setLoading(true);
     }
-  }, [account, fetchMarketItems.length]);
+  }, [account]);
 
   return (
     <div className="greyscheme">
