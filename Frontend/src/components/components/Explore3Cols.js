@@ -55,8 +55,8 @@ const Explore3Cols = ({showLoadMore = true}) => {
         (e) =>
           parseInt(e.saleId) === parseInt(nft?.saleId._hex) &&
           e.sc.toLowerCase() === nft?.token_address.toLowerCase() &&
-          e.tokenId === nft?.token_id &&
-          e.confirmed === true
+          e.tokenId === nft?.token_id 
+          // && e.confirmed === true
       );
       return result;
     };
@@ -90,13 +90,13 @@ const Explore3Cols = ({showLoadMore = true}) => {
         await contractProcessor.fetch({
           params: ops,
           onSuccess: (result) => {
-            console.log("success");
-            console.log(ops);
-            console.log(result);
+            console.log("success:getSalesInfo");
+            // console.log(ops);
+            // console.log(result);
             setSaleNFTs(result);
           },
           onError: (error) => {
-            console.log("failed:", error);
+            console.log("failed:getSalesInfo", error);
             setSaleNFTs([]);
           },
         });
@@ -120,6 +120,8 @@ const Explore3Cols = ({showLoadMore = true}) => {
 
         if (saleNFTs && saleNFTs.length > 0) {
           const promises = [];
+          // console.log("fetchMarketItems:", fetchMarketItems);
+          // console.log("saleNFTs:", saleNFTs);
           
           for (let saleInfo of saleNFTs) {
             const options = {
@@ -130,7 +132,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
               const result = await Moralis.Web3API.token.getAllTokenIds(options);
               
               const temp = result?.result.filter((nft, index) => {
-                return nft.token_id === saleInfo.tokenId.toString();
+                return parseInt(nft.token_id) === parseInt(saleInfo.tokenId.toString());
               });
               
               if (temp.length > 0) {
@@ -183,6 +185,7 @@ const Explore3Cols = ({showLoadMore = true}) => {
             }
 
             const marketItem = getMarketItem(nft);
+            // console.log("nft:", nft);
             // console.log("marketItem from Moralis:", marketItem);
             
             if (marketItem !== undefined && marketItem !== null) {
@@ -209,18 +212,23 @@ const Explore3Cols = ({showLoadMore = true}) => {
             }
           }
 
-          console.log("NFTs:", promises);
+          // console.log("NFTs:", promises);
           setNFTs(promises);
         }
+        
         setIsExplorerLoading(false);
       }
-      console.log("isLoading:", isLoading);
+      // console.log("isLoading:", isLoading);
+      // console.log('saleNFTs:', saleNFTs);
+      // console.log("nfts:", nfts);
 
       if (isLoading && nfts.length == 0) {
         setIsExplorerLoading(true);
       } else {
         if (fetchMarketItems.length > 0) {
           fetchAPIData();
+        } else {
+          setIsExplorerLoading(false);
         }
       }
       

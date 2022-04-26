@@ -15,15 +15,15 @@ const User = mongoose.model(
       type: String,
       default: ''
     },
+    banner: {
+      type: String,
+      default: ''
+    },
+    about: {
+      type: String,
+      default: ''
+    },
     twitter: {
-      type: String,
-      default: ''
-    },
-    cent: {
-      type: String,
-      default: ''
-    },
-    reddit: {
       type: String,
       default: ''
     },
@@ -34,6 +34,10 @@ const User = mongoose.model(
     instagram: {
       type: String,
       default: ''
+    },
+    created_at: {
+      type: Number,
+      default: 0
     }
   })
 );

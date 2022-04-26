@@ -2,44 +2,52 @@ const db = require("../models");
 const User = db.user;
 
 exports.saveUser = (req, res) => {
-
-  let filePath;
-  if (req.file) {
-    const {path, mimetype} = req.file;
-    filePath = path;
+  let avatarPath;
+  if (req.files.avatar && req.files.avatar.length > 0) {
+    const {path, mimetype} = req.files.avatar[0];
+    avatarPath = path;
   } else {
-    filePath = null;
+    avatarPath = null;
+  }
+
+  let bannerPath;
+  if (req.files.banner && req.files.banner.length > 0) {
+    const {path, mimetype} = req.files.banner[0];
+    bannerPath = path;
+  } else {
+    bannerPath = null;
   }
   
   if (req.body.walletAddr) {
     User.findOne({
       walletAddr: req.body.walletAddr,
     }).then((user) => {
-      console.log(user);
       if (user) {
         user.name = req.body.name;
-        user.avatar = filePath;
+        user.avatar = avatarPath ? avatarPath : user.avatar;
+        user.banner = bannerPath ? bannerPath : user.banner;
+        user.about = req.body.about;
         user.twitter = req.body.twitter;
-        user.cent = req.body.cent;
-        user.reddit = req.body.reddit;
         user.youtube = req.body.youtube;
         user.instagram = req.body.instagram;
+        user.created_at = Math.floor(new Date().getTime() / 1000);
       } else {
         user = new User({
           walletAddr: req.body.walletAddr,
           name: req.body.name,
-          avatar: filePath,
+          avatar: avatarPath,
+          banner: bannerPath,
+          about: req.body.about,
           twitter: req.body.twitter,
-          cent: req.body.cent,
-          reddit: req.body.reddit,
           youtube: req.body.youtube,
-          instagram: req.body.instagram
+          instagram: req.body.instagram,
+          created_at: Math.floor(new Date().getTime() / 1000)
         })
       }
 
-      user.save((err1) => {
-        if (err1) {
-          res.status(500).send({ message: err1 });
+      user.save((err) => {
+        if (err) {
+          res.status(500).send({ message: err });
           return;
         }
 
@@ -52,15 +60,13 @@ exports.saveUser = (req, res) => {
   }
 };
 
-// exports.getUser = (req, res) => {
-//   User.findOne({
-//     walletAddr: { $in: req.query.walletAddr },
-//   }.then((user) => {
-//     res.status(200).send({
-//       user: user
-//     })
-//   }));
-// };
+exports.getAllUsers = (req, res) => {
+  User.find({}.then((users) => {
+    res.status(200).send({
+      users: users
+    })
+  }));
+};
 
 exports.getUser = (req, res) => {
   User.findOne({
@@ -70,4 +76,4 @@ exports.getUser = (req, res) => {
       user: user
     })
   })
-}
+};

@@ -1,6 +1,8 @@
 // import React from 'react';
 import { useEffect } from "react";
+import { useDispatch } from 'react-redux';
 import { useMoralis } from "react-moralis";
+import * as actions from '../store/actions/thunks';
 import { Router, Location, Redirect } from '@reach/router';
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
@@ -101,19 +103,25 @@ const PosedRouter = ({ children }) => (
 );
 
 const App = ({ isServerInfo }) => {
-  const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+  const { Moralis, isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading, account } = useMoralis();
+
+  const dispatch = useDispatch();
+  const unsubscribe = Moralis.onAccountChanged((account) => {
+    dispatch(actions.setCurrentUser(account));
+  });
 
   useEffect(() => {
     const connectorId = window.localStorage.getItem("connectorId");
-    console.log("connectorId:", connectorId);
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("isWeb3Enabled:", isWeb3Enabled);
-    console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
-    console.log("window.web3:", window.web3);
-    console.log("window.ethereum:", window.ethereum);
+    // console.log("connectorId:", connectorId);
+    // console.log("isAuthenticated:", isAuthenticated);
+    // console.log("isWeb3Enabled:", isWeb3Enabled);
+    // console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
+    // console.log("window.web3:", window.web3);
+    // console.log("window.ethereum:", window.ethereum);
     
     if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading)
       enableWeb3({ provider: connectorId });
+      dispatch(actions.setCurrentUser(account));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled]);
 
@@ -152,7 +160,7 @@ const App = ({ isServerInfo }) => {
           {/* <ItemDetailReduxgrey path="/ItemDetailGrey/:nftId" /> */}
           <ItemDetail path="/item-detail" />
           <Author path="/Author/:authorId" />
-          <Profile path="/Profile/:authorId" />
+          <Profile path="/profile/:userAddr" />
           <AuthorGrey path="/AuthorGrey/:authorId" />
           <AuthorOpensea path="/AuthorOpensea" />
           <Wallet path="/wallet" />

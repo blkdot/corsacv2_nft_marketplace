@@ -464,6 +464,14 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             </div>
           </StyledModal>
 
+          {!isPageLoading && nfts.length == 0 &&
+            <div className="row">
+              <div className="alert alert-danger" role="alert">
+                No NFTs
+              </div>
+            </div>
+          }
+
           {!isPageLoading && nfts && nfts.map( (nft, index) => (
               nft.category === 'music' ?
               <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />

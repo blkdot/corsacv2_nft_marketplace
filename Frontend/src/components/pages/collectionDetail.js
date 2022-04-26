@@ -1,4 +1,7 @@
 import React, { memo, useEffect, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import * as selectors from '../../store/selectors';
+import * as actions from '../../store/actions/thunks';
 import {useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
 import Footer from '../components/footer';
 
@@ -44,6 +47,10 @@ const Outer = styled.div`
 `
 
 const Collection = props => {
+  const currentUserState = useSelector(selectors.currentUserState);
+
+  const dispatch = useDispatch();
+
   const { account, Moralis } = useMoralis();
   const { chainId } = useChain();
   const { marketAddress, contractABI } = useMoralisDapp();
@@ -59,8 +66,6 @@ const Collection = props => {
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
   const [openModal, setOpenModal] = useState(false);
-
-  const [payments, setPayments] = useState([]);
 
   const [height, setHeight] = useState(0);
   const [clockTop, setClockTop] = useState(true);
@@ -91,39 +96,11 @@ const Collection = props => {
     setModalMessage('');
   }
 
-  async function getPayments() {
-    try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          allowed: 1
-        }
-      }).then(async res => {
-        let payments = [];
-        for (let p of res.data.payments) {
-          payments.push({
-            value: p.id, 
-            label: p.title + " (" + p.symbol + ")", 
-            addr: p.addr, 
-            title: p.title, 
-            type: p.type,
-            symbol: p.symbol,
-            decimals: p.decimals
-          });
-        }
-        setPayments(payments);
-      });
-    } catch {
-      console.log('error in fetching payments');
-    }
-  }
+  const handleItemClick = (nft) => {
+    dispatch(actions.setBuyNFT(nft));
+    navigate('/item-detail');
+  };
 
-  useEffect(() => {
-    getPayments();
-  }, []);
-  
   useEffect(async () => {
     async function getFetchItems() {
       if (!props.address) {
@@ -135,6 +112,42 @@ const Collection = props => {
           setOpenModal(false);
           navigate("/");
         }, 5000);
+      }
+
+      //get all payments
+      let payments = [];
+      try {
+        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          params: {
+            allowed: 1
+          }
+        }).then(async res => {
+          for (let p of res.data.payments) {
+            payments.push({
+              value: p.id, 
+              label: p.title + " (" + p.symbol + ")", 
+              addr: p.addr, 
+              title: p.title, 
+              type: p.type,
+              symbol: p.symbol,
+              decimals: p.decimals
+            });
+          }
+        });
+      } catch {
+        console.log('error in fetching payments');
+      }
+
+      if (payments.length === 0) {
+        setLoading(false);
+
+        setModalTitle('Error');
+        setModalMessage('Cannot get payments list from backend');
+        setOpenModal(true);
+        return;
       }
 
       const collectionAddr = props.address;
@@ -210,8 +223,9 @@ const Collection = props => {
               }
               
               let sales = saleItems.filter((s, index) => {
-                return nft.token_address.toLowerCase() === s.sc.toLowerCase() && 
-                        parseInt(nft.token_id) === new BigNumber(s.tokenId._hex).toNumber();
+                return nft.token_address.toLowerCase() === s.sc.toLowerCase() 
+                        && parseInt(nft.token_id) === new BigNumber(s.tokenId._hex).toNumber() 
+                        // && s.confirmed === true;
               });
 
               if (sales.length > 0) {
@@ -221,7 +235,8 @@ const Collection = props => {
                 const endTime = new BigNumber(sale.endTime._hex).toNumber();
                 const currentTime = Math.floor(new Date().getTime() / 1000);
                 const payment = payments[new BigNumber(sale.payment._hex).toNumber()];
-                const basePrice = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+                const decimals = (payment && payment.decimals != undefined && payment.decimals != null) ? parseInt(payment.decimals) : 18;
+                const basePrice = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
                 
                 metadata.price = basePrice;
 
@@ -248,6 +263,8 @@ const Collection = props => {
               nft.metadata = metadata;
 
               let tempNFT = {};
+              tempNFT.token_address = nft.token_address;
+              tempNFT.token_id = nft.token_id;
               tempNFT.name = !nft.metadata ? nft.name : nft.metadata.name;
               tempNFT.description = !nft.metadata ? '' : nft.metadata.description;
               tempNFT.collection = !nft.metadata ? nft.name : nft.metadata.collection.label;
@@ -307,7 +324,9 @@ const Collection = props => {
         </div>
       </StyledModal>
 
-      <section id='profile_banner' className='jumbotron breadcumb no-bg' style={{backgroundImage: `url('/mock_data/uploads/bg_shape_1_dark_209b57f54a.jpg')`}}>
+      <section id='profile_banner' 
+              className='jumbotron breadcumb no-bg' 
+              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.banner}` : ''})`}}>
         <div className='mainbreadcumb'>
         </div>
       </section>
@@ -396,18 +415,18 @@ const Collection = props => {
                       </span>
                       { (nft.onSale || nft.onOffer || nft.onAuction) &&
                         <div className="nft__item_price">
-                          {nft.price} {nft.payment.symbol}
+                          {nft.price} {nft.payment.symbol ? nft.payment.symbol : nft.payment.label}
                         </div>
                       }
                       <div className="nft__item_action">
                         {(nft.onSale || nft.onOffer) && (
-                          <span onClick={() => navigate("/itemDetail")}>Buy Now</span>
+                          <span onClick={() => handleItemClick(nft)}>Buy Now</span>
                         )}
                         {(nft.onAuction) && (
-                          <span onClick={() => navigate("/itemDetail")}>Place a bid</span>
+                          <span onClick={() => handleItemClick(nft)}>Place a bid</span>
                         )}
                         {(!nft.onAuction && !nft.onSale && !nft.onOffer) && (
-                          <span onClick={() => navigate("/itemDetail")}>View Item</span>
+                          <span onClick={() => handleItemClick(nft)}>View Item</span>
                         )}
                       </div>
                       <div className="nft__item_like">

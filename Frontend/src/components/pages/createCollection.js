@@ -1,4 +1,6 @@
 import React, { memo, useEffect, useState, useRef } from "react";
+import { useSelector } from 'react-redux';
+import * as selectors from '../../store/selectors';
 import Footer from '../components/footer';
 import Select from 'react-select';
 import axios from "axios";
@@ -65,6 +67,8 @@ const CreateCollection = () => {
       padding: 2
     })
   };
+
+  const currentUserState = useSelector(selectors.currentUserState);
 
   const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
@@ -398,7 +402,8 @@ const CreateCollection = () => {
         </div>
       </StyledModal>
 
-      <section className='jumbotron breadcumb no-bg'>
+      <section className='jumbotron breadcumb no-bg'
+              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.banner}` : ''})`}}>
         <div className='mainbreadcumb'>
           <div className='container'>
             <div className='row m-10-hor'>

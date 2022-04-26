@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
+import * as selectors from '../../store/selectors';
+
 import {useMoralis} from "react-moralis";
 import Breakpoint, { BreakpointProvider, setDefaultBreakpoints } from "react-socks";
 //import { header } from 'react-bootstrap';
@@ -28,6 +31,9 @@ const NavLink = props => (
 );
 
 const Header = function({ className }) {
+    const currentUserState = useSelector(selectors.currentUserState);
+    const [currentUser, setCurrentUser] = useState(null);
+
     const [openMenu, setOpenMenu] = React.useState(false);
     const [openMenu1, setOpenMenu1] = React.useState(false);
     const [openMenu2, setOpenMenu2] = React.useState(false);
@@ -90,6 +96,14 @@ const Header = function({ className }) {
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
+      if (currentUserState.data) {
+        setCurrentUser(currentUserState.data);
+      } else {
+        setCurrentUser(null);
+      }
+    }, [currentUserState]);
+
+    useEffect(() => {
       const header = document.getElementById("myHeader");
       const totop = document.getElementById("scroll-to-top");
       const sticky = header.offsetTop;
@@ -111,7 +125,7 @@ const Header = function({ className }) {
       };
     }, []);
 
-    const {authenticate, isAuthenticated, account, logout} = useMoralis();
+    const { isAuthenticated, account, logout } = useMoralis();
     
     const disconnect = async () => {
       await logout();
@@ -123,390 +137,271 @@ const Header = function({ className }) {
     <header className={`navbar white ${className}`} id="myHeader">
      <div className='container'>
        <div className='row w-100-nav'>
-          <div className='logo px-0'>
-              <div className='navbar-title navbar-item'>
-                <NavLink to="/">
+        <div className='logo px-0'>
+            <div className='navbar-title navbar-item'>
+              <NavLink to="/">
+              <img
+                  src="/img/logo.png"
+                  className="img-fluid d-block"
+                  alt="#"
+                />
                 <img
-                    src="/img/logo.png"
-                    className="img-fluid d-block"
-                    alt="#"
-                  />
-                  <img
-                    src="/img/logo-2.png"
-                    className="img-fluid d-3"
-                    alt="#"
-                  />
-                  <img
-                    src="/img/logo-3.png"
-                    className="img-fluid d-4"
-                    alt="#"
-                  />
-                  <img
-                    src="/img/logo-light.png"
-                    className="img-fluid d-none"
-                    alt="#"
-                  />
+                  src="/img/logo-2.png"
+                  className="img-fluid d-3"
+                  alt="#"
+                />
+                <img
+                  src="/img/logo-3.png"
+                  className="img-fluid d-4"
+                  alt="#"
+                />
+                <img
+                  src="/img/logo-light.png"
+                  className="img-fluid d-none"
+                  alt="#"
+                />
+              </NavLink>
+            </div>
+        </div>
+
+        <div className='search'>
+          <input id="quick_search" className="xs-hide" name="quick_search" placeholder="search item here..." type="text" />
+        </div>
+
+        <BreakpointProvider>
+          <Breakpoint l down>
+            {showmenu && 
+            <div className='menu'>
+              <div className='navbar-item'>
+                <NavLink to="/" onClick={() => btn_icon(!showmenu)}>
+                  Home
                 </NavLink>
               </div>
-          </div>
-
-          <div className='search'>
-            <input id="quick_search" className="xs-hide" name="quick_search" placeholder="search item here..." type="text" />
-          </div>
-                    
-              <BreakpointProvider>
-                <Breakpoint l down>
-                  {showmenu && 
-                  <div className='menu'>
-                    <div className='navbar-item'>
-                      <NavLink to="/" onClick={() => btn_icon(!showmenu)}>
-                        Home
-                      </NavLink>
-                    </div>
-                    <div className='navbar-item'>
-                      <div ref={ref1}>
-                        <div className="dropdown-custom dropdown-toggle btn" 
-                          onClick={handleBtnClick1}
-                          >
-                          Explore
-                        </div>
-                        {openMenu1 && (
-                          <div className='item-dropdown'>
-                            <div className="dropdown" onClick={closeMenu1}>
-                              <NavLink to="/explore" onClick={() => btn_icon(!showmenu)}>Explore</NavLink>
-                              {/* <NavLink to="/explore2" onClick={() => btn_icon(!showmenu)}>Explore 2</NavLink> */}
-                              {(isAuthenticated && account) && ( <NavLink to="/mynft" onClick={() => btn_icon(!showmenu)}>My NFTs</NavLink>)}
-                              {/* <NavLink to="/exploreOpensea" onClick={() => btn_icon(!showmenu)}>Explore OpenSea</NavLink> */}
-                              <NavLink to="/rangking" onClick={() => btn_icon(!showmenu)}>Rangking</NavLink>
-                              <NavLink to="/colectionGrey/1" onClick={() => btn_icon(!showmenu)}>Collection</NavLink>
-                              {/* <NavLink to="/ItemDetail/1" onClick={() => btn_icon(!showmenu)}>Items Details</NavLink> */}
-                              {/* <NavLink to="/ItemDetailGrey/1" onClick={() => btn_icon(!showmenu)}>Items Details Grey</NavLink> */}
-                              <NavLink to="/AuctionGrey" onClick={() => btn_icon(!showmenu)}>Live Auction Grey</NavLink>
-                              <NavLink to="/helpcenter" onClick={() => btn_icon(!showmenu)}>Help Center</NavLink>
-                            </div>
-                          </div>
-                        )}
+              <div className='navbar-item'>
+                <div ref={ref1}>
+                  <div className="dropdown-custom dropdown-toggle btn" 
+                    onClick={handleBtnClick1}
+                    >
+                    Explore
+                  </div>
+                  {openMenu1 && (
+                    <div className='item-dropdown'>
+                      <div className="dropdown" onClick={closeMenu1}>
+                        <NavLink to="/explore" onClick={() => btn_icon(!showmenu)}>Items On Sale</NavLink>
+                        <NavLink to="/rangking" onClick={() => btn_icon(!showmenu)}>Rangking</NavLink>
+                        <NavLink to="/colectionGrey/1" onClick={() => btn_icon(!showmenu)}>Collection</NavLink>
+                        <NavLink to="/AuctionGrey" onClick={() => btn_icon(!showmenu)}>Live Auction Grey</NavLink>
+                        <NavLink to="/helpcenter" onClick={() => btn_icon(!showmenu)}>Help Center</NavLink>
                       </div>
                     </div>
-                    <div className='navbar-item'>
-                      <div ref={ref2}>
-                        <div className="dropdown-custom dropdown-toggle btn" 
-                          onClick={handleBtnClick2}
-                          >
-                          Pages
-                        </div>
-                        {openMenu2 && (
-                          <div className='item-dropdown'>
-                            <div className="dropdown" onClick={closeMenu2}>
-                              {/* <NavLink to="/Author/1" onClick={() => btn_icon(!showmenu)}>Author</NavLink> */}
-                              <NavLink to="/createCollection" onClick={() => btn_icon(!showmenu)}>Create Collection</NavLink>
-                              <NavLink to="/Profile/1" onClick={() => btn_icon(!showmenu)}>Profile</NavLink>
-                              <NavLink to="/AuthorGrey/1" onClick={() => btn_icon(!showmenu)}>Author Grey</NavLink>
-                              {/* <NavLink to="/AuthorOpensea" onClick={() => btn_icon(!showmenu)}>Author OpenSea</NavLink> */}
-                              {/* <NavLink to="/wallet" onClick={() => btn_icon(!showmenu)}>Wallet</NavLink> */}
-                              {/* <NavLink to="/walletGrey" onClick={() => btn_icon(!showmenu)}>Wallet Grey</NavLink> */}
-                              {/* <NavLink to="/create" onClick={() => btn_icon(!showmenu)}>Create</NavLink> */}
-                              {/* <NavLink to="/create2" onClick={() => btn_icon(!showmenu)}>Create 2</NavLink> */}
-                              <NavLink to="/createOptions" onClick={() => btn_icon(!showmenu)}>Create options</NavLink>
-                              {/* <NavLink to="/mint" onClick={() => btn_icon(!showmenu)}>Nft Minting</NavLink> */}
-                              {/* <NavLink to="/minter" onClick={() => btn_icon(!showmenu)}>Nft Minting Grey</NavLink> */}
-                              <NavLink to="/news" onClick={() => btn_icon(!showmenu)}>News</NavLink>
-                              <NavLink to="/works" onClick={() => btn_icon(!showmenu)}>Gallery</NavLink>
-                              {/* <NavLink to="/login" onClick={() => btn_icon(!showmenu)}>login</NavLink> */}
-                              {/* <NavLink to="/loginTwo" onClick={() => btn_icon(!showmenu)}>login 2</NavLink> */}
-                              {/* <NavLink to="/register" onClick={() => btn_icon(!showmenu)}>Register</NavLink> */}
-                              <NavLink to="/contact" onClick={() => btn_icon(!showmenu)}>Contact Us</NavLink>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className='navbar-item'>
-                      <NavLink to="/activity" onClick={() => btn_icon(!showmenu)}>
-                        Activity
-                      </NavLink>
-                    </div>
-                    { (isAuthenticated && account) && (
-                    <div className='navbar-item'>
-                      <NavLink to="/mynft">
-                        My NFTs
-                        <span className='lines'></span>
-                      </NavLink>
-                    </div>
-                    )}
-                    {/* <div className='navbar-item'>
-                      <div ref={ref3}>
-                        <div className="dropdown-custom dropdown-toggle btn" 
-                          onClick={handleBtnClick3}
-                          >
-                          Element
-                        </div>
-                        {openMenu3 && (
-                          <div className='item-dropdown'>
-                            <div className="dropdown" onClick={closeMenu3}>
-                              <NavLink to="/elegantIcons" onClick={() => btn_icon(!showmenu)}>Elegant Icon</NavLink>
-                              <NavLink to="/etlineIcons" onClick={() => btn_icon(!showmenu)}>Etline Icon</NavLink>
-                              <NavLink to="/fontAwesomeIcons" onClick={() => btn_icon(!showmenu)}>Font Awesome Icon</NavLink>
-                              <NavLink to="/accordion" onClick={() => btn_icon(!showmenu)}>Accordion</NavLink>
-                              <NavLink to="/alerts" onClick={() => btn_icon(!showmenu)}>Alerts</NavLink>
-                              <NavLink to="/price" onClick={() => btn_icon(!showmenu)}>Pricing Table</NavLink>
-                              <NavLink to="/progressbar" onClick={() => btn_icon(!showmenu)}>Progress bar</NavLink>
-                              <NavLink to="/tabs" onClick={() => btn_icon(!showmenu)}>Tabs</NavLink>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div> */}
-                  </div>
-                  }
-                </Breakpoint>
-
-                <Breakpoint xl>
-                  <div className='menu'>
-                    <div className='navbar-item'>
-                      <NavLink to="/">
-                        Home
-                        <span className='lines'></span>
-                      </NavLink>
-                    </div>
-                    <div className='navbar-item'>
-                      <div ref={ref1}>
-                          <div className="dropdown-custom dropdown-toggle btn" 
-                             onMouseEnter={handleBtnClick1} onMouseLeave={closeMenu1}>
-                            Explore
-                            <span className='lines'></span>
-                            {openMenu1 && (
-                            <div className='item-dropdown'>
-                              <div className="dropdown" onClick={closeMenu1}>
-                              <NavLink to="/explore">Explore</NavLink>
-                              {/* <NavLink to="<div className='navbar-item'>
-                      <div ref={ref3}>
-                        <div className="dropdown-custom dropdown-toggle btn" 
-                          onClick={handleBtnClick3}
-                          >
-                          Element
-                        </div>
-                        {openMenu3 && (
-                          <div className='item-dropdown'>
-                            <div className="dropdown" onClick={closeMenu3}>
-                              <NavLink to="/elegantIcons" onClick={() => btn_icon(!showmenu)}>Elegant Icon</NavLink>
-                              <NavLink to="/etlineIcons" onClick={() => btn_icon(!showmenu)}>Etline Icon</NavLink>
-                              <NavLink to="/fontAwesomeIcons" onClick={() => btn_icon(!showmenu)}>Font Awesome Icon</NavLink>
-                              <NavLink to="/accordion" onClick={() => btn_icon(!showmenu)}>Accordion</NavLink>
-                              <NavLink to="/alerts" onClick={() => btn_icon(!showmenu)}>Alerts</NavLink>
-                              <NavLink to="/price" onClick={() => btn_icon(!showmenu)}>Pricing Table</NavLink>
-                              <NavLink to="/progressbar" onClick={() => btn_icon(!showmenu)}>Progress bar</NavLink>
-                              <NavLink to="/tabs" onClick={() => btn_icon(!showmenu)}>Tabs</NavLink>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>/exploreGrey">Explore Grey</NavLink> */}
-                              {/* <NavLink to="/explore2Grey">Explore 2 Grey</NavLink> */}
-                              {/* <NavLink to="/exploreOpensea">Explore OpenSea</NavLink> */}
-                              <NavLink to="/rankingGrey">Ranking Grey</NavLink>
-                              <NavLink to="/collectionGrey/1">Collection Grey</NavLink>
-                              {/* <NavLink to="/ItemDetailGrey/1">Items Details Grey</NavLink> */}
-                              <NavLink to="/AuctionGrey">Live Auction Grey</NavLink>
-                              <NavLink to="/helpcenterGrey">Help Center Grey</NavLink>
-                              </div>
-                            </div>
-                          )}
-                          </div>
-                          
-                        </div>
-                    </div>
-                    <div className='navbar-item'>
-                      <div ref={ref2}>
-                          <div className="dropdown-custom dropdown-toggle btn" 
-                             onMouseEnter={handleBtnClick2} onMouseLeave={closeMenu2}>
-                            Pages
-                            <span className='lines'></span>
-                            {openMenu2 && (
-                            <div className='item-dropdown'>
-                              <div className="dropdown" onClick={closeMenu2}>
-                                <NavLink to="/collections">Collections</NavLink>
-                                <NavLink to="/Profile/1">Profile</NavLink>
-                                <NavLink to="/AuthorGrey/1">Author Grey</NavLink>
-                                {/* <NavLink to="/AuthorOpensea">Author OpenSea</NavLink> */}
-                                {/* <NavLink to="/wallet">Wallet</NavLink> */}
-                                {/* <NavLink to="/walletGrey">Wallet Grey</NavLink> */}
-                                {/* <NavLink to="/create">Create</NavLink> */}
-                                {/* <NavLink to="/createGrey">Create Grey</NavLink> */}
-                                {/* <NavLink to="/create2">Create 2</NavLink> */}
-                                {/* <NavLink to="/createOptions">Create Option</NavLink> */}
-                                {/* <NavLink to="/mint">Nft Minting</NavLink> */}
-                                {/* <NavLink to="/minter">Nft Minting Grey</NavLink> */}
-                                <NavLink to="/news">News</NavLink>
-                                <NavLink to="/works">Gallery</NavLink>
-                                {/* <NavLink to="/login">login</NavLink> */}
-                                {/* <NavLink to="/loginTwo">login 2</NavLink> */}
-                                {/* <NavLink to="/register">Register</NavLink> */}
-                                <NavLink to="/contact">Contact Us</NavLink>
-                              </div>
-                            </div>
-                          )}
-                          </div>
-                        </div>
-                    </div>
-                    <div className='navbar-item'>
-                      <NavLink to="/activity">
-                        Activity
-                        <span className='lines'></span>
-                      </NavLink>
-                    </div>
-                    { (isAuthenticated && account) && (
-                    <div className='navbar-item'>
-                      <NavLink to="/mynft">
-                        My NFTs
-                        <span className='lines'></span>
-                      </NavLink>
-                    </div>
-                    )}
-                    {/* <div className='navbar-item'>
-                      <div ref={ref3}>
-                          <div className="dropdown-custom dropdown-toggle btn" 
-                             onMouseEnter={handleBtnClick3} onMouseLeave={closeMenu3}>
-                            Elements
-                            <span className='lines'></span>
-                            {openMenu3 && (
-                            <div className='item-dropdown'>
-                              <div className="dropdown" onClick={closeMenu3}>
-                              <NavLink to="/elegantIcons">Elegant Icon</NavLink>
-                              <NavLink to="/etlineIcons">Etline Icon</NavLink>
-                              <NavLink to="/fontAwesomeIcons">Font Awesome Icon</NavLink>
-                              <NavLink to="/accordion">Accordion</NavLink>
-                              <NavLink to="/alerts">Alerts</NavLink>
-                              <NavLink to="/price">Pricing Table</NavLink>
-                              <NavLink to="/progressbar">Progess Bar</NavLink>
-                              <NavLink to="/tabs">Tabs</NavLink>
-                              </div>
-                            </div>
-                          )}
-                          </div>
-                        </div>
-                    </div> */}
-                  </div>
-                </Breakpoint>
-              </BreakpointProvider>
-
-              <div className='mainside'>
-                { (!isAuthenticated || !account) ? (
-                  <div className='connect-wal'>
-                    <NavLink to="/wallet">Connect Wallet</NavLink>
-                  </div>
-                ):(
-                  <div className="logout">
-                    <NavLink to="/createItem">Create</NavLink>
-                    <div id="de-click-menu-notification" className="de-menu-notification" onClick={() => btn_icon_not(!shownot)} ref={refpopnot}>
-                        <div className="d-count">8</div>
-                        <i className="fa fa-bell"></i>
-                        {shownot && 
-                          <div className="popshow">
-                            <div className="de-flex">
-                                <h4>Notifications</h4>
-                                <span className="viewaall">Show all</span>
-                            </div>
-                            <ul>
-                              <li>
-                                  <div className="mainnot">
-                                      <img className="lazy" src="../../img/author/author-2.jpg" alt=""/>
-                                      <div className="d-desc">
-                                          <span className="d-name"><b>Mamie Barnett</b> started following you</span>
-                                          <span className="d-time">1 hour ago</span>
-                                      </div>
-                                  </div>  
-                              </li>
-                              <li>
-                                  <div className="mainnot">
-                                      <img className="lazy" src="../../img/author/author-3.jpg" alt=""/>
-                                      <div className="d-desc">
-                                          <span className="d-name"><b>Nicholas Daniels</b> liked your item</span>
-                                          <span className="d-time">2 hours ago</span>
-                                      </div>
-                                  </div>
-                              </li>
-                              <li>
-                                  <div className="mainnot">
-                                      <img className="lazy" src="../../img/author/author-4.jpg" alt=""/>
-                                      <div className="d-desc">
-                                          <span className="d-name"><b>Lori Hart</b> started following you</span>
-                                          <span className="d-time">18 hours ago</span>
-                                      </div>
-                                  </div>    
-                              </li>
-                              <li>
-                                  <div className="mainnot">
-                                      <img className="lazy" src="../../img/author/author-5.jpg" alt=""/>
-                                      <div className="d-desc">
-                                          <span className="d-name"><b>Jimmy Wright</b> liked your item</span>
-                                          <span className="d-time">1 day ago</span>
-                                      </div>
-                                  </div>
-                              </li>
-                              <li>
-                                  <div className="mainnot">
-                                      <img className="lazy" src="../../img/author/author-6.jpg" alt=""/>
-                                      <div className="d-desc">
-                                          <span className="d-name"><b>Karla Sharp</b> started following you</span>
-                                          <span className="d-time">3 days ago</span>
-                                      </div>
-                                  </div>    
-                              </li>
-                          </ul>
-                          </div>
-                          }
-                    </div>
-                    <div id="de-click-menu-profile" className="de-menu-profile" onClick={() => btn_icon_pop(!showpop)} ref={refpop}>                           
-                        <img src="../../img/author/author-4.jpg" alt=""/>
-                        {showpop && 
-                          <div className="popshow">
-                            <div className="d-name">
-                                <h4>Your name</h4>
-                                <span className="name" onClick={()=> window.open("", "_self")}>Set display name</span>
-                            </div>
-                            {/* <div className="d-balance">
-                                <h4>Balance</h4>
-                                0 ETH
-                            </div> */}
-                            <BalanceTokens />
-                            <div className="d-wallet">
-                                <h4>My Wallet</h4>
-                                <span id="wallet" className="d-wallet-address">{account}</span>
-                                <CopyToClipboard text={account} onCopy={() => setCopied(true)}>
-                                  <button id="btn_copy" title="Copy Address">Copy</button>
-                                </CopyToClipboard>
-                            </div>
-                            <div className="d-line"></div>
-                            <ul className="de-submenu-profile">
-                              <li>
-                                <span>
-                                  <i className="fa fa-user"></i> My profile
-                                </span>
-                              </li>
-                              <li>
-                                <span>
-                                  <i className="fa fa-pencil"></i> Edit profile
-                                </span>
-                              </li>
-                              <li onClick={() => navigate("/myCollections")}>
-                                <span>
-                                  <i className="fa fa-table"></i> My Collections
-                                </span>
-                              </li>
-                              <li onClick={disconnect}>
-                                <span>
-                                  <i className="fa fa-sign-out"></i> Sign out
-                                </span>
-                              </li>
-                            </ul>
-                          </div>
-                        }
-                    </div>
-                  </div>
-                )} 
-                
+                  )}
+                </div>
               </div>
+              <div className='navbar-item'>
+                <div ref={ref2}>
+                  <div className="dropdown-custom dropdown-toggle btn" 
+                    onClick={handleBtnClick2}
+                    >
+                    Pages
+                  </div>
+                  {openMenu2 && (
+                    <div className='item-dropdown'>
+                      <div className="dropdown" onClick={closeMenu2}>
+                        <NavLink to="/AuthorGrey/1" onClick={() => btn_icon(!showmenu)}>Author Grey</NavLink>
+                        <NavLink to="/createOptions" onClick={() => btn_icon(!showmenu)}>Create options</NavLink>
+                        <NavLink to="/news" onClick={() => btn_icon(!showmenu)}>News</NavLink>
+                        <NavLink to="/works" onClick={() => btn_icon(!showmenu)}>Gallery</NavLink>
+                        <NavLink to="/contact" onClick={() => btn_icon(!showmenu)}>Contact Us</NavLink>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className='navbar-item'>
+                <NavLink to="/activity" onClick={() => btn_icon(!showmenu)}>
+                  Activity
+                </NavLink>
+              </div>
+            </div>
+            }
+          </Breakpoint>
+
+          <Breakpoint xl>
+            <div className='menu'>
+              <div className='navbar-item'>
+                <NavLink to="/">
+                  Home
+                  <span className='lines'></span>
+                </NavLink>
+              </div>
+              <div className='navbar-item'>
+                <div ref={ref1}>
+                    <div className="dropdown-custom dropdown-toggle btn" 
+                        onMouseEnter={handleBtnClick1} onMouseLeave={closeMenu1}>
+                      Explore
+                      <span className='lines'></span>
+                      {openMenu1 && (
+                      <div className='item-dropdown'>
+                        <div className="dropdown" onClick={closeMenu1}>
+                        <NavLink to="/explore">Items On Sale</NavLink>
+                        <NavLink to="/collections">Collections</NavLink>
+                        <NavLink to="/rankingGrey">Ranking Grey</NavLink>
+                        <NavLink to="/AuctionGrey">Live Auction Grey</NavLink>
+                        <NavLink to="/helpcenterGrey">Help Center Grey</NavLink>
+                        </div>
+                      </div>
+                    )}
+                    </div>
+                    
+                  </div>
+              </div>
+              <div className='navbar-item'>
+                <div ref={ref2}>
+                    <div className="dropdown-custom dropdown-toggle btn" 
+                        onMouseEnter={handleBtnClick2} onMouseLeave={closeMenu2}>
+                      Pages
+                      <span className='lines'></span>
+                      {openMenu2 && (
+                      <div className='item-dropdown'>
+                        <div className="dropdown" onClick={closeMenu2}>
+                          <NavLink to="/AuthorGrey/1">Author Grey</NavLink>
+                          <NavLink to="/news">News</NavLink>
+                          <NavLink to="/works">Gallery</NavLink>
+                          <NavLink to="/contact">Contact Us</NavLink>
+                        </div>
+                      </div>
+                    )}
+                    </div>
+                  </div>
+              </div>
+              <div className='navbar-item'>
+                <NavLink to="/activity">
+                  Activity
+                  <span className='lines'></span>
+                </NavLink>
+              </div>
+            </div>
+          </Breakpoint>
+        </BreakpointProvider>
+
+        <div className='mainside'>
+          { (!isAuthenticated || !account) ? (
+            <div className='connect-wal'>
+              <NavLink to="/wallet">Connect Wallet</NavLink>
+            </div>
+          ):(
+            <div className="logout">
+              <NavLink to="/createItem">Create</NavLink>
+              <div id="de-click-menu-notification" className="de-menu-notification" onClick={() => btn_icon_not(!shownot)} ref={refpopnot}>
+                  <div className="d-count">8</div>
+                  <i className="fa fa-bell"></i>
+                  {shownot && 
+                    <div className="popshow">
+                      <div className="de-flex">
+                          <h4>Notifications</h4>
+                          <span className="viewaall">Show all</span>
+                      </div>
+                      <ul>
+                        <li>
+                            <div className="mainnot">
+                                <img className="lazy" src="../../img/author/author-2.jpg" alt=""/>
+                                <div className="d-desc">
+                                    <span className="d-name"><b>Mamie Barnett</b> started following you</span>
+                                    <span className="d-time">1 hour ago</span>
+                                </div>
+                            </div>  
+                        </li>
+                        <li>
+                            <div className="mainnot">
+                                <img className="lazy" src="../../img/author/author-3.jpg" alt=""/>
+                                <div className="d-desc">
+                                    <span className="d-name"><b>Nicholas Daniels</b> liked your item</span>
+                                    <span className="d-time">2 hours ago</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div className="mainnot">
+                                <img className="lazy" src="../../img/author/author-4.jpg" alt=""/>
+                                <div className="d-desc">
+                                    <span className="d-name"><b>Lori Hart</b> started following you</span>
+                                    <span className="d-time">18 hours ago</span>
+                                </div>
+                            </div>    
+                        </li>
+                        <li>
+                            <div className="mainnot">
+                                <img className="lazy" src="../../img/author/author-5.jpg" alt=""/>
+                                <div className="d-desc">
+                                    <span className="d-name"><b>Jimmy Wright</b> liked your item</span>
+                                    <span className="d-time">1 day ago</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div className="mainnot">
+                                <img className="lazy" src="../../img/author/author-6.jpg" alt=""/>
+                                <div className="d-desc">
+                                    <span className="d-name"><b>Karla Sharp</b> started following you</span>
+                                    <span className="d-time">3 days ago</span>
+                                </div>
+                            </div>    
+                        </li>
+                    </ul>
+                    </div>
+                    }
+              </div>
+              <div id="de-click-menu-profile" className="de-menu-profile" onClick={() => btn_icon_pop(!showpop)} ref={refpop}>                           
+                  <img src={ currentUser && currentUser.avatar ? `${process.env.REACT_APP_SERVER_URL}/${currentUser.avatar}` : "../../img/author/author-4.jpg"} alt=""/>
+                  {showpop && 
+                    <div className="popshow">
+                      <div className="d-name">
+                          <h4>Your name</h4>
+                          <span className="name" onClick={()=> navigate(`/profile/${account.toLowerCase()}`)}>{ currentUser && currentUser.name ? currentUser.name : 'Set your name'}</span>
+                      </div>
+                      <BalanceTokens />
+                      <div className="d-wallet">
+                          <h4>My Wallet</h4>
+                          <span id="wallet" className="d-wallet-address">{account}</span>
+                          <CopyToClipboard text={account} onCopy={() => setCopied(true)}>
+                            <button id="btn_copy" title="Copy Address">Copy</button>
+                          </CopyToClipboard>
+                      </div>
+                      <div className="d-line"></div>
+                      <ul className="de-submenu-profile">
+                        <li onClick={() => navigate(`/profile/${account.toLowerCase()}`)}>
+                          <span>
+                            <i className="fa fa-user"></i> My profile
+                          </span>
+                        </li>
+                        {/* <li>
+                          <span>
+                            <i className="fa fa-pencil"></i> Edit profile
+                          </span>
+                        </li> */}
+                        <li onClick={() => navigate("/myCollections")}>
+                          <span>
+                            <i className="fa fa-table"></i> My Collections
+                          </span>
+                        </li>
+                        <li onClick={() => navigate("/mynft")}>
+                          <span>
+                            <i className="fa fa-image"></i> My NFTs
+                          </span>
+                        </li>
+                        <li onClick={disconnect}>
+                          <span>
+                            <i className="fa fa-sign-out"></i> Sign out
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  }
+              </div>
+            </div>
+          )} 
+          
+        </div>
                   
       </div>
 

@@ -1,10 +1,12 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
 import { useMoralis } from "react-moralis";
+import * as actions from '../../store/actions/thunks';
 import { connectors } from '../components/constants/wallets';
-
 
 const Wallet= () => {
   const {authenticate, isAuthenticated, account, logout} = useMoralis();
+  const dispatch = useDispatch();
 
   return (
     <div className="row">
@@ -14,8 +16,12 @@ const Wallet= () => {
           key={key}
           onClick={async () => {
             try {
-              await authenticate({provider: connectorId});
-              window.localStorage.setItem("connectorId", connectorId);
+              await authenticate({provider: connectorId}).then(user => {
+                dispatch(actions.setCurrentUser(user.get('ethAddress')));
+                window.localStorage.setItem("connectorId", connectorId);
+              }).catch(err => {
+                console.log(err);
+              });
             } catch (e) {
               console.error(e);
             }

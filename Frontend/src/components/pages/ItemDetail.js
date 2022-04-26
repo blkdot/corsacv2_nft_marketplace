@@ -37,7 +37,7 @@ const StyledModal = styled(Modal)`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-const ItemDetail = ({ nftId }) => {
+const ItemDetail = () => {
     const inputColorStyle = {
     	color: '#111'
     };
@@ -418,15 +418,23 @@ const ItemDetail = ({ nftId }) => {
             console.log("success");
             const sales = result.filter((sale, index) => {
 							return (nft.token_address.toLowerCase() == sale.sc.toLowerCase() && 
-                      nft.token_id == sale.tokenId.toString());
+                      parseInt(nft.token_id) === parseInt(sale.tokenId.toString()));
 						});
-						console.log("sale INFO:", sales[0]);
-						setPayment(sales[0].payment);
-						setSaleInfo(sales[0]);
+
+						if (sales.length > 0) {
+							console.log("sale INFO:", sales[0]);
+							setPayment(sales[0].payment);
+							setSaleInfo(sales[0]);
+						} else {
+							setPayment(0);
+							setSaleInfo(null);
+						}
+						setIsPageLoading(false);
           },
           onError: (error) => {
             console.log("failed:", error);
             setSaleInfo(null);
+						isPageLoading(false);
           },
         });
       }
@@ -449,7 +457,8 @@ const ItemDetail = ({ nftId }) => {
 				// const nativeBalance = await Web3Api.account.getNativeBalance(options);
 				
 				const token = balances.filter((t, index) => {
-					return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+					// return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+					return t.token_address.toLowerCase() == nft.payment.addr.toLowerCase();
 				});
 				
 				let bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();

@@ -22,6 +22,10 @@ export const recentPostsState = (state) => state.blogs.recentPosts;
 export const tagsState = (state) => state.blogs.tags;
 export const commentsState = (state) => state.blogs.comments;
 
+//users
+export const usersState = (state) => state.users.users;
+export const currentUserState = (state) => state.users.currentUser;
+
 export const auctionedNfts = createSelector(nftBreakdownState, ( nfts ) => {
     if(!nfts.data) {
         return [];

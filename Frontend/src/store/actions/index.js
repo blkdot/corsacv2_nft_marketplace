@@ -81,10 +81,18 @@ export const getNftBalanceDetail = asyncAction(
     'nft/GET_NFT_BALANCE_DETAIL_FAIL'
 )();
 
+export const getUsers = asyncAction(
+    'user/GET_USERS',
+    'user/GET_USERS_SUCCESS',
+    'user/GET_USERS_FAIL'
+)();
+
 export const setNftBalances = action('nft/SET_NFT_BALANCES')();
 export const setBuyNFT = action('nft/SET_BUY_NFT')();
+export const setCurrentUser = action('user/SET_CURRENT_USER')();
 
 export const clearNfts = action('nft/CLEAR_ALL_NFTS')();
+export const clearUsers = action('user/CLEAR_ALL_USERS')();
 export const clearFilter = action('nft/CLEAR_FILTER')();
 export const filterCategories = action('nft/FILTER_CATEGORIES')();
 export const filterStatus = action('nft/FILTER_STATUS')();

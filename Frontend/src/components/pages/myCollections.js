@@ -1,4 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
+import * as selectors from '../../store/selectors';
 import {useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances} from "react-moralis";
 import Footer from '../components/footer';
 
@@ -40,6 +42,8 @@ const Outer = styled.div`
   border-radius: 8px;
 `
 const MyCollections = props => {
+  const currentUserState = useSelector(selectors.currentUserState);
+  
   const { account, Moralis } = useMoralis();
   const { chainId } = useChain();
   const { marketAddress, contractABI } = useMoralisDapp();
@@ -167,7 +171,8 @@ const MyCollections = props => {
         </div>
       </StyledModal>
 
-      <section className='jumbotron breadcumb no-bg'>
+      <section className='jumbotron breadcumb no-bg'
+              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.banner}` : ''})`}}>
         <div className='mainbreadcumb'>
           <div className='container'>
             <div className='row m-10-hor'>

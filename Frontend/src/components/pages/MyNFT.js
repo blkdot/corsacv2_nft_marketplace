@@ -1,11 +1,10 @@
 import React, { memo, useEffect, useState } from "react";
 import {useMoralis, useNFTBalances, useWeb3ExecuteFunction} from "react-moralis";
 import { useSelector, useDispatch } from 'react-redux';
+import * as selectors from '../../store/selectors';
 import MyNFTBalance from '../components/MyNFTBalance';
 import MyNFTBalanceOnSale from '../components/MyNFTBalanceOnSale';
 import Footer from '../components/footer';
-import * as selectors from '../../store/selectors';
-import { fetchHotCollections, setNFTBalances } from "../../store/actions/thunks";
 import api from "../../core/api";
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
@@ -18,6 +17,8 @@ import { navigate } from "@reach/router";
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
 const MyNFT = function({ collectionId = 1 }) {
+  const currentUserState = useSelector(selectors.currentUserState);
+
   const [openMenu, setOpenMenu] = React.useState(true);
   const [openMenu1, setOpenMenu1] = React.useState(false);
   const handleBtnClick = () => {
@@ -33,11 +34,9 @@ const MyNFT = function({ collectionId = 1 }) {
     document.getElementById("Mainbtn").classList.remove("active");
   };
 
-  const dispatch = useDispatch();
-  const hotCollectionsState = useSelector(selectors.hotCollectionsState);
-  const hotCollections = hotCollectionsState.data ? hotCollectionsState.data[0] : {};
+  const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
+  const defaultBanner = api.baseUrl + '/uploads/medium_2_770d4f4fa5.jpg';
 
-  // const {data: NFTBalances} = useNFTBalances();
   const {account} = useMoralis();
   const [copied, setCopied] = useState(false);
   const {marketAddress, contractABI} = useMoralisDapp();
@@ -54,39 +53,32 @@ const MyNFT = function({ collectionId = 1 }) {
       navigate('/');
   }, []);
   
-  useEffect(() => {
-    dispatch(fetchHotCollections(collectionId));
-  }, [dispatch, collectionId]);
-
   return (
     <div className="greyscheme">
       <StyledHeader theme={theme} />
-      { hotCollections.author &&  hotCollections.author.banner &&
-          <section id='profile_banner' className='jumbotron breadcumb no-bg' style={{backgroundImage: `url(${api.baseUrl + '/uploads/medium_2_770d4f4fa5.jpg'})`}}>
-            <div className='mainbreadcumb'>
-            </div>
-          </section>
-        }
-
+      
+      <section id='profile_banner' 
+              className='jumbotron breadcumb no-bg' 
+              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.banner}` : defaultBanner})`}}>
+        <div className='mainbreadcumb'>
+        </div>
+      </section>
+      
       <section className='container d_coll no-top no-bottom'>
         <div className='row'>
           <div className="col-md-12">
             <div className="d_profile">
                 <div className="profile_avatar">
-                { hotCollections.author &&  hotCollections.author.avatar &&
                   <div className="d_profile_img">
-                    <img src={api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg'} alt=""/>
+                    <img src={currentUserState && currentUserState.data && currentUserState.data.avatar ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.avatar}` : defaultAvatar}
+                    alt=""/>
                     <i className="fa fa-check"></i>
                   </div>
-                }
-                <div className="profile_name">
+                
+                  <div className="profile_name">
                     <h4>
-                      {/* { hotCollections.name } */}
                       My NFTs
                         <div className="clearfix"></div>
-                        {/* { hotCollections.author &&  hotCollections.author.wallet &&
-                          <span id="wallet" className="profile_wallet">{ hotCollections.author.wallet }</span>
-                        } */}
                         <span id="wallet" className="profile_wallet">{ account }</span>
                         <CopyToClipboard text={account} onCopy={() => setCopied(true)}>
                           <button id="btn_copy" title="Copy Address" style={inputColorStyle}>Copy</button>
@@ -94,7 +86,6 @@ const MyNFT = function({ collectionId = 1 }) {
                     </h4>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -111,6 +102,7 @@ const MyNFT = function({ collectionId = 1 }) {
             </div>
           </div>
         </div>
+        
         {openMenu && (  
           <div id='zero1' className='onStep fadeIn'>
             <MyNFTBalance showLoadMore={false} />
