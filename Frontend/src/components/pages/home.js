@@ -3,6 +3,7 @@ import SliderCarouselSingleRedux from '../components/SliderCarouselSingleRedux';
 import FeatureBox from '../components/FeatureBox';
 import CarouselCollectionRedux from '../components/CarouselCollectionRedux';
 import ColumnNewRedux from '../components/ColumnNewRedux';
+import NewItems from '../components/NewItems';
 import AuthorListRedux from '../components/AuthorListRedux';
 import Footer from '../components/footer';
 import Reveal from 'react-awesome-reveal';
@@ -10,6 +11,7 @@ import { keyframes } from "@emotion/react";
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
 import { navigate } from '@reach/router';
+import HotCollections from '../components/hotCollections';
 
 const fadeInUp = keyframes`
   0% {
@@ -52,7 +54,7 @@ const homethree= () => (
             <Reveal className='onStep' keyframes={fadeInUp} delay={800} duration={900} triggerOnce>
               <div className="" style={{display: "flex", gap: "10px"}}>
               <span onClick={()=> navigate("/explore")} className="btn-main lead">Explore</span>
-              <span onClick={()=> navigate("/createItem")} className="btn-main lead">Creat</span>
+              <span onClick={()=> navigate("/createItem")} className="btn-main lead">Create</span>
               </div>
               <div className="mb-sm-30"></div>
             </Reveal>
@@ -72,7 +74,7 @@ const homethree= () => (
               <h2 className='style-2'>New Items</h2>
           </div>
         </div>
-        <ColumnNewRedux/>
+        <NewItems />
       </div>
     </section>
 
@@ -85,7 +87,8 @@ const homethree= () => (
       <div className='container no-top'>
         <div className='row'>
           <div className='col-lg-12 px-0'>
-            <CarouselCollectionRedux/>
+            {/* <CarouselCollectionRedux /> */}
+            <HotCollections />
           </div>
         </div>
       </div>

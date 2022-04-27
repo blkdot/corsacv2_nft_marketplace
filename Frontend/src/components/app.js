@@ -113,17 +113,20 @@ const App = ({ isServerInfo }) => {
   useEffect(() => {
     const connectorId = window.localStorage.getItem("connectorId");
     // console.log("connectorId:", connectorId);
-    // console.log("isAuthenticated:", isAuthenticated);
-    // console.log("isWeb3Enabled:", isWeb3Enabled);
-    // console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("isWeb3Enabled:", isWeb3Enabled);
+    console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
     // console.log("window.web3:", window.web3);
     // console.log("window.ethereum:", window.ethereum);
     
     if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading)
       enableWeb3({ provider: connectorId });
+    
+    if (account) {
       dispatch(actions.setCurrentUser(account));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, isWeb3Enabled]);
+  }, [isAuthenticated, isWeb3Enabled, account]);
 
   return (
     <div className="wraper">
