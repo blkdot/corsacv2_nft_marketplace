@@ -25,12 +25,18 @@ module.exports = function(app) {
 
   const upload = multer({ storage: storage })
   
+  //use this function in order to upload avatar and banner into backend
+  // app.post(
+  //   "/api/user/save",
+  //   upload.fields([
+  //     {name: 'avatar', maxCount: 1},
+  //     {name: 'banner', maxCount: 1}
+  //   ]),
+  //   controller.saveUser
+  // );
+
   app.post(
     "/api/user/save",
-    upload.fields([
-      {name: 'avatar', maxCount: 1},
-      {name: 'banner', maxCount: 1}
-    ]),
     controller.saveUser
   );
 

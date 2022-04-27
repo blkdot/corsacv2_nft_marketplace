@@ -59,7 +59,7 @@ const MyNFT = function({ collectionId = 1 }) {
       
       <section id='profile_banner' 
               className='jumbotron breadcumb no-bg' 
-              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.banner}` : defaultBanner})`}}>
+              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? currentUserState.data.banner : defaultBanner})`}}>
         <div className='mainbreadcumb'>
         </div>
       </section>
@@ -70,7 +70,7 @@ const MyNFT = function({ collectionId = 1 }) {
             <div className="d_profile">
                 <div className="profile_avatar">
                   <div className="d_profile_img">
-                    <img src={currentUserState && currentUserState.data && currentUserState.data.avatar ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.avatar}` : defaultAvatar}
+                    <img src={currentUserState && currentUserState.data && currentUserState.data.avatar ? currentUserState.data.avatar : defaultAvatar}
                     alt=""/>
                     <i className="fa fa-check"></i>
                   </div>

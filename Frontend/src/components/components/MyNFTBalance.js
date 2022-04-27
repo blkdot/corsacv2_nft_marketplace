@@ -478,7 +478,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               :
               <MyNftCard 
                 nft={nft} 
-                key={`${nft.symbol}_${nft.token_id}`}
+                key={`${nft.token_address}_${nft.token_id}`}
                 onImgLoad={onImgLoad} 
                 height={height} 
                 setNftToSend={setNftToSend}

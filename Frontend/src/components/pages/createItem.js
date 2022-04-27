@@ -452,7 +452,7 @@ const CreateItem = () => {
       </StyledModal>
 
       <section className='jumbotron breadcumb no-bg'
-              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? `${process.env.REACT_APP_SERVER_URL}/${currentUserState.data.banner}` : ''})`}}>
+              style={{backgroundImage: `url(${currentUserState && currentUserState.data && currentUserState.data.banner ? currentUserState.data.banner : ''})`}}>
         <div className='mainbreadcumb'>
           <div className='container'>
             <div className='row m-10-hor'>

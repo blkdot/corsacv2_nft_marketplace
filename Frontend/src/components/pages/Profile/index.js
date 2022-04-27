@@ -172,37 +172,97 @@ const Profile = ({ userAddr }) => {
       return;
     }
 
-    try {
-      let formData = new FormData();
-      formData.append('walletAddr', account.toLowerCase());
-      formData.append('name', userName);
-      formData.append('about', about);
-      formData.append('twitter', twitter);
-      formData.append('youtube', youtube);
-      formData.append('instagram', instagram);
-      formData.append('avatar', avatar.data);
-      formData.append('banner', banner.data);
+    Moralis.initialize(APP_ID);
+    Moralis.serverURL = SERVER_URL;
 
+    //save avatar image into ipfs
+    let avatarIpfs = null;
+    if (avatar.data) {
+      await saveFile(
+        avatar.data.name, 
+        avatar.data, 
+        { 
+          saveIPFS: true,
+          onSuccess: (result) => {
+            avatarIpfs = GATEWAY_URL + result.hash();
+          },
+          onError: (error) => {
+            setLoading(false);
+
+            setModalTitle('Error');
+            if (error.message) {
+              setModalMessage(error.message);
+            } else {
+              setModalMessage(error);
+            }
+            setOpenModal(true);
+          }
+        }
+      );
+    }
+
+    //save banner image into ipfs
+    let bannerIpfs = null;
+    if (banner.data) {
+      await saveFile(
+        banner.data.name, 
+        banner.data, 
+        { 
+          saveIPFS: true,
+          onSuccess: (result) => {
+            bannerIpfs = GATEWAY_URL + result.hash();
+          },
+          onError: (error) => {
+            setLoading(false);
+  
+            setModalTitle('Error');
+            if (error.message) {
+              setModalMessage(error.message);
+            } else {
+              setModalMessage(error);
+            }
+            setOpenModal(true);
+          }
+        }
+      );
+    }
+
+    try {
       const res = await axios.post(
         `${process.env.REACT_APP_SERVER_URL}/api/user/save`, 
-        formData
+        {
+          'walletAddr': account.toLowerCase(),
+          'name': userName,
+          'avatar': avatarIpfs,
+          'banner': bannerIpfs,
+          'about': about,
+          'twitter': twitter,
+          'youtube': youtube,
+          'instagram': instagram
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
       );
 
-      if (res) {
-        setLoading(false);
+      setLoading(false);
 
+      if (res) {
         if (res.data.type === 'error') {
           setModalTitle('Error');
+          setModalMessage(res.data.message);
+          setOpenModal(true);
         } else {
-          setModalTitle('Success');
-        
           dispatch(actions.setCurrentUser(account.toLowerCase()));
-        }
 
-        setModalMessage(res.data.message);
-        setOpenModal(true);
+          setModalTitle('Success');
+          setModalMessage(res.data.message);
+          setOpenModal(true);
+        }
       }
-    } catch(error) {
+    } catch (error) {
       console.log(error);
       setLoading(false);
 
@@ -211,7 +271,6 @@ const Profile = ({ userAddr }) => {
       setOpenModal(true);
       return;
     }
-    
   }
 
   const closeModal = () => {
@@ -262,7 +321,7 @@ const Profile = ({ userAddr }) => {
 
       <section id='profile_banner' 
               className='jumbotron breadcumb no-bg' 
-              style={{backgroundImage: `url(${banner.preview ? banner.preview : user && user.banner ? `${process.env.REACT_APP_SERVER_URL}/${user.banner}` : defaultBanner})`}}>
+              style={{backgroundImage: `url(${banner.preview ? banner.preview : user && user.banner ? user.banner : defaultBanner})`}}>
         <div className='mainbreadcumb'>
         </div>
       </section>
@@ -273,7 +332,7 @@ const Profile = ({ userAddr }) => {
             <div className="d_profile">
               <div className="profile_avatar">
                 <div className="d_profile_img">
-                  <img src={avatar.preview ? avatar.preview : user && user.avatar ? `${process.env.REACT_APP_SERVER_URL}/${user.avatar}` : defaultAvatar} alt=""/>
+                  <img src={avatar.preview ? avatar.preview : user && user.avatar ? user.avatar : defaultAvatar} alt=""/>
                   <i className="fa fa-check"></i>
                 </div>
                 <div className="profile_name">

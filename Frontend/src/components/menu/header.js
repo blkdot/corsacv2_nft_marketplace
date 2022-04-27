@@ -352,7 +352,7 @@ const Header = function({ className }) {
                     }
               </div>
               <div id="de-click-menu-profile" className="de-menu-profile" onClick={() => btn_icon_pop(!showpop)} ref={refpop}>                           
-                  <img src={ currentUser && currentUser.avatar ? `${process.env.REACT_APP_SERVER_URL}/${currentUser.avatar}` : "../../img/author/author-4.jpg"} alt=""/>
+                  <img src={ currentUser && currentUser.avatar ? currentUser.avatar : "../../img/author/author-4.jpg"} alt=""/>
                   {showpop && 
                     <div className="popshow">
                       <div className="d-name">
