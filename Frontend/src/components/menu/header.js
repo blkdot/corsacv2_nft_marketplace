@@ -291,7 +291,7 @@ const Header = function({ className }) {
             </div>
           ):(
             <div className="logout">
-              <NavLink to="/createItem">Create</NavLink>
+              {/* <NavLink to="/createItem">Create</NavLink> */}
               <div id="de-click-menu-notification" className="de-menu-notification" onClick={() => btn_icon_not(!shownot)} ref={refpopnot}>
                   <div className="d-count">8</div>
                   <i className="fa fa-bell"></i>

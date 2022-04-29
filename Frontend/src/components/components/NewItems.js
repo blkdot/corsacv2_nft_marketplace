@@ -258,12 +258,12 @@ const NewItems = () => {
         }
       }
 
-      console.log(promises);
+      console.log("new items:", promises);
 
       setNfts(promises);
-      
-      setLoading(false);
     }
+
+    setLoading(false);
   }, [saleNFTs, payments]);
 
   return (

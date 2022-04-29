@@ -508,9 +508,10 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           }
         }
 
-        setIsPageLoading(false);
         setMyNfts(nfts);
       }
+
+      setIsPageLoading(false);
     }, [saleNFTs, saleNFTs.length]);
 
     const updateNFTs = (newNFT, index) => {

@@ -56,8 +56,6 @@ const HotCollections = () => {
           });
 
           c.author = author;
-
-          setLoading(false);
         }
 
         setHotCollections(collections);
@@ -65,6 +63,8 @@ const HotCollections = () => {
     } catch {
       console.log('error in fetching collections');
     }
+
+    setLoading(false);
   }
   
   useEffect(() => {
@@ -72,7 +72,7 @@ const HotCollections = () => {
   }, [settings]);
 
   return (
-      <div className='nft'>
+      <div className='nft' style={{textAlign: "center"}}>
         <StyledSpin tip="Loading..." size="large" spinning={loading}/>
         { hotCollections.length > 0 &&
         <Slider {...settings}>
