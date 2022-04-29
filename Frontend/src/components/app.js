@@ -74,6 +74,7 @@ import CreateItem from './pages/createItem';
 import Collections from './pages/Collections';
 import Collection from './pages/collectionDetail';
 import MyCollections from "./pages/myCollections";
+import LiveAuction from "./pages/LiveAuction";
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -202,6 +203,7 @@ const App = ({ isServerInfo }) => {
           <Collections path="/collections" />
           <MyCollections path="/myCollections" />
           <Collection path="/collection/:address" />
+          <LiveAuction path="/liveAuction" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

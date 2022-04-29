@@ -188,9 +188,9 @@ const Header = function({ className }) {
                     <div className='item-dropdown'>
                       <div className="dropdown" onClick={closeMenu1}>
                         <NavLink to="/explore" onClick={() => btn_icon(!showmenu)}>Items On Sale</NavLink>
-                        <NavLink to="/rangking" onClick={() => btn_icon(!showmenu)}>Rangking</NavLink>
+                        <NavLink to="/liveAuction" onClick={() => btn_icon(!showmenu)}>Live Auction</NavLink>
                         <NavLink to="/colectionGrey/1" onClick={() => btn_icon(!showmenu)}>Collection</NavLink>
-                        <NavLink to="/AuctionGrey" onClick={() => btn_icon(!showmenu)}>Live Auction Grey</NavLink>
+                        <NavLink to="/ranking" onClick={() => btn_icon(!showmenu)}>Ranking</NavLink>
                         <NavLink to="/helpcenter" onClick={() => btn_icon(!showmenu)}>Help Center</NavLink>
                       </div>
                     </div>
@@ -244,9 +244,9 @@ const Header = function({ className }) {
                       <div className='item-dropdown'>
                         <div className="dropdown" onClick={closeMenu1}>
                         <NavLink to="/explore">Items On Sale</NavLink>
+                        <NavLink to="/liveAuction">Live Auction</NavLink>
                         <NavLink to="/collections">Collections</NavLink>
                         <NavLink to="/rankingGrey">Ranking Grey</NavLink>
-                        <NavLink to="/AuctionGrey">Live Auction Grey</NavLink>
                         <NavLink to="/helpcenterGrey">Help Center Grey</NavLink>
                         </div>
                       </div>
