@@ -474,7 +474,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     }, [nfts]);
 
     useEffect(async () => {
-      if (nfts.length > 0 && saleNFTs.length > 0) {
+      if (nfts.length > 0) {
         for (let nft of nfts) {
           const sale = saleNFTs.find(e => e.sc.toLowerCase() === nft.token_address.toLowerCase() && new BigNumber(e.tokenId._hex).toNumber() === parseInt(nft.token_id));
           
@@ -507,10 +507,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.onOffer = false;
           }
         }
-
-        setMyNfts(nfts);
       }
 
+      setMyNfts(nfts);
       setIsPageLoading(false);
     }, [saleNFTs, saleNFTs.length]);
 
