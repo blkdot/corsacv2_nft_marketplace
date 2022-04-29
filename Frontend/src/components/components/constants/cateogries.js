@@ -1,4 +1,4 @@
-export const categoris = [
+export const categories = [
   {value: 'Art', label: 'Art'},
   {value: 'Collectibles', label: 'Collectibles'},
   {value: 'Game Items', label: 'Game Items'},

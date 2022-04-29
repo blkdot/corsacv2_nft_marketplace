@@ -14,7 +14,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
-import { categoris } from "../components/constants/cateogries";
+import { categories } from "../components/constants/cateogries";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -470,7 +470,7 @@ const CreateCollection = () => {
               <h5>Category <span className="text-muted">(Required)</span></h5>
               <Select 
                   styles={customStyles}
-                  options={[defaultValue, ...categoris]}
+                  options={[defaultValue, ...categories]}
                   onChange={handleCategoryChange}
               />
               

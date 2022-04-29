@@ -17,7 +17,7 @@ const StyledSpin = styled(Spin)`
   }
 `
 
-const Explore3Cols = () => {
+const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filterCollections}) => {
   const [payments, setPayments] = useState([]);
   const [nfts, setNFTs] = useState([]);
   const [saleNFTs, setSaleNFTs] = useState([]);
@@ -201,7 +201,7 @@ const Explore3Cols = () => {
       }
 
       // console.log("NFTs:", promises);
-
+      let filteredNfts = [];
       for (let nft of promises) {
         if (!nft.metadata) {
           // const options = {
@@ -286,25 +286,73 @@ const Explore3Cols = () => {
           nft.onSale = false;
           nft.onOffer = false;
         }
+
+        //apply filters
+        const cat = nft.metadata && nft.metadata.collection ? nft.metadata.collection.category : null;
+        const saleType = nft.onSale ? 0 : nft.onAuction ? 1 : nft.onOffer ? 2 : null;
+        const payment = nft.payment ? nft.payment.value : null;
+        const collection = nft.metadata && nft.metadata.collection ? nft.metadata.collection.addr : null;
+        
+        let flag = true;
+        if (filterCategories.length > 0) {
+          const fc = filterCategories.filter((c, index) => {
+            return c.value === cat;
+          });
+
+          if (fc.length === 0) {
+            flag = false;
+          }
+        }
+
+        if (filterSaleTypes.length > 0) {
+          const fs = filterSaleTypes.filter((c, index) => {
+            return parseInt(c.value) === parseInt(saleType);
+          });
+
+          if (fs.length === 0) {
+            flag = false;
+          }
+        }
+
+        if (filterPayments.length > 0) {
+          const fp = filterPayments.filter((c, index) => {
+            return parseInt(c.value) === parseInt(payment);
+          });
+
+          if (fp.length === 0) {
+            flag = false;
+          }
+        }
+
+        if (filterCollections.length > 0) {
+          const fcc = filterCollections.filter((c, index) => {
+            return c.value === collection;
+          });
+
+          if (fcc.length === 0) {
+            flag = false;
+          }
+        }
+
+        if (flag) {
+          filteredNfts.push(nft);
+        }
       }
 
-      console.log("NFTs:", promises);
-      setNFTs(promises);
+      // console.log("NFTs:", filteredNfts);
+      setNFTs(filteredNfts);
     }
     
     setIsExplorerLoading(false);
   }
 
-  useEffect(() => {
-    getPayments();
-    getSalesInfo();
-  }, []);
+  useEffect(async () => {
+    setIsExplorerLoading(true);
+    await getPayments();
+    await getSalesInfo();
+  }, [filterCategories, filterSaleTypes, filterPayments, filterCollections]);
 
   useEffect(() => {
-    // console.log("isLoading:", isLoading);
-    // console.log('saleNFTs:', saleNFTs);
-    // console.log("nfts:", nfts);
-
     if (isLoading && nfts.length == 0) {
       setIsExplorerLoading(true);
     } else {
