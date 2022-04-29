@@ -4,7 +4,6 @@ import * as selectors from '../../store/selectors';
 import Footer from '../components/footer';
 import Select from 'react-select';
 import axios from "axios";
-import moment from "moment";
 import { navigate } from '@reach/router';
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralisWeb3Api, useMoralis, useMoralisFile, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
@@ -135,18 +134,18 @@ const CreateItem = () => {
       setOpenModal(true);
       return;
     }
-    if (!collection || collection.value == undefined || collection.value == '') {
+    if (collection && (collection.value === undefined || collection.value === null || collection.value === '')) {
       setModalTitle('Error');
       setModalMessage("Choose collection for your item");
       setOpenModal(true);
       return;
     }
-    if (!payment || payment.value == undefined || payment.value == null || payment.value == '') {
-      setModalTitle('Error');
-      setModalMessage("Choose payment for your item");
-      setOpenModal(true);
-      return;
-    }
+    // if (payment && (payment.value === undefined || payment.value === null || payment.value === '')) {
+    //   setModalTitle('Error');
+    //   setModalMessage("Choose payment for your item");
+    //   setOpenModal(true);
+    //   return;
+    // }
     if (itemName == '') {
       setModalTitle('Error');
       setModalMessage("Enter name for your item");
@@ -199,8 +198,9 @@ const CreateItem = () => {
       description: description,
       collection: collection,
       image: GATEWAY_URL + imageFileIpfs.hash(),
-      payment: payment,
-      royalty: royalty
+      // payment: payment,
+      royalty: royalty,
+      creator: account.toLowerCase()
     };
     let metadataFileIpfs = null;
     await saveFile(
@@ -273,12 +273,13 @@ const CreateItem = () => {
                   'walletAddr': account.toLowerCase(),
                   'collectionId': collection.value,
                   'tokenId': token_id,
-                  'payment': payment.value,
+                  // 'payment': payment.value,
                   'title': itemName,
                   'description': description,
                   'image': GATEWAY_URL + imageFileIpfs.hash(),
                   'royalty': royalty,
-                  'timeStamp': Math.floor(new Date().getTime() / 1000)
+                  'timeStamp': Math.floor(new Date().getTime() / 1000),
+                  'creator': account.toLowerCase()
                 },
                 {
                   headers: {
@@ -383,7 +384,14 @@ const CreateItem = () => {
 
         let myCollections = [];
         for (let c of erc721Collections) {
-          myCollections.push({value: c._id, label: c.title, addr: c.collectionAddr, symbol: c.symbol});
+          myCollections.push({
+            value: c._id, 
+            label: c.title, 
+            addr: c.collectionAddr, 
+            symbol: c.symbol,
+            category: c.category,
+            image: c.image
+          });
         }
         setCollections(myCollections);
       });
@@ -470,7 +478,7 @@ const CreateItem = () => {
             <div className="field-set">
               <h5>Upload image <span className="text-muted">(Required)</span></h5>
               <div className="d-create-file">
-                <p id="file_name">Image for Collection</p>
+                <p id="file_name">Image for your item</p>
                 <div className='browse'>
                   <input type="button" id="get_file" className="btn-main" value="Browse"/>
                   <input id='upload_file' type="file" ref={imgInput} onChange={handleFileChange} accept="image/*" />
@@ -491,14 +499,14 @@ const CreateItem = () => {
               
               <div className="spacer-30"></div>
 
-              <h5>Choose payment <span className="text-muted">(Required)</span></h5>
+              {/* <h5>Choose payment <span className="text-muted">(Required)</span></h5>
               <Select 
                   styles={customStyles}
                   options={[defaultValue, ...payments]}
                   onChange={handlePaymentChange}
               />
               
-              <div className="spacer-30"></div>
+              <div className="spacer-30"></div> */}
 
               <h5>Item Name <span className="text-muted">(30 available, required)</span></h5>
               <input type="text" 

@@ -22,13 +22,14 @@ exports.createItem = (req, res) => {
         let item = new NFTItem({
           walletAddr: req.body.walletAddr,
           collectionId: req.body.collectionId,
-          payment: req.body.payment,
+          // payment: req.body.payment,
           tokenId: req.body.tokenId,
           title: req.body.title,
           description: req.body.description,
           image: req.body.image,
           royalty: req.body.royalty,
-          timeStamp: req.body.timeStamp
+          timeStamp: req.body.timeStamp,
+          creator: req.body.creator
         });
         
         item.save((err1) => {

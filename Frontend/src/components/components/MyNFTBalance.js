@@ -4,7 +4,7 @@ import * as actions from '../../store/actions/thunks';
 import { clearNfts, clearFilter } from '../../store/actions';
 import MyNftCard from './MyNftCard';
 import NftMusicCard from './NftMusicCard';
-import { Modal, Input, Spin, Button, Tabs, DatePicker } from "antd";
+import { Modal, Input, Select, Option, Spin, Button, Tabs, DatePicker } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
 import axios from "axios";
@@ -28,10 +28,13 @@ const StyledModal = styled(Modal)`
 //react functional component
 const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null }) => {
     const mt100 = { marginTop: "100px" };
+
+    const { Option } = Select;
         
     const dispatch = useDispatch();
     const {getNFTBalances, data: NFTBalances, isLoading} = useNFTBalances();
     const [nfts, setNfts] = useState([]);
+    const [myNfts, setMyNfts] = useState([]);
 
     const [height, setHeight] = useState(0);
 
@@ -66,7 +69,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const { TabPane } = Tabs;
 
     const [saleNFTs, setSaleNFTs] = useState([]);
-    const [priceToken, setPriceToken] = useState([]);
+    const [payments, setPayments] = useState([]);
+    const [salePayment, setSalePayment] = useState(0);
+    const [auctionPayment, setAuctionPayment] = useState(0);
        
     const fallbackImg = 
       "data:image/png;base64,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";
@@ -95,7 +100,18 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         }
       }
 
-      const p = price * ("1e" + 9);
+      const method = parseInt(tabKey) - 1;
+      let payment = null;
+      if (method == 0) {
+        payment = salePayment;
+      } else if (method == 1) {
+        payment = auctionPayment;
+      } else {
+        payment = 0;
+      }
+
+      const p = price * ("1e" + payments[payment].decimals);
+      
       const ops = {
         contractAddress: marketAddress,
         functionName: listItemFunction,
@@ -103,9 +119,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         params: {
           sc: nft.token_address,
           tokenId: parseInt(nft.token_id),
-          payment: 2,
+          payment: payment,
           copy: 1,
-          method: parseInt(tabKey) - 1,
+          method: method,
           duration: duration,
           basePrice: String(p),
           feeRatio: 0,
@@ -134,8 +150,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           });
 
           if (token.length > 0) {
-            nft.price = new BigNumber(ops.params.basePrice).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-            nft.price_symbol = token[0].symbol;
+            nft.price = new BigNumber(ops.params.basePrice).dividedBy(new BigNumber(10).pow(payments[payment].decimals)).toNumber();
+            nft.payment = payments[payment];
           }
 
           if (parseInt(ops.params.method) === 0) {
@@ -250,6 +266,55 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       setLoading(false);
     }
 
+    async function getPayments() {
+      try {
+        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          params: {
+            allowed: 1
+          }
+        }).then(async res => {
+          let payments = [];
+          for (let p of res.data.payments) {
+            payments.push({
+              value: p.id, 
+              label: p.title + " (" + p.symbol + ")", 
+              addr: p.addr, 
+              title: p.title, 
+              type: p.type,
+              symbol: p.symbol,
+              decimals: p.decimals
+            });
+          }
+          setPayments(payments);
+        });
+      } catch {
+        console.log('error in fetching payments');
+      }
+    }
+
+    const getNFTCreator = async (walletAddr) => {
+      let creator = null;
+      
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {
+          walletAddr: walletAddr.toLowerCase()
+        }
+      }).then(res => {
+        creator = res.data.user;
+      }).catch(err => {
+        console.log(err);
+        creator = null;
+      });
+              
+      return creator;
+    };
+
     useEffect(async () => {
       const options = {
         chain: chainId,
@@ -261,12 +326,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         await Moralis.enableWeb3();
       }
       
-      const tb = await Web3Api.account.getTokenBalances(options);
-      const token = tb.filter((t, index) => {
-        return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
-      });
-
-      setPriceToken(token);
+      getPayments();
     }, []);
 
     useEffect(async () => {
@@ -334,6 +394,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                 .then((response) => response.json())
                 .then((data) => {
                   nft.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                  nft.metadata = data;
                 }).catch(function() {
                   console.log("error: getting uri");
                   nft.image = fallbackImg;
@@ -347,6 +408,27 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               nft.image = JSON.parse(JSON.stringify(nft.metadata)).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
             }
           }
+
+          //get author/seller info
+          try {
+            await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              params: {
+                walletAddr: nft.owner_of.toLowerCase()
+              }
+            }).then(res => {
+              nft.author = res.data.user;
+            });
+          } catch (err) {
+            console.log("fetching user error:", err);
+            nft.author = null;
+          }
+
+          //get creator of nft
+          nft.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+
           myNFTs.push(nft);
         }
         setNfts(myNFTs);
@@ -387,21 +469,21 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             setSaleNFTs([]);
           },
         });
-
-        setIsPageLoading(false);
       }
       getSalesOf(account);
     }, [nfts]);
 
-    useEffect(() => {
+    useEffect(async () => {
       if (nfts.length > 0 && saleNFTs.length > 0) {
         for (let nft of nfts) {
           const sale = saleNFTs.find(e => e.sc.toLowerCase() === nft.token_address.toLowerCase() && new BigNumber(e.tokenId._hex).toNumber() === parseInt(nft.token_id));
           
           if (sale !== undefined) {
-            if (priceToken.length > 0) {
-              nft.price = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(priceToken[0].decimals)).toNumber();
-              nft.price_symbol = priceToken[0].symbol;
+            //get price by payment
+            if (payments.length >= parseInt(sale.payment) + 1) {
+              const payment = payments[parseInt(sale.payment)];
+              nft.price = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+              nft.payment = payment;
             }
             
             const method = new BigNumber(sale.method._hex).toNumber();
@@ -425,6 +507,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.onOffer = false;
           }
         }
+
+        setIsPageLoading(false);
+        setMyNfts(nfts);
       }
     }, [saleNFTs, saleNFTs.length]);
 
@@ -437,17 +522,13 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       }
     };
     
-    //will run when component unmounted
-    useEffect(() => {
-        return () => {
-            dispatch(clearFilter());
-            dispatch(clearNfts());
-        }
-    },[dispatch]);
+    const handleSalePaymentChange = (value) => {
+      setSalePayment(value);
+    };
 
-    const loadMore = () => {
-        dispatch(actions.fetchNftBalancesBreakdown(authorId));
-    }
+    const handleAuctionPaymentChange = (value) => {
+      setAuctionPayment(value);
+    };
 
     return (
         <div className='row'>
@@ -464,7 +545,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             </div>
           </StyledModal>
 
-          {!isPageLoading && nfts.length == 0 &&
+          {!isPageLoading && myNfts.length == 0 &&
             <div className="row">
               <div className="alert alert-danger" role="alert">
                 No NFTs
@@ -472,7 +553,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             </div>
           }
 
-          {!isPageLoading && nfts && nfts.map( (nft, index) => (
+          {!isPageLoading && myNfts && myNfts.map( (nft, index) => (
               nft.category === 'music' ?
               <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
               :
@@ -486,12 +567,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                 setVisibility2={setVisibility2}
               />
           ))}
-          { showLoadMore && nfts.length <= 20 &&
-            <div className='col-lg-12'>
-                <div className="spacer-single"></div>
-                <span onClick={loadMore} className="btn-main lead m-auto">Load More</span>
-            </div>
-          }
           { visible1 && 
 					<div className='checkout'>
 						<div className='maincheckout' style={mt100}>
@@ -537,7 +612,13 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   alt=""
                 />
                 <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
-                  <TabPane tab="Fixed price" key="1">
+                  <TabPane tab="Fixed Price" key="1">
+                    <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleSalePaymentChange}>
+                      { payments && payments.map((payment, index) => (
+                          <Option value={payment.value} key={index}>{payment.label}</Option>
+                        ))
+                      }
+                    </Select>
                     <Input
                       autoFocus
                       placeholder="Amount"
@@ -545,6 +626,12 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                     />
                   </TabPane>
                   <TabPane tab="Timed Auction" key="2">
+                    <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
+                      { payments && payments.map((payment, index) => (
+                          <Option value={payment.value} key={index}>{payment.label}</Option>
+                        ))
+                      }
+                    </Select>
                     <Input
                       autoFocus
                       placeholder="Amount"

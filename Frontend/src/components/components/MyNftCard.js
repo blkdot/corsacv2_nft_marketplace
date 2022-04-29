@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import styled from "styled-components";
@@ -10,6 +10,7 @@ import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappP
 import Countdown from 'react-countdown';
 import { Modal, Spin } from "antd";
 import BigNumber from 'bignumber.js';
+import api from "../../core/api";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -56,6 +57,8 @@ const MyNftCard = ({
                   setVisibility2,
                   page = ''
                  }) => {
+    const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
+
     const { account } = useMoralis();
     
     const dispatch = useDispatch();
@@ -152,7 +155,7 @@ const MyNftCard = ({
                 nft.onAuction = false;
                 nft.onOffer = false;
                 nft.price = null;
-                nft.price_symbol = null;
+                nft.payment = null;
                 nft.endTime = null;
               }
             }
@@ -216,7 +219,7 @@ const MyNftCard = ({
       });
       return flag;
     }
-            
+    
     return (
         <div className={className}>
           <StyledModal
@@ -242,79 +245,65 @@ const MyNftCard = ({
             }
             { nft.endTime && clockTop &&
               <div className="de_countdown">
-                  {/* <Clock deadline={nft.deadline} /> */}
                   <Countdown
                     date={parseInt(nft.endTime) * 1000}
-                    // zeroPadTime={2}
                     renderer={renderer}
                   />
               </div>
             }
-              {/* <div className="author_list_pp">
-                  <span onClick={()=> navigateTo(nft.author_link ? nft.author_link : '')}>                                    
-                      <img className="lazy" src="" alt=""/>
-                      <i className="fa fa-check"></i>
-                  </span>
-              </div> */}
+              <div className="author_list_pp">
+                <span onClick={()=> navigateTo(nft.author && nft.author.walletAddr ? "/author/" + nft.author.walletAddr : '')}>
+                  <img className="lazy" 
+                      src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
+                      title={nft.author && nft.author.name ? nft.author.name : 'Unknown'}
+                      alt=""/>
+                  <i className="fa fa-check"></i>
+                </span>
+              </div>
               <div className="nft__item_wrap" style={{height: `${height}px`}}>
-                  <Outer>
-                      <span>
-                          <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/>
-                      </span>
-                  </Outer>
+                <Outer>
+                  <span>
+                    <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/>
+                  </span>
+                </Outer>
               </div>
               { nft.endTime && !clockTop &&
-                  // <div className="de_countdown">
-                  //     <Clock deadline={nft.deadline} />
-                  // </div>
-                  <Countdown
-                      date={parseInt(nft.endTime) * 1000}
-                      // zeroPadTime={2}
-                      renderer={renderer}
-                  />
+                <Countdown
+                  date={parseInt(nft.endTime) * 1000}
+                  renderer={renderer}
+                />
               }
               <div className="nft__item_info">
-                  <span onClick={() => navigateTo(nft.nft_link ? `${nft.nft_link}/${nft.id}` : '')}>
-                      {/* <h4>{nft.title}</h4> */}
-                      <h4>{nft.name}</h4>
-                  </span>
-                  { nft.onSale || nft.onOffer || nft.onAuction ? (
-                          // <div className="has_offers">
-                          //   <span className='through'>{nft.priceover}</span> {nft.price} {nft.price_symbol}
-                          // </div> 
-                          <div className="nft__item_price">
-                            {nft.price} {nft.price_symbol}
-                            {/* { nft.onAuction && 
-                                <span>{nft.bid}/{nft.max_bid}</span>
-                            } */}
-                          </div>
-                      ) : (
-                          <div className="nft__item_price">
-                            {nft.price} {nft.price_symbol}
-                          </div>
-                      )
-                  }
-                  <div className="nft__item_action">
-                    { page && page === 'explore' ? (
-                    <>
-                      {(nft.onSale || nft.onOffer) && (
-                        <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
-                      )}
-                      {(nft.onAuction) && (
-                        <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
-                      )}
-                    </>
-                    ) : (
-                      (nft.onSale || nft.onOffer || nft.onAuction) ? (
-                        <span onClick={() => handleCancelSaleClick(nft)}>
-                          Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
-                        </span>
-                      )
-                      : (
-                        <span onClick={() => handleSellClick(nft)}>Create Sale</span>
-                      )
+                <span onClick={() => handleBuyClick(nft)}>
+                  <h4>{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h4>
+                </span>
+                
+                { (nft.onSale || nft.onAuction || nft.onOffer) && 
+                <div className="nft__item_price">
+                  {nft.price} {nft.payment && nft.payment.symbol ? nft.payment.symbol : 'Unknown'}
+                </div>
+                }
+                <div className="nft__item_action">
+                  { page && page === 'explore' ? (
+                  <>
+                    {(nft.onSale || nft.onOffer) && (
+                      <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
                     )}
-                  </div>
+                    {(nft.onAuction) && (
+                      <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
+                    )}
+                  </>
+                  ) : (
+                    (nft.onSale || nft.onOffer || nft.onAuction) ? (
+                      <span onClick={() => handleCancelSaleClick(nft)}>
+                        Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
+                      </span>
+                    )
+                    : (
+                      <span onClick={() => handleSellClick(nft)}>Create Sale</span>
+                    )
+                  )}
+                </div>
                   <div className="nft__item_like">
                       <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
                   </div>                            

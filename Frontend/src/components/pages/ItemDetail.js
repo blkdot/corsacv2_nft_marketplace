@@ -51,7 +51,7 @@ const ItemDetail = () => {
 		const contractProcessor = useWeb3ExecuteFunction();
     const {marketAddress, contractABI, corsacTokenAddress, corsacTokenABI} = useMoralisDapp();
 		const Web3Api = useMoralisWeb3Api();
-		const {account} = useMoralis();
+		const {account, Moralis} = useMoralis();
 		const {chainId} = useChain();
 
     const listItemFunction = "getSaleInfo";
@@ -63,6 +63,7 @@ const ItemDetail = () => {
 		const [yourBalance, setYourBalance] = useState(0);
 		const [serviceFee, setServiceFee] = useState(0);
 		const [serviceFeePercent, setServiceFeePercent] = useState(0);
+		const [payments, setPayments] = useState([]);
 		const [payment, setPayment] = useState(0);
 		const [decimals, setDecimals] = useState(18);
 		const [symbol, setSymbol] = useState("BNB");
@@ -86,6 +87,10 @@ const ItemDetail = () => {
 		const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 		const [isPageLoading, setIsPageLoading] = useState(true);
 		const [isBidEnded, setIsBidEnded] = useState(false);
+
+		const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
+  	const fallbackImg = 
+    	"data:image/png;base64,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";
 
 		const renderer = props => {
 			if (props.completed) {
@@ -314,8 +319,7 @@ const ItemDetail = () => {
 
 		const buyItem = async () => {
 			console.log("buyItem");
-			const totalPrice = (basePrice + serviceFee) * (new BigNumber(10).pow(decimals)).toNumber();
-			console.log("totalPrice:", totalPrice);
+			const totalPrice = Moralis.Units.Token(basePrice + serviceFee, decimals);
 			const ops = {
 				contractAddress: marketAddress,
 				functionName: "buy",
@@ -392,11 +396,42 @@ const ItemDetail = () => {
 			});
 		}
 
+		async function getPayments() {
+			try {
+				await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					params: {
+						allowed: 1
+					}
+				}).then(async res => {
+					let payments = [];
+					for (let p of res.data.payments) {
+						payments.push({
+							value: p.id, 
+							label: p.title + " (" + p.symbol + ")", 
+							addr: p.addr, 
+							title: p.title, 
+							type: p.type,
+							symbol: p.symbol,
+							decimals: p.decimals
+						});
+					}
+					setPayments(payments);
+				});
+			} catch {
+				console.log('error in fetching payments');
+			}
+		}
+
 		useEffect(() => {
 			if (nftDetailState == undefined) {
 				navigate('/');
 			} else {
 				setNFT(nftDetailState.data);
+
+				getPayments();
 			}
     }, [nftDetailState]);
 
@@ -422,7 +457,7 @@ const ItemDetail = () => {
 						});
 
 						if (sales.length > 0) {
-							console.log("sale INFO:", sales[0]);
+							// console.log("sale INFO:", sales[0]);
 							setPayment(sales[0].payment);
 							setSaleInfo(sales[0]);
 						} else {
@@ -440,7 +475,7 @@ const ItemDetail = () => {
       }
 
 			if (nft) {
-				console.log("item detail:", nft);
+				// console.log("item detail:", nft);
 				getSalesInfo(nft);
 			}
 		}, [nft]);
@@ -454,25 +489,44 @@ const ItemDetail = () => {
 				
 				const balances = await Web3Api.account.getTokenBalances(options);
 				// console.log(balances);
-				// const nativeBalance = await Web3Api.account.getNativeBalance(options);
-				
+								
 				const token = balances.filter((t, index) => {
 					// return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
 					return t.token_address.toLowerCase() == nft.payment.addr.toLowerCase();
 				});
 				
-				let bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
-				let yBalance = new BigNumber(token[0].balance).toNumber();
-	
-				// if payment is corsac token, not stable coin
-				if (saleInfo.payment._hex !== 0x00) {
-					bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-					yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+				let bPrice = 0;
+				let yBalance = 0;
 
-					setDecimals(token[0].decimals);
-					setSymbol(token[0].symbol);
+				if (parseInt(saleInfo.payment._hex) === 0x00) {
+					//payment is stable coin like BNB
+					const nativeBalance = await Web3Api.account.getNativeBalance(options);
+					bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(18)).toNumber();
+					yBalance = (new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(18)).toNumber();
+					
+					setDecimals(payments[0].decimals);
+					setSymbol(payments[0].symbol);
+				} else {
+					if (token.length > 0) {
+						bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+						yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+
+						setDecimals(token[0].decimals);
+						setSymbol(token[0].symbol);
+					} else {
+						//you haven't current token
+						const opt = {
+							chain: chainId,
+							addresses: nft.payment.addr.toLowerCase(),
+						};
+						const tokenMetadata = await Web3Api.token.getTokenMetadata(opt);
+						bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(parseInt(tokenMetadata[0].decimals))).toNumber();
+						yBalance = 0;
+						setDecimals(nft.payment.decimals);
+						setSymbol(nft.payment.symbol);
+					}
 				}
-				
+
 				// const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
 				// const yBalance = new BigNumber(token[0].balance).toNumber();
 				const sFeePercent = (new BigNumber(saleInfo.feeRatio._hex, 16)) / 100;
@@ -531,254 +585,211 @@ const ItemDetail = () => {
 				<StyledHeader theme={theme} />
 				
 				<section className='container'>
-				{/* {isCheckoutLoading && 
-					<div className="row mt-md-5 pt-md-4">
-          	<StyledSpin tip="Loading..." size="large" />
-					</div>
-        } */}
-				
-				<StyledModal
-					key="1"
-					title=''
-					visible={isPageLoading}
-					centered
-					footer={null}
-					closable={false}
-				>
-					<div className="row">
-					<StyledSpin tip="Loading..." size="large" />
-					</div>
-				</StyledModal>
-
-				<StyledModal
-					key="2"
-					title=''
-					visible={isCheckoutLoading}
-					centered
-					footer={null}
-					closable={false}
-				>
-					<div className="row">
-					<StyledSpin tip="Loading..." size="large" />
-					</div>
-				</StyledModal>
-				
-				{ !isPageLoading && nft && 
-					<div className='row mt-md-5 pt-md-4'>
-						<div className="col-md-6 text-center">
-								{/* <img src={ nft.preview_image && api.baseUrl + nft.preview_image.url} className="img-fluid img-rounded mb-sm-30" alt=""/> */}
-								<img src={ nft.image} className="img-fluid img-rounded mb-sm-30" alt=""/>
+					<StyledModal
+						key="1"
+						title=''
+						visible={isPageLoading}
+						centered
+						footer={null}
+						closable={false}
+					>
+						<div className="row">
+						<StyledSpin tip="Loading..." size="large" />
 						</div>
-						<div className="col-md-6">
-							<div className="item_info">
-								{nft.onAuction &&
-									<>
-										Auctions ends in 
-										<div className="de_countdown">
-											<Countdown
-												date={parseInt(nft.endTime) * 1000}
-												renderer={renderer}
-											/>
-										</div>
-									</>
-								}
-								{/* <h2>{nft.title}</h2> */}
-								<h2>{nft.name}</h2>
-								<div className="item_info_counts">
-									<div className="item_info_type"><i className="fa fa-image"></i>{nft.category}</div>
-									<div className="item_info_views"><i className="fa fa-eye"></i>{nft.views}</div>
-									<div className="item_info_like"><i className="fa fa-heart"></i>{nft.likes}</div>
-								</div>
-								<p>{nft.description}</p>
+					</StyledModal>
 
-								<div className="d-flex flex-row">
+					<StyledModal
+						key="2"
+						title=''
+						visible={isCheckoutLoading}
+						centered
+						footer={null}
+						closable={false}
+					>
+						<div className="row">
+						<StyledSpin tip="Loading..." size="large" />
+						</div>
+					</StyledModal>
+					
+					{ !isPageLoading && nft && 
+						<div className='row mt-md-5 pt-md-4'>
+							<div className="col-md-6 text-center">
+									<img className="img-fluid img-rounded mb-sm-30"
+										src={ nft.image ? nft.image : nft.metadata.image ? nft.metadata.image : fallbackImg} 
+										alt=""/>
+							</div>
+							<div className="col-md-6">
+								<div className="item_info">
+									{nft.onAuction &&
+										<>
+											Auctions ends in 
+											<div className="de_countdown">
+												<Countdown
+													date={parseInt(nft.endTime) * 1000}
+													renderer={renderer}
+												/>
+											</div>
+										</>
+									}
+									
+									<h2>{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h2>
+									<div className="item_info_counts">
+										<div className="item_info_type"><i className="fa fa-image"></i>{nft.metadata && nft.metadata.collection.category ? nft.metadata.collection.category : nft.category}</div>
+										<div className="item_info_views"><i className="fa fa-eye"></i>{nft.views}</div>
+										<div className="item_info_like"><i className="fa fa-heart"></i>{nft.likes}</div>
+									</div>
+									
+									<div className="d-flex flex-row">
 										<div className="mr40">
-												<h6>Creator</h6>
-												<div className="item_author">                                    
-														<div className="author_list_pp">
-																<span>
-																		<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
-																		<i className="fa fa-check"></i>
-																</span>
-														</div>                                    
-														<div className="author_list_info">
-																<span>{nft.author && nft.author.username}</span>
-														</div>
+											<h6>Creator</h6>
+											<div className="item_author">                                    
+												<div className="author_list_pp">
+													<span>
+														<img className="lazy" 
+																src={nft.creator && nft.creator.avatar ? nft.creator.avatar : defaultAvatar} 
+																title={nft.creator && nft.creator.name ? nft.creator.name : 'Unknown'} 
+																alt=""
+														/>
+														<i className="fa fa-check"></i>
+													</span>
 												</div>
+												<div className="author_list_info">
+													<span>{nft.creator && nft.creator.name ? nft.creator.name : 'Unknown'}</span>
+												</div>
+											</div>
 										</div>
 										<div className="mr40">
-												<h6>Collection</h6>
-												<div className="item_author">                                    
-														<div className="author_list_pp">
-																<span>
-																		<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
-																		<i className="fa fa-check"></i>
-																</span>
-														</div>                                    
-														<div className="author_list_info">
-																<span>{nft.author && nft.author.username}</span>
-														</div>
+											<h6>Collection</h6>
+											<div className="item_author">                                    
+												<div className="author_list_pp">
+													<span>
+														<img className="lazy" 
+																src={nft.metadata && nft.metadata.collection && nft.metadata.collection.image ? nft.metadata.collection.image : fallbackImg}
+																title={nft.metadata && nft.metadata.collection && nft.metadata.collection.label ? nft.metadata.collection.label : 'Unknown'} 
+																alt=""/>
+														<i className="fa fa-check"></i>
+													</span>
+												</div>                                    
+												<div className="author_list_info">
+													<span>{nft.metadata && nft.metadata.collection && nft.metadata.collection.label ? nft.metadata.collection.label : 'Unknown'}</span>
 												</div>
+											</div>
 										</div>
-								</div>
+									</div>
 
-								<div className="spacer-40"></div>
+									<div className="spacer-40"></div>
 
-								<div className="de_tab">
+									<div className="de_tab">
 
-									<ul className="de_nav">
+										<ul className="de_nav">
 											<li id='Mainbtn0' className="active"><span onClick={handleBtnClick0}>Details</span></li>
 											<li id='Mainbtn' ><span onClick={handleBtnClick}>Bids</span></li>
 											<li id='Mainbtn1' className=''><span onClick={handleBtnClick1}>History</span></li>
-									</ul>
-																			
-									<div className="de_tab_content">
+										</ul>
+																				
+										<div className="de_tab_content">
 											{openMenu0  && (  
-											<div className="tab-1 onStep fadeIn">
+												<div className="tab-1 onStep fadeIn">
 													<div className="d-block mb-3">
-															<div className="mr40">
-																	<h6>Owner</h6>
-																	<div className="item_author">                                    
-																			<div className="author_list_pp">
-																					<span>
-																							<img className="lazy" src={nft.author && api.baseUrl + nft.author.avatar.url} alt=""/>
-																							<i className="fa fa-check"></i>
-																					</span>
-																			</div>                                    
-																			<div className="author_list_info">
-																					<span>{nft.author && nft.author.username}</span>
-																			</div>
-																	</div>
+														<div className="mr40">
+															<h6>Owner</h6>
+															<div className="item_author">                                    
+																<div className="author_list_pp">
+																	<span>
+																		<img className="lazy" 
+																				src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
+																				title={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
+																				alt=""
+																		/>
+																		<i className="fa fa-check"></i>
+																	</span>
+																</div>                                    
+																<div className="author_list_info">
+																	<span>{nft.author && nft.author.name ? nft.author.name : 'Unknown'}</span>
+																</div>
 															</div>
-
-															<div className="row mt-5">
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Background</h5>
-																					<h4>Yellowish Sky</h4>
-																					<span>85% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Eyes</h5>
-																					<h4>Purple Eyes</h4>
-																					<span>14% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Nose</h5>
-																					<h4>Small Nose</h4>
-																					<span>45% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Mouth</h5>
-																					<h4>Smile Red Lip</h4>
-																					<span>61% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Neck</h5>
-																					<h4>Pink Ribbon</h4>
-																					<span>27% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Hair</h5>
-																					<h4>Pink Short</h4>
-																					<span>35% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Accessories</h5>
-																					<h4>Heart Necklace</h4>
-																					<span>33% have this trait</span>
-																			</div>
-																	</div>
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Hat</h5>
-																					<h4>Cute Panda</h4>
-																					<span>62% have this trait</span>
-																			</div>
-																	</div>      
-																	<div className="col-lg-4 col-md-6 col-sm-6">
-																			<div className="nft_attr">
-																					<h5>Clothes</h5>
-																					<h4>Casual Purple</h4>
-																					<span>78% have this trait</span>
-																			</div>
-																	</div>                                   
-															</div>
-
-													</div>
-											</div>
-											)}
-
-											{openMenu  && (  
-											<div className="tab-1 onStep fadeIn">
-													{nft.bids && nft.bids.map((bid, index) => (
-															<div className="p_list" key={index}>
-																	<div className="p_list_pp">
-																			<span>
-																					{/* <img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/> */}
-																					<i className="fa fa-check"></i>
-																			</span>
-																	</div>                                    
-																	<div className="p_list_info">
-																		<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
-																		<span>by <b>{bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
-																	</div>
-															</div>
-													))}
-													{(nft.bids === undefined || nft.bids === null || nft.bids.length === 0) &&
-														<div className="p_list">
-															<span><b>No bids</b></span>
 														</div>
-													}
-											</div>
-											)}
 
-											{openMenu1 && ( 
-											<div className="tab-2 onStep fadeIn">
-													{nft.history && nft.history.map((bid, index) => (
-															<div className="p_list" key={index}>
-																	<div className="p_list_pp">
-																			<span>
-																					<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
-																					<i className="fa fa-check"></i>
-																			</span>
-																	</div>                                    
-																	<div className="p_list_info">
-																			Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
-																			<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
-																	</div>
+														<div className="row mt-5">
+															<div className="col-lg-12 col-md-12 col-sm-12">
+																{ nft.price != 0 && nft.price != null && 
+																<div className="nft_attr">
+																	<h3>
+																		Price: {nft.price ? nft.price.toString() + ' ' + nft.payment.symbol : ''}
+																	</h3>
+																	<h3 className="mb-0">
+																		Royalty: {nft.metadata && nft.metadata.royalty ? nft.metadata.royalty.toString() + ' %' : ''}
+																	</h3>
+																</div>
+																}
+																<div className="nft_attr" style={{textAlign: "left"}}>
+																	<h4 className="mb-4">Description:</h4>
+																	<span dangerouslySetInnerHTML={{__html: nft.metadata && nft.metadata.description ? nft.metadata.description.replaceAll('\n', "<br/>") : ''}} />
+																</div>
 															</div>
-													))}
-											</div>
-											)}
+														</div>
+													</div>
+												</div>
+												)}
 
-											{/* button for checkout */}
-											<div className="d-flex flex-row mt-5">
-												{(nft.onSale || nft.onOffer) && 
-													<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
-												}
-												{!isBidEnded && nft.onAuction && 
-													<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
-												}
-											</div>
-									</div>     
-								</div>          
+												{openMenu  && (  
+												<div className="tab-1 onStep fadeIn">
+														{nft.bids && nft.bids.map((bid, index) => (
+																<div className="p_list" key={index}>
+																		<div className="p_list_pp">
+																				<span>
+																						{/* <img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/> */}
+																						<i className="fa fa-check"></i>
+																				</span>
+																		</div>                                    
+																		<div className="p_list_info">
+																			<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
+																			<span>by <b>{bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
+																		</div>
+																</div>
+														))}
+														{(nft.bids === undefined || nft.bids === null || nft.bids.length === 0) &&
+															<div className="p_list">
+																<span><b>No bids</b></span>
+															</div>
+														}
+												</div>
+												)}
+
+												{openMenu1 && ( 
+												<div className="tab-2 onStep fadeIn">
+														{nft.history && nft.history.map((bid, index) => (
+																<div className="p_list" key={index}>
+																		<div className="p_list_pp">
+																				<span>
+																						<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
+																						<i className="fa fa-check"></i>
+																				</span>
+																		</div>                                    
+																		<div className="p_list_info">
+																				Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
+																				<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
+																		</div>
+																</div>
+														))}
+												</div>
+												)}
+
+												{/* button for checkout */}
+												<div className="d-flex flex-row mt-5">
+													{(nft.onSale || nft.onOffer) && 
+														<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
+													}
+													{!isBidEnded && nft.onAuction && 
+														<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
+													}
+												</div>
+										</div>     
+									</div>          
+								</div>
 							</div>
 						</div>
-					</div>
-				}
+					}
 				</section>
 				
 				<Footer /> 

@@ -11,10 +11,10 @@ const NFTItem = mongoose.model(
       type: mongoose.Schema.Types.ObjectId,
       default: null
     },
-    payment: {
-      type: Number,
-      default: 0
-    },
+    // payment: {
+    //   type: Number,
+    //   default: 0
+    // },
     tokenId: {
       type: Number,
       default: 0
@@ -38,6 +38,10 @@ const NFTItem = mongoose.model(
     timeStamp: {
       type: Number,
       default: 0
+    },
+    creator: {
+      type: String,
+      default: ''
     },
     stars: {
       type: Number,

@@ -127,6 +127,26 @@ const NewItems = () => {
     });
   }
 
+  const getNFTCreator = async (walletAddr) => {
+    let creator = null;
+    
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        walletAddr: walletAddr.toLowerCase()
+      }
+    }).then(res => {
+      creator = res.data.user;
+    }).catch(err => {
+      console.log(err);
+      creator = null;
+    });
+            
+    return creator;
+  };
+
   const handleItemClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
     navigate('/item-detail');
@@ -179,12 +199,15 @@ const NewItems = () => {
                   walletAddr: saleInfo.seller.toLowerCase()
                 }
               }).then(res => {
-                temp[0].seller = res.data.user;
+                temp[0].author = res.data.user;
               });
             } catch (err) {
               console.log("fetching user error:", err);
-              temp[0].seller = null;
+              temp[0].author = null;
             }
+
+            //get creator of nft
+            temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getNFTCreator(temp[0].metadata.creator) : null;
 
             temp[0].endTime = (temp[0].method === 1) ? parseInt(saleInfo.endTime._hex) : null;
             
@@ -235,6 +258,8 @@ const NewItems = () => {
         }
       }
 
+      console.log(promises);
+
       setNfts(promises);
       
       setLoading(false);
@@ -266,9 +291,9 @@ const NewItems = () => {
                 {/* <span onClick={()=> navigate('/author/' + (nft.seller ? nft.seller.walletAddress : ''))}> */}
                 <span>
                   <img className="lazy" 
-                      src={nft.seller && nft.seller.avatar ? nft.seller.avatar : defaultAvatar} 
-                      title={nft.seller && nft.seller.name ? nft.seller.name : 'Unknown'} 
-                      alt={nft.seller && nft.seller.name ? nft.seller.name : 'Unknown'} 
+                      src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
+                      title={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
+                      alt={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
                   />
                   <i className="fa fa-check"></i>
                 </span>

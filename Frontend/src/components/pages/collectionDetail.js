@@ -8,6 +8,7 @@ import Footer from '../components/footer';
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 
 import axios from "axios";
+import api from "../../core/api";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
@@ -70,6 +71,7 @@ const Collection = props => {
   const [height, setHeight] = useState(0);
   const [clockTop, setClockTop] = useState(true);
 
+  const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
   const fallbackImg =
     "data:image/png;base64,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";
 
@@ -99,6 +101,26 @@ const Collection = props => {
   const handleItemClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
     navigate('/item-detail');
+  };
+
+  const getNFTCreator = async (walletAddr) => {
+    let creator = null;
+    
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        walletAddr: walletAddr.toLowerCase()
+      }
+    }).then(res => {
+      creator = res.data.user;
+    }).catch(err => {
+      console.log(err);
+      creator = null;
+    });
+            
+    return creator;
   };
 
   useEffect(async () => {
@@ -184,7 +206,7 @@ const Collection = props => {
         const NFTs = await Web3Api.token.getAllTokenIds(options);
         const itemsCount = NFTs.result.length;
         c.itemsCount = itemsCount;
-        console.log("nfts:", NFTs);
+        // console.log("nfts:", NFTs);
         setCollection(c);
 
         //get all saleItems from marketplace
@@ -204,11 +226,36 @@ const Collection = props => {
             console.log("success");
             saleItems = result;
 
-            console.log("saleItems:", saleItems);
+            // console.log("saleItems:", saleItems);
 
             let newNFTs = [];
+            // console.log(NFTs.result);
             for (let nft of NFTs.result) {
               let metadata = null;
+              //get metadata
+              const options = {
+                address: nft.token_address,
+                token_id: nft.token_id,
+                chain: chainId
+              };
+              const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
+              //get author/seller info
+              try {
+                await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  params: {
+                    walletAddr: tokenIdMetadata.owner_of.toLowerCase()
+                  }
+                }).then(res => {
+                  nft.author = res.data.user;
+                });
+              } catch (err) {
+                console.log("fetching user error:", err);
+                nft.author = null;
+              }
+
               if (nft.metadata) {
                 if (typeof nft.metadata === "string") {
                   metadata = JSON.parse(nft.metadata);
@@ -239,6 +286,7 @@ const Collection = props => {
                 const basePrice = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
                 
                 metadata.price = basePrice;
+                metadata.payment = payment;
 
                 if (method === 1 && endTime > currentTime) {
                   metadata.onAuction = true;
@@ -263,6 +311,9 @@ const Collection = props => {
               nft.metadata = metadata;
 
               let tempNFT = {};
+              tempNFT.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+              tempNFT.author = nft.author ? nft.author : null;
+              tempNFT.metadata = metadata;
               tempNFT.token_address = nft.token_address;
               tempNFT.token_id = nft.token_id;
               tempNFT.name = !nft.metadata ? nft.name : nft.metadata.name;
@@ -278,7 +329,7 @@ const Collection = props => {
 
               newNFTs.push(tempNFT);
             }
-            console.log("newNFTs:", newNFTs);
+            // console.log("newNFTs:", newNFTs);
             
             setItems(newNFTs);
             setLoading(false);
@@ -390,12 +441,15 @@ const Collection = props => {
                     />
                   </div>
                 }
-                  {/* <div className="author_list_pp">
-                      <span onClick={()=> navigateTo(nft.author_link ? nft.author_link : '')}>                                    
-                          <img className="lazy" src="" alt=""/>
+                  <div className="author_list_pp">
+                      <span onClick={()=> navigate(nft.author && nft.author.walletAddr ? '/author/' + nft.author.walletAddr : '/')}>                                    
+                          <img className="lazy" 
+                              src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
+                              title={nft.author && nft.author.name ? nft.author.name : 'Unknown'}
+                              alt=""/>
                           <i className="fa fa-check"></i>
                       </span>
-                  </div> */}
+                  </div>
                   <div className="nft__item_wrap" style={{height: `${height}px`}}>
                     <Outer>
                       <span>
@@ -415,7 +469,7 @@ const Collection = props => {
                       </span>
                       { (nft.onSale || nft.onOffer || nft.onAuction) &&
                         <div className="nft__item_price">
-                          {nft.price} {nft.payment.symbol ? nft.payment.symbol : nft.payment.label}
+                          {nft.price} {nft.payment && nft.payment.symbol ? nft.payment.symbol : 'Unknown'}
                         </div>
                       }
                       <div className="nft__item_action">

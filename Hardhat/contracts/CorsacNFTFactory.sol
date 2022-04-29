@@ -1206,4 +1206,14 @@ contract CorsacNFTFactory is
             saleId
         );
     }
+
+    /**
+     * @dev this function gets creator of NFT
+     * @param collectionAddr - collection address
+     * @param tokenId - tokenId
+     */
+    function getNFTCreator(address collectionAddr, uint256 tokenId) external view returns(address) {
+        require(collectionOccupation[collectionAddr] == true);
+        return IContractInfoWrapper(collectionAddr).getCreator(tokenId);
+    }
 }
