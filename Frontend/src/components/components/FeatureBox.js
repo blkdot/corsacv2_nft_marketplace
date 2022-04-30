@@ -27,7 +27,7 @@ const featurebox= () => (
                         <h4 className="">Set up your wallet</h4>
                       </Reveal>
                       <Reveal className='onStep' keyframes={fadeInUp} delay={200} duration={600} triggerOnce>
-                        <p className="">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem.</p>
+                        <p className="">Once you've set up the wallet of your choice, connect it to Corsac Marketplace, by clicking the connect wallet on the top right corner.</p>
                       </Reveal>
                     </div>
                     <i className="wm icon_wallet"></i>
@@ -44,7 +44,8 @@ const featurebox= () => (
                       <h4 className="">Add your NFT's</h4>
                     </Reveal>
                     <Reveal className='onStep' keyframes={fadeInUp} delay={200} duration={600} triggerOnce>
-                      <p className="">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem.</p>
+                      <p className="">Upload your work (image, video, audio, or 3D arts), add a title and description, and customize your NFTs.</p>
+                      <br/>
                     </Reveal>
                   </div>
                   <i className="wm icon_cloud-upload_alt"></i>
@@ -61,7 +62,7 @@ const featurebox= () => (
                       <h4 className="">Sell your NFT's</h4>
                     </Reveal>
                     <Reveal className='onStep' keyframes={fadeInUp} delay={200} duration={600} triggerOnce>
-                      <p className="">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem.</p>
+                      <p className="">Choose between auctions, fixed-price listings. You choose how you want to sell your NFTs, and we help you sell them in Corsac or Other Token as well.</p>
                     </Reveal>
                   </div>
                   <i className="wm icon_tags_alt"></i>

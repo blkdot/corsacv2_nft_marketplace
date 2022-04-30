@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useDispatch } from 'react-redux';
 import { useMoralis } from "react-moralis";
 import * as actions from '../store/actions/thunks';
-import { Router, Location, Redirect } from '@reach/router';
+import { Router, Location, Redirect, navigate } from '@reach/router';
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
 import Home from './pages/home';
@@ -108,7 +108,8 @@ const App = ({ isServerInfo }) => {
 
   const dispatch = useDispatch();
   const unsubscribe = Moralis.onAccountChanged((account) => {
-    dispatch(actions.setCurrentUser(account));
+    dispatch(actions.setCurrentUser(account.toLowerCase()));
+    navigate("/profile/" + account.toLowerCase());
   });
 
   useEffect(() => {
@@ -119,6 +120,9 @@ const App = ({ isServerInfo }) => {
     console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
     // console.log("window.web3:", window.web3);
     // console.log("window.ethereum:", window.ethereum);
+    if (isAuthenticated && account) {
+      navigate("/profile/" + account.toLowerCase());
+    }
     
     if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading)
       enableWeb3({ provider: connectorId });

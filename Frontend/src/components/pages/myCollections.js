@@ -56,7 +56,7 @@ const MyCollections = props => {
 
   const [pageTitle, setPageTitle] = useState("My Collections");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingTitle, setLoadingTitle] = useState("Loading...");
 
   const [modalTitle, setModalTitle] = useState('');
