@@ -171,6 +171,8 @@ const LiveAuction = () => {
 
   useEffect(async () => {
     if (saleNFTs.length > 0) {
+      setLoading(true);
+      
       let nfts = [];
       for (let sale of saleNFTs) {
         try {
@@ -265,11 +267,11 @@ const LiveAuction = () => {
           console.log(e);
         }
       }
-      console.log(nfts);
+      setLoading(false);
       setAuctions(nfts);
+    } else {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [saleNFTs]);
 
   return (
@@ -305,7 +307,7 @@ const LiveAuction = () => {
       <section className='container'>
         <div className="row">
           { auctions && auctions.map( (nft, index) => (
-            <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4">
+            <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
               <div className="nft__item m-0">
                 { nft.item_type && nft.item_type === 'single_items' ? (
                   <div className='icontype'><i className="fa fa-bookmark"></i></div>   
