@@ -2,7 +2,9 @@ const Web3 = require('web3')
 const dotenv = require('dotenv');
 const HDWalletProvider = require("truffle-hdwallet-provider");
 const marketABI = require('./market.json');
-const { collection } = require('../models/collection.model');
+const Activity = require('../models/activity.model');
+const User = require('../models/user.model');
+const Bid = require('../models/bid.model');
 
 dotenv.config();
 
@@ -72,10 +74,31 @@ const poll_method = async () => {
       console.log("finalizing auction...saleId=", sales[i].saleId);
       try {
         const nonce = await web3.eth.getTransactionCount(process.env.PUBLIC_KEY);
-        
+                
         await contract.methods.finalizeAuction(parseInt(sales[i].saleId)).send({
           from: process.env.PUBLIC_KEY,
           nonce: nonce
+        }).then(async (result) => {
+          const seller = sales[i].seller;
+          const user = await User.findOne({walletAddr: seller.toLowerCase()});
+          const lastBid = await Bid.find({saleId: parseInt(sales[i].saleId)}).sort({price: -1}).limit(1);
+          
+          //save activity
+          const activity = new Activity({
+            actor: lastBid && lastBid[0] && lastBid[0].walletAddr ? lastBid[0].walletAddr : 'Unknown',
+            actionType: 8,
+            description: (user && user.name ? user.name : 'Unknown') + ": wins from timed auction - " + sales[i].sc + "#" + sales[i].tokenId,
+            from: seller.toLowerCase(),
+            timeStamp: Math.floor(new Date().getTime() / 1000)
+          });
+        
+          activity.save((err) => {
+            if (err) {
+              console.log("Error: " + err);
+            } else {
+              console.log("Activity was saved successfully");
+            }
+          });
         });
         
         if (global.endedAuctionList.length > 10000) {

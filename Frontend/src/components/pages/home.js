@@ -12,6 +12,7 @@ import { keyframes } from "@emotion/react";
 import { StyledHeader } from '../Styles';
 import { navigate } from '@reach/router';
 import HotCollections from '../components/hotCollections';
+import TopSeller from '../components/TopSeller';
 
 const fadeInUp = keyframes`
   0% {
@@ -87,7 +88,6 @@ const homethree= () => (
       <div className='container no-top'>
         <div className='row'>
           <div className='col-lg-12 px-0'>
-            {/* <CarouselCollectionRedux /> */}
             <HotCollections />
           </div>
         </div>
@@ -100,7 +100,7 @@ const homethree= () => (
           <h2 className='style-2'>Top Seller</h2>
         </div>
         <div className='col-lg-12'>
-          <AuthorListRedux/>
+          <TopSeller />
         </div>
       </div>
     </section>

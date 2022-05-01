@@ -2,6 +2,8 @@ const db = require("../models");
 const mongoose = require("mongoose");
 const NFTItem = db.item;
 const Collection = db.collection;
+const Activity = db.activity;
+const User = db.user;
 const { createCollection, getTokenId, mintTo, transferMoney } = require('../contracts/methods');
 
 exports.createItem = (req, res) => {
@@ -32,7 +34,7 @@ exports.createItem = (req, res) => {
           creator: req.body.creator
         });
         
-        item.save((err1) => {
+        item.save(async (err1) => {
           if (err1) {
             res.status(500).send({
               type: 'error',
@@ -40,12 +42,31 @@ exports.createItem = (req, res) => {
             });
             return;
           }
-  
-          res.send({
-            type: 'success',
-            message: "NFT item was created successfully",
+          
+          //get user info
+          let user = await User.findOne({walletAddr: req.body.walletAddr});
+
+          //save activity
+          const activity = new Activity({
+            actor: req.body.walletAddr,
+            actionType: 2,
+            description: (user ? user.name : 'Unknown') + ": " + "created new item - " + req.body.title,
+            from: '',
+            timeStamp: Math.floor(new Date().getTime() / 1000)
           });
-          return;
+
+          activity.save((err2) => {
+            if (err1) {
+              res.status(500).send({ message: err2 });
+              return;
+            }
+
+            res.send({
+              type: 'success',
+              message: "Item was created successfully!",
+            });
+            return;
+          });
         });
       } else {
         res.status(500).send({

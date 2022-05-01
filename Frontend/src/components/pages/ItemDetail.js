@@ -38,6 +38,8 @@ const StyledModal = styled(Modal)`
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
 const ItemDetail = () => {
+		const currentUserState = useSelector(selectors.currentUserState);
+
     const inputColorStyle = {
     	color: '#111'
     };
@@ -65,8 +67,8 @@ const ItemDetail = () => {
 		const [serviceFeePercent, setServiceFeePercent] = useState(0);
 		const [payments, setPayments] = useState([]);
 		const [payment, setPayment] = useState(0);
-		const [decimals, setDecimals] = useState(18);
-		const [symbol, setSymbol] = useState("BNB");
+		const [decimals, setDecimals] = useState(null);
+		const [symbol, setSymbol] = useState(null);
 		const [tokenApproved, setTokenApproved] = useState(false);
 
 		const [openCheckout, setOpenCheckout] = useState(false);
@@ -302,7 +304,9 @@ const ItemDetail = () => {
 			};
 			await contractProcessor.fetch({
 				params: ops,
-				onSuccess: (result) => {
+				onSuccess: async (result) => {
+					await result.wait();
+
 					console.log("success:approved");
 					setTokenApproved(true);
 					setIsCheckoutLoading(false);
@@ -331,8 +335,33 @@ const ItemDetail = () => {
 			};
 			await contractProcessor.fetch({
 				params: ops,
-				onSuccess: (result) => {
+				onSuccess: async (result) => {
 					console.log("success:buy");
+					await result.wait();
+
+					//save activity
+					try {
+						const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
+						const description = currentUserState.data.name + ": bought a item - " + itemName;
+			
+						const res = await axios.post(
+							`${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
+							{
+								'actor': account.toLowerCase(),
+								'actionType': 6,
+								'description': description,
+								'from': nft.author && nft.author.walletAddr ? nft.author.walletAddr : 'Unknown'
+							},
+							{
+								headers: {
+									'Content-Type': 'application/json',
+								}
+							}
+						);
+					} catch(ex) {
+						console.log(ex);
+					}
+
 					navigate('/mynft');
 				},
 				onError: (error) => {
@@ -345,11 +374,11 @@ const ItemDetail = () => {
 			setPlaceBidErrorMsg('');
 			setPlaceBidError(false);
 
-			console.log("placeBid");
+			// console.log("placeBid");
 			const price = bidAmount * (new BigNumber(10).pow(decimals)).toNumber();
-			const totalPrice = (bidAmount + bidAmount * serviceFeePercent / 100) * (new BigNumber(10).pow(decimals)).toNumber();
-			console.log("bid Amount:", price);
-			console.log("totalPrice:", totalPrice);
+			const totalPrice = Moralis.Units.Token(bidAmount + bidAmount * serviceFeePercent / 100, decimals);
+			// console.log("bid Amount:", price);
+			// console.log("totalPrice:", totalPrice);
 			const ops = {
 				contractAddress: marketAddress,
 				functionName: "placeBid",
@@ -358,13 +387,37 @@ const ItemDetail = () => {
 					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
 					price: totalPrice
 				},
-				// msgValue: totalPrice
+				msgValue: totalPrice
 			};
-			console.log(ops);
 			await contractProcessor.fetch({
 				params: ops,
 				onSuccess: async (result) => {
 					console.log("success:placeBid");
+					await result.wait();
+
+					//save activity
+					try {
+						const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
+						const description = currentUserState.data.name + ": placed a bid - " + itemName;
+			
+						const res = await axios.post(
+							`${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
+							{
+								'actor': account.toLowerCase(),
+								'actionType': 7,
+								'description': description,
+								'from': ''
+							},
+							{
+								headers: {
+									'Content-Type': 'application/json',
+								}
+							}
+						);
+					} catch(ex) {
+						console.log(ex);
+					}
+
 					setIsCheckoutLoading(false);
 					const res = await axios.post(`${process.env.REACT_APP_SERVER_URL}/api/bid/add`, {
 							walletAddr: account,
@@ -580,7 +633,7 @@ const ItemDetail = () => {
 			}
 		}, [symbol, decimals]);
 
-    return (
+		return (
 			<div className="greyscheme">
 				<StyledHeader theme={theme} />
 				
@@ -744,7 +797,7 @@ const ItemDetail = () => {
 																		</div>                                    
 																		<div className="p_list_info">
 																			<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
-																			<span>by <b>{bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
+																			<span>by <b>{bid.user && bid.user.name ? bid.user.name : bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
 																		</div>
 																</div>
 														))}
@@ -802,8 +855,8 @@ const ItemDetail = () => {
 								<h3>Checkout</h3>
 							</div>
 							<p>
-								You are about to purchase a <span className="bold">{nft.name} #{nft.token_id}</span> 
-								<span className="bold"> from {saleInfo.seller}</span>
+								You are about to purchase a <span className="bold">{nft.metadata && nft.metadata.name ? nft.metadata.name : ''}({nft.name} #{nft.token_id})</span> 
+								<span className="bold"> from {nft.author && nft.author.name ? nft.author.name : saleInfo.seller}</span>
 							</p>
 							{/* <div className='detailcheckout mt-4'>
 								<div className='listcheckout'>

@@ -1,5 +1,7 @@
 const db = require("../models");
 const Collection = db.collection;
+const Activity = db.activity;
+const User = db.user;
 const { createCollection: createCollectionToken } = require('../contracts/methods');
 
 exports.createCollection = (req, res) => {
@@ -39,19 +41,38 @@ exports.createCollection = (req, res) => {
       description: req.body.description,
       timeStamp: req.body.timeStamp,
       created: 1
-    })
+    });
 
-    collection.save((err) => {
+    collection.save(async (err) => {
       if (err) {
         res.status(500).send({ message: err });
         return;
       }
 
-      res.send({
-        type: 'success',
-        message: "Collection was created successfully!",
+      //get user info
+      let user = await User.findOne({walletAddr: req.body.walletAddr});
+
+      //save activity
+      const activity = new Activity({
+        actor: req.body.walletAddr,
+        actionType: 1,
+        description: (user ? user.name : 'Unknown') + ": " + "created new collection - " + req.body.title,
+        from: '',
+        timeStamp: Math.floor(new Date().getTime() / 1000)
       });
-      return;
+
+      activity.save((err1) => {
+        if (err1) {
+          res.status(500).send({ message: err1 });
+          return;
+        }
+
+        res.send({
+          type: 'success',
+          message: "Collection was created successfully!",
+        });
+        return;
+      });
     });
   });
 }

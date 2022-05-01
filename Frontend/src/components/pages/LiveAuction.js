@@ -158,6 +158,26 @@ const LiveAuction = () => {
     }
   }
 
+  const getNFTCreator = async (walletAddr) => {
+    let creator = null;
+    
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        walletAddr: walletAddr.toLowerCase()
+      }
+    }).then(res => {
+      creator = res.data.user;
+    }).catch(err => {
+      console.log(err);
+      creator = null;
+    });
+            
+    return creator;
+  };
+
   const handleBuyClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
     navigate('/item-detail');
@@ -241,6 +261,9 @@ const LiveAuction = () => {
 
             //set endTime
             temp[0].endTime = parseInt(sale.endTime);
+
+            //get creator of NFT
+            temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getNFTCreator(temp[0].metadata.creator) : null;
 
             //check sale type
             if (parseInt(sale.method) === 0x00) {

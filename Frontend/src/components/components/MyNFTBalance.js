@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { clearNfts, clearFilter } from '../../store/actions';
 import MyNftCard from './MyNftCard';
@@ -10,6 +10,8 @@ import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFT
 import axios from "axios";
 import BigNumber from "bignumber.js";
 import styled from 'styled-components';
+import * as selectors from '../../store/selectors';
+import { navigate } from '@reach/router';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -30,8 +32,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const mt100 = { marginTop: "100px" };
 
     const { Option } = Select;
-        
-    const dispatch = useDispatch();
+
+    const currentUserState = useSelector(selectors.currentUserState);
     const {getNFTBalances, data: NFTBalances, isLoading} = useNFTBalances();
     const [nfts, setNfts] = useState([]);
     const [myNfts, setMyNfts] = useState([]);
@@ -39,17 +41,17 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const [height, setHeight] = useState(0);
 
     const onImgLoad = ({target:img}) => {
-        let currentHeight = height;
-        if(currentHeight < img.offsetHeight) {
-            setHeight(img.offsetHeight);
-        }
+      let currentHeight = height;
+      if(currentHeight < img.offsetHeight) {
+          setHeight(img.offsetHeight);
+      }
     }
 
     const contractProcessor = useWeb3ExecuteFunction();
     const { account, Moralis } = useMoralis();
     const { chainId } = useChain();
     const Web3Api = useMoralisWeb3Api();
-    const { marketAddress, contractABI, corsacTokenAddress } = useMoralisDapp();
+    const { marketAddress, contractABI } = useMoralisDapp();
 
     const [visible1, setVisibility1] = useState(false);
     const [visible2, setVisibility2] = useState(false);
@@ -132,24 +134,49 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       
       await contractProcessor.fetch({
         params: ops,
-        onSuccess: async () => {
+        onSuccess: async (result) => {
+          await result.wait();
+          
           console.log("success");
           setLoading(false);
           setVisibility2(false);
           // addItemImage();
           succList();
 
-          const options = {
-            chain: chainId,
-            address: account
-          };
-          
-          const balances = await Web3Api.account.getTokenBalances(options);
-          const token = balances.filter((t, index) => {
-            return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
-          });
+          //save activity
+          try {
+            const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
+            const description = currentUserState.data.name + ": created " + ((method === 0) ? "sale" : (method === 1) ? "auction" : (method === 2) ? "offer" : "unknown") + " - " + itemName;
+            
+            const res = await axios.post(
+              `${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
+              {
+                'actor': account.toLowerCase(),
+                'actionType': (method === 0) ? 3 : (method === 1) ? 4 : (method === 2) ? 5 : 99,
+                'description': description,
+                'from': ''
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              }
+            );
+          } catch(ex) {
+            console.log(ex);
+          }
 
-          if (token.length > 0) {
+          // const options = {
+          //   chain: chainId,
+          //   address: account
+          // };
+          
+          // const balances = await Web3Api.account.getTokenBalances(options);
+          // const token = balances.filter((t, index) => {
+          //   return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+          // });
+
+          if (payments.length >= payment + 1) {
             nft.price = new BigNumber(ops.params.basePrice).dividedBy(new BigNumber(10).pow(payments[payment].decimals)).toNumber();
             nft.payment = payments[payment];
           }
@@ -329,7 +356,16 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       getPayments();
     }, []);
 
+    useEffect(() => {
+      if (isLoading) {
+        setIsPageLoading(true);
+      } else {
+        setIsPageLoading(false);
+      }
+    }, [isLoading]);
+
     useEffect(async () => {
+      setIsPageLoading(true);
       let collections = [];
 
       //get collections from contract
@@ -507,10 +543,12 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.onOffer = false;
           }
         }
+        setIsPageLoading(false);
+      } else {
+        setIsPageLoading(false);
       }
 
       setMyNfts(nfts);
-      setIsPageLoading(false);
     }, [saleNFTs, saleNFTs.length]);
 
     const updateNFTs = (newNFT, index) => {
@@ -531,140 +569,140 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     };
 
     return (
-        <div className='row'>
-          <StyledModal
-            key="100"
-            title=''
-            visible={isPageLoading}
-            centered
-            footer={null}
-            closable={false}
-          >
-            <div className="row">
-            <StyledSpin tip="Loading..." size="large" />
-            </div>
-          </StyledModal>
+      <div className='row'>
+        <StyledModal
+          key="100"
+          title=''
+          visible={isPageLoading}
+          centered
+          footer={null}
+          closable={false}
+        >
+          <div className="row">
+          <StyledSpin tip="Loading..." size="large" />
+          </div>
+        </StyledModal>
 
-          {!isPageLoading && myNfts.length == 0 &&
-            <div className="row">
-              <div className="alert alert-danger" role="alert">
-                No NFTs
-              </div>
+        {!isPageLoading && myNfts.length == 0 &&
+          <div className="row">
+            <div className="alert alert-danger" role="alert">
+              No NFTs
             </div>
-          }
+          </div>
+        }
 
-          {!isPageLoading && myNfts && myNfts.map( (nft, index) => (
-              nft.category === 'music' ?
-              <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
-              :
-              <MyNftCard 
-                nft={nft} 
-                key={`${nft.token_address}_${nft.token_id}`}
-                onImgLoad={onImgLoad} 
-                height={height} 
-                setNftToSend={setNftToSend}
-                setVisibility1={setVisibility1}
-                setVisibility2={setVisibility2}
+        {!isPageLoading && myNfts && myNfts.map( (nft, index) => (
+            nft.category === 'music' ?
+            <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
+            :
+            <MyNftCard 
+              nft={nft} 
+              key={`${nft.token_address}_${nft.token_id}`}
+              onImgLoad={onImgLoad} 
+              height={height} 
+              setNftToSend={setNftToSend}
+              setVisibility1={setVisibility1}
+              setVisibility2={setVisibility2}
+            />
+        ))}
+        { visible1 && 
+        <div className='checkout'>
+          <div className='maincheckout' style={mt100}>
+            <button className='btn-close' onClick={() => setVisibility1(false)}>x</button>
+            <div className='heading'>
+                <h3>Approve to list NFT in the market</h3>
+            </div>
+            <StyledSpin spinning={loading} tip="Approving">
+              <img
+                src={`${nftToSend?.image}`}
+                style={{
+                  width: "250px",
+                  margin: "auto",
+                  borderRadius: "10px",
+                  marginBottom: "15px",
+                }}
+                alt=""
               />
-          ))}
-          { visible1 && 
-					<div className='checkout'>
-						<div className='maincheckout' style={mt100}>
-							<button className='btn-close' onClick={() => setVisibility1(false)}>x</button>
-							<div className='heading'>
-									<h3>Approve to list NFT in the market</h3>
-							</div>
-							<StyledSpin spinning={loading} tip="Approving">
-                <img
-                  src={`${nftToSend?.image}`}
-                  style={{
-                    width: "250px",
-                    margin: "auto",
-                    borderRadius: "10px",
-                    marginBottom: "15px",
+            </StyledSpin>
+            <div className="d-flex flex-row mt-5">
+              <button className='btn-main btn2' onClick={() => setVisibility1(false)}>Cancel</button>
+              <button className='btn-main' onClick={() => approveAll(nftToSend)}>Approve</button>
+            </div>
+          </div>
+        </div>
+        }
+        { visible2 && 
+        <div className='checkout'>
+          <div className='maincheckout' style={mt100}>
+            <button className='btn-close' onClick={() => closeCreateSaleModal()}>x</button>
+            <div className='heading'>
+                <h3>{`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}</h3>
+            </div>
+            <StyledSpin spinning={loading} tip="Creating Sale">
+              <img
+                src={`${nftToSend?.image}`}
+                style={{
+                  width: "250px",
+                  margin: "auto",
+                  borderRadius: "10px",
+                  marginBottom: "15px",
+                }}
+                alt=""
+              />
+              <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
+                <TabPane tab="Fixed Price" key="1">
+                  <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleSalePaymentChange}>
+                    { payments && payments.map((payment, index) => (
+                        <Option value={payment.value} key={index}>{payment.label}</Option>
+                      ))
+                    }
+                  </Select>
+                  <Input
+                    autoFocus
+                    placeholder="Amount"
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </TabPane>
+                <TabPane tab="Timed Auction" key="2">
+                  <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
+                    { payments && payments.map((payment, index) => (
+                        <Option value={payment.value} key={index}>{payment.label}</Option>
+                      ))
+                    }
+                  </Select>
+                  <Input
+                    autoFocus
+                    placeholder="Amount"
+                    onChange={(e) => setPrice(e.target.value)}
+                    style={{marginBottom: "16px"
                   }}
-                  alt=""
-                />
-              </StyledSpin>
-							<div className="d-flex flex-row mt-5">
-                <button className='btn-main btn2' onClick={() => setVisibility1(false)}>Cancel</button>
-                <button className='btn-main' onClick={() => approveAll(nftToSend)}>Approve</button>
-              </div>
-						</div>
-					</div>
-				  }
-          { visible2 && 
-					<div className='checkout'>
-						<div className='maincheckout' style={mt100}>
-							<button className='btn-close' onClick={() => closeCreateSaleModal()}>x</button>
-							<div className='heading'>
-									<h3>{`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}</h3>
-							</div>
-							<StyledSpin spinning={loading} tip="Creating Sale">
-                <img
-                  src={`${nftToSend?.image}`}
-                  style={{
-                    width: "250px",
-                    margin: "auto",
-                    borderRadius: "10px",
-                    marginBottom: "15px",
-                  }}
-                  alt=""
-                />
-                <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
-                  <TabPane tab="Fixed Price" key="1">
-                    <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleSalePaymentChange}>
-                      { payments && payments.map((payment, index) => (
-                          <Option value={payment.value} key={index}>{payment.label}</Option>
-                        ))
-                      }
-                    </Select>
-                    <Input
-                      autoFocus
-                      placeholder="Amount"
-                      onChange={(e) => setPrice(e.target.value)}
-                    />
-                  </TabPane>
-                  <TabPane tab="Timed Auction" key="2">
-                    <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
-                      { payments && payments.map((payment, index) => (
-                          <Option value={payment.value} key={index}>{payment.label}</Option>
-                        ))
-                      }
-                    </Select>
-                    <Input
-                      autoFocus
-                      placeholder="Amount"
-                      onChange={(e) => setPrice(e.target.value)}
-                      style={{marginBottom: "16px"
-                    }}
-                    />
-                    <DatePicker showTime onChange={onChangeDueDate} value={dueDate}/>
-                  </TabPane>
-                </Tabs>
-              </StyledSpin>
-							<div className="d-flex flex-row mt-5">
-                <button className='btn-main btn2' onClick={() => closeCreateSaleModal()}>Cancel</button>
-                <button className='btn-main' onClick={() => list(nftToSend)}>List</button>
-              </div>
-						</div>
-					</div>
-				  }
-          { openErrorModal && 
-					<div className='checkout'>
-						<div className='maincheckout' style={mt100}>
-							<button className='btn-close' onClick={() => setOpenErrorModal(false)}>x</button>
-							<div className='heading'>
-									<h3>{errorTitle}</h3>
-							</div>
-							<p>{errorMsg}</p>
-							<div className="d-flex flex-row mt-5">
-                <button className='btn-main btn2' onClick={() => setOpenErrorModal(false)}>Close</button>
-              </div>
-						</div>
-					</div>
-				  }
-        </div>              
+                  />
+                  <DatePicker showTime onChange={onChangeDueDate} value={dueDate}/>
+                </TabPane>
+              </Tabs>
+            </StyledSpin>
+            <div className="d-flex flex-row mt-5">
+              <button className='btn-main btn2' onClick={() => closeCreateSaleModal()}>Cancel</button>
+              <button className='btn-main' onClick={() => list(nftToSend)}>List</button>
+            </div>
+          </div>
+        </div>
+        }
+        { openErrorModal && 
+        <div className='checkout'>
+          <div className='maincheckout' style={mt100}>
+            <button className='btn-close' onClick={() => setOpenErrorModal(false)}>x</button>
+            <div className='heading'>
+                <h3>{errorTitle}</h3>
+            </div>
+            <p>{errorMsg}</p>
+            <div className="d-flex flex-row mt-5">
+              <button className='btn-main btn2' onClick={() => setOpenErrorModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+        }
+      </div>              
     );
 };
 

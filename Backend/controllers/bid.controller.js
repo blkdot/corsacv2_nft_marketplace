@@ -4,6 +4,7 @@ const Collection = db.collection;
 // const { createCollection, getTokenId, mintTo } = require('../contracts/methods');
 const { item } = require("../models");
 const Bid = require("../models/bid.model");
+const User = require("../models/user.model");
 
 exports.addBid = (req, res) => {
   let bid = new Bid({
@@ -27,7 +28,14 @@ exports.addBid = (req, res) => {
 exports.getBidsBySaleId = (req, res) => {
   db.bid.find({
     saleId: { $in: req.query.saleId }
-  }).then((bids) => {
-    res.send(bids);
+  }).then(async (bids) => {
+    let newBids = [];
+    for (let bid of bids) {
+      const user = await User.findOne({walletAddr: bid.walletAddr});
+      let temp = JSON.parse(JSON.stringify(bid));
+      temp.user = JSON.parse(JSON.stringify(user));
+      newBids.push(temp)
+    }
+    res.send(newBids);
   }).catch((e) => res.status(500).send({ message: e }));
 };

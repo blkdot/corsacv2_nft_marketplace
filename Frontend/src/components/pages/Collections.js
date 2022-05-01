@@ -117,7 +117,7 @@ const Collections = props => {
           setModalMessage('Error occurs while fetching data from backend');
         });
       }
-      console.log(cs);
+      
       setCollections(cs);
       setLoading(false);
     }).catch((e) => {

@@ -58,10 +58,29 @@ exports.saveActivity = (req, res) => {
 }
 
 exports.getAllActivities = (req, res) => {
-  Activity.find({}).
-  limit(100).
-  sort({timeStamp: -1}).
-  exec((err, activities) => {
+  Activity.aggregate([
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "actor", 
+        foreignField: "walletAddr", 
+        as: "actorUsers"
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "from", 
+        foreignField: "walletAddr", 
+        as: "fromUsers"
+      }
+    }
+  ], (err, activities) => {
     if (err) {
       res.status(500).send({ message: err });
       return;
@@ -73,12 +92,36 @@ exports.getAllActivities = (req, res) => {
 }
 
 exports.getActivities = (req, res) => {
-  Activity.find({
-    actor: { $eq: req.query.actor }
-  }).
-  limit(100).
-  sort({timeStamp: -1}).
-  exec((err, activities) => {
+  Activity.aggregate([
+    {
+      $match: {
+        $or: [
+          {actor: {$eq: req.query.actor}}
+        ]
+      }
+    }, 
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "actor", 
+        foreignField: "walletAddr", 
+        as: "actorUsers"
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "from", 
+        foreignField: "walletAddr", 
+        as: "fromUsers"
+      }
+    }
+  ], (err, activities) => {
     if (err) {
       res.status(500).send({ message: err });
       return;
@@ -90,11 +133,39 @@ exports.getActivities = (req, res) => {
 }
 
 exports.getActivitiesByType = (req, res) => {
-  Activity.find({
-    actionType: { $eq: req.query.actionType }
-  }).
-  sort({timeStamp: -1}).
-  exec((err, activities) => {
+  let types = [];
+  for (let type of req.query.actionTypes) {
+    types.push(parseInt(type));
+  }
+
+  Activity.aggregate([
+    {
+      $match: {
+        actionType: {$in: types}
+      }
+    }, 
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "actor", 
+        foreignField: "walletAddr", 
+        as: "actorUsers"
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "actor", 
+        foreignField: "walletAddr", 
+        as: "fromUsers"
+      }
+    }
+  ], (err, activities) => {
     if (err) {
       res.status(500).send({ message: err });
       return;
@@ -108,16 +179,33 @@ exports.getActivitiesByType = (req, res) => {
 exports.getBestSellers = (req, res) => {
   Activity.aggregate([
     {
-      $match: {"actionType": { $eq: 6, $eq: 8}}
-    },
+      $match: {
+        $or: [
+          {actionType: {$eq: 6}}, 
+          {actionType: {$eq: 8}}
+        ]
+      }
+    }, 
     {
-      $group: {
-        _id: "$from",
-        sales: { $sum: 1}
+      $group: { 
+        _id: "$from", 
+        sales: {
+          $sum: 1
+        }
+      }
+    }, 
+    {
+      $sort: { 
+        sales: -1
       }
     },
     {
-      $sort: { sales: -1 }
+      $lookup: {
+        from: "users", 
+        localField: "_id", 
+        foreignField: "walletAddr", 
+        as: "users"
+      }
     }
   ], (err, sellers) => {
     if (err) {

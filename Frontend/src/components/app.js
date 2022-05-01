@@ -54,7 +54,7 @@ import Creategrey from './pages/createGrey';
 import Create2 from './pages/create2';
 import Create3 from './pages/create3';
 import Createoption from './pages/createOptions';
-import Activity from './pages/activity';
+import Activity from './pages/Activity';
 import Activitygrey from './pages/activityGrey';
 import Contact from './pages/contact';
 import Contactgrey from './pages/contactGrey';
@@ -109,7 +109,9 @@ const App = ({ isServerInfo }) => {
   const dispatch = useDispatch();
   const unsubscribe = Moralis.onAccountChanged((account) => {
     dispatch(actions.setCurrentUser(account.toLowerCase()));
-    navigate("/profile/" + account.toLowerCase());
+    if (isAuthenticated && account) {
+      navigate("/profile/" + account.toLowerCase());
+    }
   });
 
   useEffect(() => {
@@ -189,7 +191,7 @@ const App = ({ isServerInfo }) => {
           <Create3 path="/create3" />
           <Createoption path="/createOptions" />
           <Activity path="/activity" />
-          <Activitygrey path="/activityGrey" />
+          {/* <Activitygrey path="/activityGrey" /> */}
           <Contact path="/contact" />
           <Contactgrey path="/contactGrey" />
           <ElegantIcons path="/elegantIcons" />

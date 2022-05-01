@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import styled from "styled-components";
 // import Clock from "./Clock";
@@ -11,6 +11,8 @@ import Countdown from 'react-countdown';
 import { Modal, Spin } from "antd";
 import BigNumber from 'bignumber.js';
 import api from "../../core/api";
+import axios from 'axios';
+import * as selectors from '../../store/selectors';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -57,6 +59,7 @@ const MyNftCard = ({
                   setVisibility2,
                   page = ''
                  }) => {
+    const currentUserState = useSelector(selectors.currentUserState);
     const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
 
     const { account } = useMoralis();
@@ -151,6 +154,29 @@ const MyNftCard = ({
             
             if (callFunctionName !== '') {
               if (await cancelSale(saleId, callFunctionName)) {
+                //save activity
+                try {
+                  const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
+                  const description = currentUserState.data.name + ": cancelled " + ((nft.onSale) ? "sale" : (nft.onAuction) ? "auction" : (nft.onOffer) ? "offer" : "unknown") + " - " + itemName;
+            
+                  const res = await axios.post(
+                    `${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
+                    {
+                      'actor': account.toLowerCase(),
+                      'actionType': (nft.onSale) ? 9 : (nft.onAuction) ? 10 : (nft.onOffer) ? 11 : 99,
+                      'description': description,
+                      'from': ''
+                    },
+                    {
+                      headers: {
+                        'Content-Type': 'application/json',
+                      }
+                    }
+                  );
+                } catch(ex) {
+                  console.log(ex);
+                }
+
                 nft.onSale = false;
                 nft.onAuction = false;
                 nft.onOffer = false;
