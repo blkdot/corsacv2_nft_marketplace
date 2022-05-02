@@ -38,6 +38,7 @@ const CreateSaleModal = styled(Modal)`
   }
   .ant-modal-footer {
     border-radius: 0 0 8px 8px;
+    padding-bottom: 16px;
   }
   .ant-btn {
     font-size: 16px;
@@ -373,13 +374,10 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     useEffect(() => {
       if (isLoading) {
         setIsPageLoading(true);
-      } else {
-        setIsPageLoading(false);
       }
     }, [isLoading]);
 
     useEffect(async () => {
-      setIsPageLoading(true);
       let collections = [];
 
       //get collections from contract

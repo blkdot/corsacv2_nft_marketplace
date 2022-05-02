@@ -30,7 +30,21 @@ export const setCurrentUser = (walletAddr) => async (dispatch) => {
         walletAddr: walletAddr
       }
     }).then(async res => {
-      dispatch(actions.setCurrentUser(res.data.user));
+      if (res.data.user) {
+        dispatch(actions.setCurrentUser(res.data.user));
+      } else {
+        dispatch(actions.setCurrentUser({
+          walletAddr: '',
+          name: 'Unregistered User',
+          avatar: null,
+          banner: null,
+          about: null,
+          twitter: null,
+          youtube: null,
+          instagram: null,
+          created_at: null
+        }));
+      }
     });
   } catch (err) {
     console.log("fetching user error:", err);

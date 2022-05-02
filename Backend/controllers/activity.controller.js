@@ -65,6 +65,9 @@ exports.getAllActivities = (req, res) => {
       }
     },
     {
+      $limit: 100
+    },
+    {
       $lookup: {
         from: "users", 
         localField: "actor", 
@@ -104,6 +107,9 @@ exports.getActivities = (req, res) => {
       $sort: {
         timeStamp: -1
       }
+    },
+    {
+      $limit: 100
     },
     {
       $lookup: {
@@ -148,6 +154,9 @@ exports.getActivitiesByType = (req, res) => {
       $sort: {
         timeStamp: -1
       }
+    },
+    {
+      $limit: 100
     },
     {
       $lookup: {
