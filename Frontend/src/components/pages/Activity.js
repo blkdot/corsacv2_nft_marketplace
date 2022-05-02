@@ -86,12 +86,12 @@ const Activity = () => {
         }
 
         acts.push({
-          actor: a.actorUsers && a.actorUsers[0] ? a.actorUsers[0].name : a.actor,
-          avatar: a.actorUsers && a.actorUsers[0] ? a.actorUsers[0].avatar : defaultAvatar,
+          actor: a.actorUsers && a.actorUsers[0] && a.actorUsers[0].name ? a.actorUsers[0].name : a.actor,
+          avatar: a.actorUsers && a.actorUsers[0] && a.actorUsers[0].avatar ? a.actorUsers[0].avatar : defaultAvatar,
           type: a.actionType,
           description: a.description,
           timeStamp: moment(a.timeStamp * 1000).format('L, LT'),
-          from: a.fromUsers && a.fromUsers[0] ? a.fromUsers[0].name : a.from,
+          from: a.fromUsers && a.fromUsers[0] && a.fromUsers[0].name ? a.fromUsers[0].name : a.from,
           className: className
         });
       }
@@ -165,12 +165,12 @@ const Activity = () => {
         }
         
         acts.push({
-          actor: a.actorUsers && a.actorUsers[0] ? a.actorUsers[0].name : a.actor,
-          avatar: a.actorUsers && a.actorUsers[0] ? a.actorUsers[0].avatar : defaultAvatar,
+          actor: a.actorUsers && a.actorUsers[0] && a.actorUsers[0].name ? a.actorUsers[0].name : a.actor,
+          avatar: a.actorUsers && a.actorUsers[0] && a.actorUsers[0].avatar? a.actorUsers[0].avatar : defaultAvatar,
           type: a.actionType,
           description: a.description,
           timeStamp: moment(a.timeStamp * 1000).format('L, LT'),
-          from: a.fromUsers && a.fromUsers[0] ? a.fromUsers[0].name : a.from,
+          from: a.fromUsers && a.fromUsers[0] && a.fromUsers[0].name ? a.fromUsers[0].name : a.from,
           className: className
         });
       }
