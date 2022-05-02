@@ -26,6 +26,25 @@ const StyledModal = styled(Modal)`
     background-color: transparent;
   }
 `
+const CreateSaleModal = styled(Modal)`
+  .ant-modal-title {
+    font-weight: 600;
+  }
+  .ant-modal-content {
+    border-radius: 8px;
+  }
+  .ant-modal-header {
+    border-radius: 8px 8px 0 0;
+  }
+  .ant-modal-footer {
+    border-radius: 0 0 8px 8px;
+  }
+  .ant-btn {
+    font-size: 16px;
+    font-weight: 800;
+    border-radius: 4px;
+  }
+`
 
 //react functional component
 const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null }) => {
@@ -343,11 +362,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     };
 
     useEffect(async () => {
-      const options = {
-        chain: chainId,
-        address: account
-      };
-
       const isWeb3Active = Moralis.ensureWeb3IsInstalled();
       if (!isWeb3Active) {
         await Moralis.enableWeb3();
@@ -631,63 +645,64 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           </div>
         </div>
         }
-        { visible2 && 
-        <div className='checkout'>
-          <div className='maincheckout' style={mt100}>
-            <button className='btn-close' onClick={() => closeCreateSaleModal()}>x</button>
-            <div className='heading'>
-                <h3>{`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}</h3>
-            </div>
-            <StyledSpin spinning={loading} tip="Creating Sale">
-              <img
-                src={`${nftToSend?.image}`}
-                style={{
-                  width: "250px",
-                  margin: "auto",
-                  borderRadius: "10px",
-                  marginBottom: "15px",
+
+        <CreateSaleModal 
+          title={`List ${nftToSend?.name} #${nftToSend?.token_id} For Sale`}
+          visible={visible2} 
+          centered
+          maskClosable={false}
+          onOk={() => list(nftToSend)} 
+          onCancel={() => closeCreateSaleModal()}
+          footer={[
+            <Button onClick={() => closeCreateSaleModal()}>Cancel</Button>,
+            <Button type="primary" danger onClick={() => list(nftToSend)}>List</Button>
+          ]}
+        >
+          <StyledSpin spinning={loading} tip="Creating Sale">
+            <img
+              src={`${nftToSend?.image}`}
+              style={{
+                width: "250px",
+                margin: "auto",
+                borderRadius: "10px",
+                marginBottom: "15px",
+              }}
+              alt=""
+            />
+            <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
+              <TabPane tab="Fixed Price" key="1">
+                <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleSalePaymentChange}>
+                  { payments && payments.map((payment, index) => (
+                      <Option value={payment.value} key={index}>{payment.label}</Option>
+                    ))
+                  }
+                </Select>
+                <Input
+                  autoFocus
+                  placeholder="Amount"
+                  onChange={(e) => setPrice(e.target.value)}
+                />
+              </TabPane>
+              <TabPane tab="Timed Auction" key="2">
+                <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
+                  { payments && payments.map((payment, index) => (
+                      <Option value={payment.value} key={index}>{payment.label}</Option>
+                    ))
+                  }
+                </Select>
+                <Input
+                  autoFocus
+                  placeholder="Amount"
+                  onChange={(e) => setPrice(e.target.value)}
+                  style={{marginBottom: "16px"
                 }}
-                alt=""
-              />
-              <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
-                <TabPane tab="Fixed Price" key="1">
-                  <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleSalePaymentChange}>
-                    { payments && payments.map((payment, index) => (
-                        <Option value={payment.value} key={index}>{payment.label}</Option>
-                      ))
-                    }
-                  </Select>
-                  <Input
-                    autoFocus
-                    placeholder="Amount"
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </TabPane>
-                <TabPane tab="Timed Auction" key="2">
-                  <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
-                    { payments && payments.map((payment, index) => (
-                        <Option value={payment.value} key={index}>{payment.label}</Option>
-                      ))
-                    }
-                  </Select>
-                  <Input
-                    autoFocus
-                    placeholder="Amount"
-                    onChange={(e) => setPrice(e.target.value)}
-                    style={{marginBottom: "16px"
-                  }}
-                  />
-                  <DatePicker showTime onChange={onChangeDueDate} value={dueDate}/>
-                </TabPane>
-              </Tabs>
-            </StyledSpin>
-            <div className="d-flex flex-row mt-5">
-              <button className='btn-main btn2' onClick={() => closeCreateSaleModal()}>Cancel</button>
-              <button className='btn-main' onClick={() => list(nftToSend)}>List</button>
-            </div>
-          </div>
-        </div>
-        }
+                />
+                <DatePicker showTime onChange={onChangeDueDate} value={dueDate}/>
+              </TabPane>
+            </Tabs>
+          </StyledSpin>
+        </CreateSaleModal>
+        
         { openErrorModal && 
         <div className='checkout'>
           <div className='maincheckout' style={mt100}>
