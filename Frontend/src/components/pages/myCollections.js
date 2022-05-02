@@ -104,44 +104,47 @@ const MyCollections = props => {
           c.url = `/collection/${c.collectionAddr}`;
         }
 
-        for (let nft of NFTBalances.result) {
-          let cs = allCollections.filter((c, index) => {
-            return c.collectionAddr.toLowerCase() === nft.token_address.toLowerCase();
-          });
-
-          if (cs.length === 0) {
-            continue;
-          }
-
-          const options = {
-            address: nft.token_address,
-            chain: chainId,
-          };
-
-          //get numbers of items of collection
-          const NFTs = await Web3Api.token.getAllTokenIds(options);
-          const itemsCount = NFTs.result.length;
-
-          cs[0].itemsCount = itemsCount;
-          cs[0].url = `/collection/${cs[0].collectionAddr}`;
-
-          let flag = false;
-          for (let c of collections) {
-            if (c.collectionAddr.toLowerCase() === cs[0].collectionAddr.toLowerCase()) {
-              c = cs[0];
-              flag = true;
+        if (NFTBalances && NFTBalances.result && NFTBalances.result.length > 0) {
+          for (let nft of NFTBalances.result) {
+            let cs = allCollections.filter((c, index) => {
+              return c.collectionAddr.toLowerCase() === nft.token_address.toLowerCase();
+            });
+  
+            if (cs.length === 0) {
               continue;
             }
-          }
-          if (!flag) {
-            collections.push(cs[0]);
+  
+            const options = {
+              address: nft.token_address,
+              chain: chainId,
+            };
+  
+            //get numbers of items of collection
+            const NFTs = await Web3Api.token.getAllTokenIds(options);
+            const itemsCount = NFTs.result.length;
+  
+            cs[0].itemsCount = itemsCount;
+            cs[0].url = `/collection/${cs[0].collectionAddr}`;
+  
+            let flag = false;
+            for (let c of collections) {
+              if (c.collectionAddr.toLowerCase() === cs[0].collectionAddr.toLowerCase()) {
+                c = cs[0];
+                flag = true;
+                continue;
+              }
+            }
+            if (!flag) {
+              collections.push(cs[0]);
+            }
           }
         }
-        console.log(collections);
+        // console.log(collections);
 
         setMyCollections(collections);
         setLoading(false);
       }).catch((error) => {
+        console.log(error);
         setLoading(false);
 
         setModalTitle('Error');
@@ -150,7 +153,7 @@ const MyCollections = props => {
       });
     }
 
-    if (account && !isLoading) {
+    if (account && !isLoading && NFTBalances) {
       getMyCollections();
     }
   }, [account, NFTBalances]);
