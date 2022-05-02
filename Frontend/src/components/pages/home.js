@@ -1,18 +1,15 @@
 import React from 'react';
-import SliderCarouselSingleRedux from '../components/SliderCarouselSingleRedux';
-import FeatureBox from '../components/FeatureBox';
-import CarouselCollectionRedux from '../components/CarouselCollectionRedux';
-import ColumnNewRedux from '../components/ColumnNewRedux';
+import { navigate } from '@reach/router';
+import SliderCarouselHome from '../components/SliderCarouselHome';
 import NewItems from '../components/NewItems';
-import AuthorListRedux from '../components/AuthorListRedux';
+import HotCollections from '../components/hotCollections';
+import TopSeller from '../components/TopSeller';
+import FeatureBox from '../components/FeatureBox';
 import Footer from '../components/footer';
 import Reveal from 'react-awesome-reveal';
 import { keyframes } from "@emotion/react";
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
-import { navigate } from '@reach/router';
-import HotCollections from '../components/hotCollections';
-import TopSeller from '../components/TopSeller';
 
 const fadeInUp = keyframes`
   0% {
@@ -34,7 +31,7 @@ const theme = 'GREY'; //LIGHT, GREY, RETRO
 const homethree= () => (
   <div className="greyscheme">
     <StyledHeader theme={theme} />
-    <section className="jumbotron no-bg" style={{backgroundImage: `url(${'./img/background/7.jpg'})`}}>
+    <section className="jumbotron no-bg" style={{backgroundImage: `url(${'./img/background/8.jpg'})`}}>
       <div className='container'>
         <div className='row align-items-center'>
           <div className='col-lg-6'>
@@ -62,7 +59,7 @@ const homethree= () => (
             <div className="spacer-double"></div>
           </div>
           <div className='col-lg-6 px-0'>
-            <SliderCarouselSingleRedux/>
+            <SliderCarouselHome/>
           </div>
         </div>
       </div>

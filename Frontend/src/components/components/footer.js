@@ -67,11 +67,12 @@ const footer= () => (
                         </div>
                         <div className="de-flex-col mt-4">
                             <div className="social-icons">
-                                <span onClick={()=> window.open("", "_self")}><i className="fa fa-facebook fa-lg"></i></span>
-                                <span onClick={()=> window.open("", "_self")}><i className="fa fa-twitter fa-lg"></i></span>
-                                <span onClick={()=> window.open("", "_self")}><i className="fa fa-linkedin fa-lg"></i></span>
-                                <span onClick={()=> window.open("", "_self")}><i className="fa fa-pinterest fa-lg"></i></span>
-                                <span onClick={()=> window.open("", "_self")}><i className="fa fa-rss fa-lg"></i></span>
+                                {/* <span onClick={()=> window.open("", "_self")}><i className="fa fa-facebook fa-lg"></i></span> */}
+                                <span onClick={()=> window.open("https://www.corsac.io", "_self")}><i className="fa fa-home fa-lg"></i></span>
+                                <span onClick={()=> window.open("https://twitter.com/corsacv2", "_self")}><i className="fa fa-twitter fa-lg"></i></span>
+                                {/* <span onClick={()=> window.open("", "_self")}><i className="fa fa-linkedin fa-lg"></i></span> */}
+                                {/* <span onClick={()=> window.open("", "_self")}><i className="fa fa-pinterest fa-lg"></i></span> */}
+                                {/* <span onClick={()=> window.open("", "_self")}><i className="fa fa-rss fa-lg"></i></span> */}
                             </div>
                         </div>
                     </div>

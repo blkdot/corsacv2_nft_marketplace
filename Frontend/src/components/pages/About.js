@@ -53,10 +53,19 @@ const About = () => {
             <img src="../img/about.png" class="w-100 mb-5" alt="" />
           </div>
           <div className="col-md-6">
-            <p>Founded on 1st November 2021, Corsac (CORSAC V2) is a reflection token based on Binance Smart Chain, where holders earn BUSD just for holding the tokens. Corsac had a stellar launch which was reflected by it getting listed in CMC and CoinGecko and getting over thousands of holders on board within 24 hours from its launch. Unlike Other tokens, Corsac has got multiple utilities, few of them includes:</p>
-            <p>CorsacSwap: Fast, Secure and Most Convenient way to swap your native crypto for Corsac.</p>
-            <p>Corsac Finance: Unique away of lending your BUSD and earn interest on them. Lending is secure as you get CORSAC V2 as collateral and on top of that earn the reflections on the collateral as well. Else you can borrow BUSD for some other investments, keep the capital gains and return the rest without getting your bank involved.</p>
-            <p>We at Corsac believe in constantly improving and bring out new utilities. Be a part of Corsac, and let your investment ventures take wings.</p>
+            <p>
+              Corsac v2 (Previously Corsac) is a decentralised deflationary token, 
+              which means it has been designed to become scarcer over time, thus increasing its value. 
+            </p>
+            <p>
+              Apart from this Corsac v2 rewards its holders with 9% Binance-pegged USD (BUSD) for every buy, 
+              sell and transfer of the token in the Binance Blockchain. 
+            </p>
+            <p>
+              To ensure that the transactions keep flowing, 
+              multiple utilities have been developed and many more are under development, 
+              which will lead to sustainable transaction of Corsac v2 and thus generating generous amount of BUSD reflection for the holders.
+            </p>
           </div>
         </div>
         <div className='row de-flex' style={{justifyContent: 'center'}}>

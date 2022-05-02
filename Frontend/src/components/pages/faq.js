@@ -123,9 +123,10 @@ const Faq = () => {
               <Accordion.Collapse eventKey="0">
                 <Card.Body>
                   To sell an NFT first you will have to create one. 
-                  You can do this simply by clicking on the CREATE button on main page and following the on page instructions which includes selecting the file and inputting the details of it. 
-                  A small amount of fee will be charged in CORSAC V2 (which can be purchased via Corsac Swap or Pancake Swap) for uploading the NFT. 
-                  After uploading is successful, you will be redirected to your item detail page where you can set the item for sale or auction.
+                  You can do this simply by clicking on the Connect Wallet button on main page and follow by setting up your profile in the My Profile and afterwhich heading to My Collections to mint an Collection of NFTs of your choice, 
+                  following the on page instructions which includes selecting the file and inputting the details of it, After uploading is successful, 
+                  you will be redirected to your item detail page where you can set the item for sale or auction, 
+                  or head to My NFTs in profile Settings.
                 </Card.Body>
               </Accordion.Collapse>
             </Card>
@@ -164,22 +165,9 @@ const Faq = () => {
               </Card.Header>
               <Accordion.Collapse eventKey="3">
                 <Card.Body>
-                  Unlike OpenSEA or Rarible; our NFT Marketplace is first of it’s kind which is based on CORSAC V2 (Corsac), a hyper-deflationary reflection token designed to become more scarce over time along with rewarding holders of Corsac (CORSAC V2) in BUSD for transactions of NFT happening in this marketplace. 
-                  Apart from this our fee is only 1.5% which is fairly low compared to any other NFT marketplace.
-                </Card.Body>
-              </Accordion.Collapse>
-            </Card>
-            <Card>
-              <Card.Header>
-                <Accordion.Toggle as={Button} variant="" eventKey="4">
-                  <strong>5.  How do I get a “verified” badge beside my username in the NFT marketplace?</strong>
-                </Accordion.Toggle>
-              </Card.Header>
-              <Accordion.Collapse eventKey="4">
-                <Card.Body>
-                  To ensure the best interest of users using this platform, and to protect users from being cheated, verification is done manually and extra cautiously by our team. 
-                  To earn the “Verified” badge next to your username, a meagre processing fee for validation shall also be charged. 
-                  For more information on individual or corporate account verification please contact us, we will be happy to assist you further.
+                  Unlike OpenSEA or Rarible; our NFT Marketplace is first of it's kind which is based on CORSAC V2 (Corsac), 
+                  a hyper-deflationary reflection token designed to become more scarce over time along with rewarding holders of Corsac (CORSAC V2) in BUSD for transactions of NFT happening in this marketplace. <br/>
+                  Apart from this our fee is only 1.5% which is fairly low compared to any other NFT marketplace, and with Royalties up to 40% and NFT to be Purchased with BEP-20 of your choice (Whitelisting Needed)
                 </Card.Body>
               </Accordion.Collapse>
             </Card>
