@@ -237,7 +237,7 @@ const Activity = () => {
           <div className="col-md-8">
             <ul className="activity-list">
               {activities && activities.map((activity, index) => (
-                  <li className={activity.className}>
+                  <li className={activity.className} key={index}>
                     <img className="lazy" src={activity.avatar} alt=""/>
                     <div className="act_list_text">
                         <h4>{activity.actor}</h4>
