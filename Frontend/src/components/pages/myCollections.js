@@ -150,7 +150,7 @@ const MyCollections = props => {
       });
     }
 
-    if (account && NFTBalances && NFTBalances.result.length > 0) {
+    if (account && !isLoading) {
       getMyCollections();
     }
   }, [account, NFTBalances]);
