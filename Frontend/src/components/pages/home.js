@@ -72,7 +72,7 @@ const homethree= () => (
       <div className='container'>
         <div className='row'>
           <div className='col-lg-12'>
-              <h2 className='style-2'>New Items</h2>
+            <h2 className='style-2'>New Items</h2>
           </div>
         </div>
         <NewItems />
@@ -108,7 +108,7 @@ const homethree= () => (
     <section className='container no-top'>
       <div className='row'>
         <div className='col-lg-12'>
-          <h2 className='style-2'>Create and sell</h2>
+          <h2 className='style-2'>Create and sell your NFTs</h2>
         </div>
       </div>
       <div className='container px-0'>

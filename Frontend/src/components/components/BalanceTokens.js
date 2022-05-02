@@ -55,7 +55,7 @@ const BalanceTokens = () => {
       <div className="d-balance">
         <h4>Balance</h4>
         {native && (
-        <p>{native.balance} {native.symbol}</p>
+        <p>{native.balance} BNB</p>
         )}
         {/* {tokens && tokens.map((token, index) => (
           <p key={index}>{token.balance} {token.symbol}</p>

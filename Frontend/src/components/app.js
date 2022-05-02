@@ -61,7 +61,7 @@ import Contactgrey from './pages/contactGrey';
 import ElegantIcons from './pages/elegantIcons';
 import EtlineIcons from './pages/etlineIcons';
 import FontAwesomeIcons from './pages/fontAwesomeIcons';
-import Accordion from './pages/accordion';
+import Accordion from './pages/accordionGrey';
 import Alerts from './pages/alerts';
 import Progressbar from './pages/progressbar';
 import Tabs from './pages/tabs';
@@ -75,6 +75,8 @@ import Collections from './pages/Collections';
 import Collection from './pages/collectionDetail';
 import MyCollections from "./pages/myCollections";
 import LiveAuction from "./pages/LiveAuction";
+import About from "./pages/About";
+import Faq from "./pages/faq";
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -210,6 +212,8 @@ const App = ({ isServerInfo }) => {
           <MyCollections path="/myCollections" />
           <Collection path="/collection/:address" />
           <LiveAuction path="/liveAuction" />
+          <About path="/about" />
+          <Faq path="/faq" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />
