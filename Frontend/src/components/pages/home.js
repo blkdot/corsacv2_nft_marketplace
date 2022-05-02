@@ -31,7 +31,7 @@ const theme = 'GREY'; //LIGHT, GREY, RETRO
 const homethree= () => (
   <div className="greyscheme">
     <StyledHeader theme={theme} />
-    <section className="jumbotron no-bg" style={{backgroundImage: `url(${'./img/background/8.jpg'})`}}>
+    <section className="jumbotron no-bg" style={{backgroundImage: `url(${'./img/background/homepage.png'})`}}>
       <div className='container'>
         <div className='row align-items-center'>
           <div className='col-lg-6'>
