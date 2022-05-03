@@ -59,7 +59,7 @@ const NewItems = () => {
   }
 
   const contractProcessor = useWeb3ExecuteFunction();
-  const { account, Moralis } = useMoralis();
+  const { account, Moralis, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
   const { chainId } = useChain();
   const Web3Api = useMoralisWeb3Api();
   const { marketAddress, contractABI } = useMoralisDapp();
@@ -155,7 +155,10 @@ const NewItems = () => {
   useEffect(async () => {
     if (window.web3 === undefined && window.ethereum === undefined)
         return;
-    const web3 = await Moralis.enableWeb3();
+    
+    if (!isWeb3EnableLoading && !isWeb3Enabled) {
+      await Moralis.enableWeb3();
+    }
 
     getPayments();
     getSalesInfo();
