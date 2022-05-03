@@ -31,13 +31,11 @@ module.exports = function(app) {
     controller.createCollection
   )
 
-  app.get(
-    "/api/collection",
-    controller.getCollection
-  )
+  app.get("/api/collection", controller.getCollections);
 
   app.get("/api/collection/all", controller.getAllCollections);
   app.get("/api/collection/address", controller.getCollectionByAddress);
+  
 
   app.get("/api/collection/stars", controller.getCollectionStars);
   app.post("/api/collection/star/update", controller.updateCollectionStars);

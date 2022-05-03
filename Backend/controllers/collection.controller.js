@@ -77,9 +77,9 @@ exports.createCollection = (req, res) => {
   });
 }
 
-exports.getCollection = (req, res) => {
+exports.getCollections = (req, res) => {
   Collection.find({
-    walletAddr: { $in: req.query.walletAddr }
+    walletAddr: { $eq: req.query.walletAddr }
   },
   (err, collections) => {
     if (err) {

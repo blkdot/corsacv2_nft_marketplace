@@ -80,67 +80,41 @@ const MyCollections = props => {
     setModalTitle('');
     setModalMessage('');
   }
+
+  useEffect(() => {
+    if (isLoading) {
+      setLoading(true);
+    }
+  }, [isLoading]);
   
   useEffect(async () => {
     async function getMyCollections() {
       setOpenModal(false);
-      setLoading(true);
-
-      let allCollections = [];
+      
       //get collections from backend
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection`, {
         headers: {
           'Content-Type': 'application/json',
         },
-        params: {}
+        params: {
+          walletAddr: account.toLowerCase()
+        }
       }).then(async res => {
-        allCollections = res.data.collections;
+        let collections = res.data.collections;
 
-        let collections = allCollections.filter((c, index) => {
-          return c.walletAddr.toLowerCase() === account.toLowerCase();
-        });
         for (let c of collections) {
           c.itemsCount = 0;
           c.url = `/collection/${c.collectionAddr}`;
-        }
-
-        if (NFTBalances && NFTBalances.result && NFTBalances.result.length > 0) {
-          for (let nft of NFTBalances.result) {
-            let cs = allCollections.filter((c, index) => {
-              return c.collectionAddr.toLowerCase() === nft.token_address.toLowerCase();
-            });
-  
-            if (cs.length === 0) {
-              continue;
-            }
-  
-            const options = {
-              address: nft.token_address,
-              chain: chainId,
-            };
-  
-            //get numbers of items of collection
-            const NFTs = await Web3Api.token.getAllTokenIds(options);
-            const itemsCount = NFTs.result.length;
-  
-            cs[0].itemsCount = itemsCount;
-            cs[0].url = `/collection/${cs[0].collectionAddr}`;
-  
-            let flag = false;
-            for (let c of collections) {
-              if (c.collectionAddr.toLowerCase() === cs[0].collectionAddr.toLowerCase()) {
-                c = cs[0];
-                flag = true;
-                continue;
+        
+          if (NFTBalances && NFTBalances.result && NFTBalances.result.length > 0) {
+            for (let nft of NFTBalances.result) {
+              if (nft.token_address.toLowerCase() === c.collectionAddr.toLowerCase()) {
+                c.itemsCount++;
               }
-            }
-            if (!flag) {
-              collections.push(cs[0]);
             }
           }
         }
-        // console.log(collections);
-
+        
         setMyCollections(collections);
         setLoading(false);
       }).catch((error) => {
