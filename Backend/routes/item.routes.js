@@ -31,6 +31,7 @@ module.exports = function(app) {
   
   // app.post("/api/item/buy", controller.buyItem);
   // app.get("/api/items/all", controller.getAllItems);
+  app.get("/api/item/recent", controller.getRecentItems);
   app.get("/api/item/wallet", controller.getItemsByWallet);
   app.get("/api/item/collection", controller.getItemsByCollection);
   // app.get("/api/item", controller.getItem);

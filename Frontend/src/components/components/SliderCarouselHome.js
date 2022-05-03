@@ -2,44 +2,37 @@ import React, { memo, useEffect, useState } from "react";
 import Slider from "react-slick";
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { carouselCollectionSingle } from './constants';
-import { useSelector, useDispatch } from 'react-redux';
-import * as selectors from '../../store/selectors';
-import { fetchNftShowcase } from "../../store/actions/thunks";
+import { carouselCollectionSingle, fallbackImg } from './constants';
+import { useDispatch } from 'react-redux';
+import * as actions from '../../store/actions/thunks';
 import { navigate } from "@reach/router";
-import api from "../../core/api";
 import axios from "axios";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import BigNumber from "bignumber.js";
 
 
 const SliderCarouselHome = () => {
-
-  // const dispatch = useDispatch();
-  // const nftsState = useSelector(selectors.nftShowcaseState);
-  // const nfts = nftsState.data ? nftsState.data : [];
-  
-  // useEffect(() => {
-  //     dispatch(fetchNftShowcase());
-  // }, [dispatch]);
-
-  const navigateTo = (link) => {
-      navigate(link);
-  }
-
+  const dispatch = useDispatch();
   const [payments, setPayments] = useState([]);
   const [nfts, setNfts] = useState([]);
   const [sales, setSales] = useState([]);
-
+  const [items, setItems] = useState([]);
+  const [newItems, setNewItems] = useState([]);
   const contractProcessor = useWeb3ExecuteFunction();
-  const { marketAddress, contractABI, corsacTokenAddress } = useMoralisDapp();
+  const { marketAddress, contractABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
-  const { Moralis, account } = useMoralis();
+  const { Moralis, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
   const { chainId } = useChain();
 
   const getSalesInfo = async () => {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
+
+    const isWeb3Active = Moralis.ensureWeb3IsInstalled();
+    if (!isWeb3Active || !Moralis.web3 || !Moralis.web3._isProvider) {
+      await Moralis.enableWeb3();
+    }
 
     const ops = {
       contractAddress: marketAddress,
@@ -94,15 +87,29 @@ const SliderCarouselHome = () => {
     }
   }
 
+  async function getRecentItems() {
+    try {
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/recent`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {}
+      }).then(async res => {
+        setItems(res.data.items);
+      });
+    } catch {
+      console.log('error in fetching items');
+    }
+  }
+
   const getNFTCreator = async (walletAddr) => {
     let creator = null;
-    
     await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
       headers: {
         'Content-Type': 'application/json',
       },
       params: {
-        walletAddr: walletAddr.toLowerCase()
+        walletAddr: walletAddr.toString().toLowerCase()
       }
     }).then(res => {
       creator = res.data.user;
@@ -114,39 +121,131 @@ const SliderCarouselHome = () => {
     return creator;
   };
 
+  const handleBuyClick = (nft) => {
+    dispatch(actions.setBuyNFT(nft));
+    navigate('/item-detail');
+  };
+
   useEffect(async () => {
     const isWeb3Active = Moralis.ensureWeb3IsInstalled();
-    if (!isWeb3Active) {
+    
+    if (!isWeb3Active || !Moralis.web3 || !Moralis.web3._isProvider) {
       await Moralis.enableWeb3();
     }
 
-    getPayments();
-    getSalesInfo();
-  }, []);
+    await getPayments();
+    await getRecentItems();
+    await getSalesInfo();
+  }, [isWeb3Enabled, !isWeb3EnableLoading]);
 
-  useEffect(() => {
-    console.log(sales);
-  }, [sales]);
+  useEffect(async () => {
+    let newItems = [];
+    for (let item of items) {
+      let newItem = item;
+      if (item.collections.length > 0 && item.tokenId) {
+        const ops = {
+          address: item.collections[0].collectionAddr,
+          token_id: item.tokenId,
+          chain: chainId
+        };
+        const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(ops);
+        let metadata = null;
+        if (tokenIdMetadata.metadata) {
+          metadata = JSON.parse(tokenIdMetadata.metadata);
+        } else {
+          await fetch((tokenIdMetadata.token_uri))
+            .then((response) => response.json())
+            .then((data) => {
+              data.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+              metadata = data;
+            }).catch(function() {
+              console.log("error: getting uri");
+            });
+        }
+
+        //get author/seller info
+        try {
+          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            params: {
+              walletAddr: tokenIdMetadata.owner_of.toLowerCase()
+            }
+          }).then(res => {
+            newItem.author = res.data.user;
+          });
+        } catch (err) {
+          console.log("fetching user error:", err);
+          newItem.author = null;
+        }
+
+        newItem.token_address = item.collections[0].collectionAddr;
+        newItem.image = item.image;
+        newItem.metadata = metadata;
+        newItem.creator = item.creator ? await getNFTCreator(item.creator) : null;
+        newItem.collection = metadata.collection;
+
+        newItems.push(newItem);
+      }
+    }
+    // console.log("bbb:", newItems);
+    setNewItems(newItems);
+  }, [items]);
+
+  useEffect(async () => {
+    for (let ni of newItems) {
+      const sale = sales.filter((s, index) => {
+        return s.sc.toLowerCase() === ni.token_address.toLowerCase() && 
+          parseInt(s.tokenId) === parseInt(ni.tokenId);
+      });
+      if (sale.length > 0) {
+        if (parseInt(sale[0].method) === 0x00) {
+          ni.onSale = true;
+          ni.onAuction = false;
+          ni.onOffer = false;
+        } else if (parseInt(sale[0].method) === 0x01) {
+          ni.onSale = false;
+          ni.onAuction = true;
+          ni.onOffer = false;
+        } else if (parseInt(sale[0].method) === 0x02) {
+          ni.onSale = false;
+          ni.onAuction = false;
+          ni.onOffer = true;
+        }
+        ni.method = parseInt(sale[0].method);
+        ni.endTime = sale[0].endTime;
+        ni.payment = payments[parseInt(sale[0].payment)];
+        ni.price = Moralis.Units.FromWei(new BigNumber(sale[0].basePrice._hex, 16).toString(), ni.payment.decimals);
+        ni.seller = sale[0].seller;
+      }
+    }
+
+    // console.log(newItems);
+    setNfts(newItems);
+  }, [sales, newItems]);
 
   return (
     <div className='nft-big'>
+      { nfts && nfts.length > 0 &&
       <Slider {...carouselCollectionSingle}>
         {nfts && nfts.map( (nft, index) => (
-          <div onClick={() => navigateTo(nft.nft_link)} className='itm' index={index+1} key={index}>
-            <div className="nft_pic">                            
+          <div onClick={() => handleBuyClick(nft)} className='itm' index={index+1} key={index}>
+            <div className="nft_pic">
               <span>
                 <span className="nft_pic_info">
-                  <span className="nft_pic_title">{nft.title}</span>
-                  <span className="nft_pic_by">{nft.author.username}</span>
+                  <span className="nft_pic_title">{nft.metadata && nft.metadata.name ? nft.metadata.name : 'Unknown'}</span>
+                  <span className="nft_pic_by">{nft.author && nft.author.name ? nft.author.name : 'Unknown'}</span>
                 </span>
               </span>
               <div className="nft_pic_wrap">
-                <img src={api.baseUrl + nft.preview_image.url} className="lazy img-fluid" alt=""/>
+                <img src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy img-fluid" alt=""/>
               </div>
             </div>
           </div>
         ))}
       </Slider>
+    }
     </div>
   );
 }

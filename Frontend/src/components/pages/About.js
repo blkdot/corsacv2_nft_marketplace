@@ -50,7 +50,7 @@ const About = () => {
       <section className='container'>
         <div className='row'>
           <div className="col-md-6">
-            <img src="../img/about.png" class="w-100 mb-5" alt="" />
+            <img src="../img/about.png" className="w-100 mb-5" alt="" />
           </div>
           <div className="col-md-6">
             <p>

@@ -38,7 +38,6 @@ const states = (state = defaultState, action) => {
       return { ...state, nftBreakdown: initEntityState(null)};
 
     case getType(actions.setBuyNFT):
-      console.log("setBuyNFT payload:", action.payload);
       return { ...state, buyNFT: entityLoadingSucceeded(state.buyNFT, action.payload) };
     
     default:

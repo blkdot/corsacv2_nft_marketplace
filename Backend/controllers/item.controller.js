@@ -85,11 +85,34 @@ exports.createItem = (req, res) => {
   }
 };
 
-// exports.getAllItems = (req, res) => {
-//   NFTItem.find({}).then((items) => {
-//     res.send(items.filter((item) => item.status === 0));
-//   }).catch((e) => console.log('error', e));
-// };
+exports.getRecentItems = (req, res) => {
+  NFTItem.aggregate([
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $limit: 100
+    },
+    {
+      $lookup: {
+        from: "collections", 
+        localField: "collectionId", 
+        foreignField: "_id", 
+        as: "collections"
+      }
+    }
+  ], (err, items) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      items: items
+    })
+  });
+};
 
 exports.getItemsByWallet = (req, res) => {
   NFTItem.find({

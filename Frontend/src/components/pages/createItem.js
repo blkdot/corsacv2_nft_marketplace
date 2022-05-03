@@ -165,9 +165,6 @@ const CreateItem = () => {
     Moralis.initialize(APP_ID);
     Moralis.serverURL = SERVER_URL;
 
-    // const file = new Moralis.File(image.data.name, image.data);
-    // await file.saveIPFS();
-    // console.log(file.ipfs(), file.hash());
     let imageFileIpfs = null;
     await saveFile(
       image.data.name, 
@@ -190,9 +187,7 @@ const CreateItem = () => {
         }
       }
     );
-    // console.log(imageFileIpfs);
-    // console.log("imagePath:", GATEWAY_URL + imageFileIpfs.hash());
-
+    
     const metadata = {
       name: itemName,
       description: description,
@@ -227,14 +222,8 @@ const CreateItem = () => {
         }
       }
     );
-    // console.log(metadataFileIpfs);
-    
+        
     const metadataUrl = GATEWAY_URL + metadataFileIpfs.hash();
-    // console.log("metadataUrl:", metadataUrl);
-
-    // const response = await fetch(metadataUrl);
-    // console.log(await response.json());
-
     //mint NFT
     let ops = {
       contractAddress: marketAddress,
@@ -260,10 +249,8 @@ const CreateItem = () => {
           params: ops,
           onSuccess: async (result) => {
             console.log("success:getTokenId");
-            console.log("getTokenId:", result);
-            token_id = new BigNumber(result._hex).toNumber() - 1;
 
-            console.log("minted tokenID:", token_id);
+            token_id = new BigNumber(result._hex).toNumber() - 1;
 
             //save item into db
             try {

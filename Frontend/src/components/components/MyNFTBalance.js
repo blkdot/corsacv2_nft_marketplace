@@ -412,7 +412,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       });
 
       if (NFTBalances && NFTBalances.result) {
-        console.log(NFTBalances.result);
+        // console.log(NFTBalances.result);
         
         let myNFTs = [];
         for (let nft of NFTBalances.result) {
@@ -652,8 +652,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           onOk={() => list(nftToSend)} 
           onCancel={() => closeCreateSaleModal()}
           footer={[
-            <Button onClick={() => closeCreateSaleModal()}>Cancel</Button>,
-            <Button type="primary" danger onClick={() => list(nftToSend)}>List</Button>
+            <Button onClick={() => closeCreateSaleModal()} key="1">Cancel</Button>,
+            <Button type="primary" danger onClick={() => list(nftToSend)} key="2">List</Button>
           ]}
         >
           <StyledSpin spinning={loading} tip="Creating Sale">

@@ -1011,7 +1011,7 @@ const ItemDetail = () => {
           onOk={() => handleCheckoutbidClick()} 
           onCancel={() => closeCheckoutbid()}
           footer={[
-            <Button onClick={() => handleCheckoutbidClick()}>Cancel</Button>,
+            <Button onClick={() => closeCheckoutbid()}>Cancel</Button>,
             <Button type="primary" danger onClick={() => handleCheckoutbidClick()}>Place a bid</Button>
           ]}
         >
