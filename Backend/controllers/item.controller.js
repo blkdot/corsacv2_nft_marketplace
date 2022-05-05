@@ -8,7 +8,7 @@ const { createCollection, getTokenId, mintTo, transferMoney } = require('../cont
 
 exports.createItem = (req, res) => {
   if (req.body.collectionId) {
-    Collection.find({
+    Collection.findOne({
       _id: new mongoose.Types.ObjectId(req.body.collectionId)
     },
     (err, collection) => {
@@ -53,7 +53,7 @@ exports.createItem = (req, res) => {
             description: (user ? user.name : 'Unknown') + ": " + "created new item - " + req.body.title,
             from: '',
             timeStamp: Math.floor(new Date().getTime() / 1000),
-            collectionAddr: collection.collectionAddr.toLowerCase(),
+            collectionAddr: collection.collectionAddr,
             tokenId: parseInt(req.body.tokenId)
           });
 

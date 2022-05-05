@@ -168,14 +168,16 @@ const SliderCarouselHome = () => {
         if (tokenIdMetadata.metadata) {
           metadata = JSON.parse(tokenIdMetadata.metadata);
         } else {
-          await fetch((tokenIdMetadata.token_uri))
-            .then((response) => response.json())
-            .then((data) => {
-              data.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
-              metadata = data;
-            }).catch(function() {
-              console.log("error: getting uri");
-            });
+          if (tokenIdMetadata.token_uri) {
+            await fetch((tokenIdMetadata.token_uri))
+              .then((response) => response.json())
+              .then((data) => {
+                data.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                metadata = data;
+              }).catch(function() {
+                console.log("error: getting uri");
+              });
+          }
         }
 
         //get author/seller info
@@ -202,7 +204,7 @@ const SliderCarouselHome = () => {
         newItem.image = item.image;
         newItem.metadata = metadata;
         newItem.creator = item.creator ? await getNFTCreator(item.creator) : null;
-        newItem.collection = metadata.collection;
+        newItem.collection = metadata && metadata.collection ? metadata.collection : null;
 
         newItems.push(newItem);
       }

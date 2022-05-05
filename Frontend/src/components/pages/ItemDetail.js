@@ -20,7 +20,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button } from "antd";
 import styled from 'styled-components';
-import { formatWalletAddr } from "../../utils";
+import { formatAddress } from "../../utils";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -634,6 +634,8 @@ const ItemDetail = () => {
 						} catch(ex) {
 							console.log(ex);
 						}
+
+						setIsCheckoutLoading(false);
 					},
 					onError: (error) => {
 						console.log("failed:cancel " + action, error);
@@ -678,9 +680,9 @@ const ItemDetail = () => {
 				const result = await Moralis.Web3API.native.runContractFunction(ops);
 				const sales = result.filter((sale, index) => {
 					return (nft.token_address.toLowerCase() == sale[3].toLowerCase() && 
-									parseInt(nft.token_id) === parseInt(sale[4]));
+									parseInt(nft.tokenId ? nft.tokenId : nft.token_id) === parseInt(sale[4]));
 				});
-
+				
 				if (sales.length > 0) {
 					// console.log("sale INFO:", sales[0]);
 					const sale = sales[0];
@@ -799,7 +801,7 @@ const ItemDetail = () => {
 
 						if (res.data.length > 0) {
 							let lastBid = res.data[res.data.length - 1];
-							setIsBidded(lastBid.user.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
+							setIsBidded(lastBid.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
 						}
           });
         } catch {
@@ -815,16 +817,17 @@ const ItemDetail = () => {
 						},
             params: {
               collectionAddr: nft.token_address.toLowerCase(),
-							tokenId: parseInt(nft.token_id)
+							tokenId: parseInt(nft.token_id ? nft.token_id : nft.tokenId)
             }
           }).then(async res => {
 						let history = [];
 						for (let h of res.data.history) {
 							history.push({
-								actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatWalletAddr(h.actorUsers[0].walletAddr)) : 'Unknown',
+								actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatAddress(h.actorUsers[0].walletAddr, 'wallet')) : '',
 								actorAvatar: h.actorUsers && h.actorUsers[0] ? h.actorUsers[0].avatar : defaultAvatar,
-								from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatWalletAddr(h.fromUsers[0].walletAddr)) : 'Unknown',
+								from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatAddress(h.fromUsers[0].walletAddr, 'wallet')) : '',
 								actionType: h.actionType,
+								description: h.description,
 								timeStamp: h.timeStamp * 1000
 							});
 						}
@@ -838,8 +841,8 @@ const ItemDetail = () => {
 
 			if (saleInfo) {
 				getBidList();
-				getHistory();
 			}
+			getHistory();
 		}, [saleInfo, symbol, decimals]);
 		
 		return (
@@ -1000,13 +1003,16 @@ const ItemDetail = () => {
 															<div className="p_list" key={index}>
 																	<div className="p_list_pp">
 																			<span>
-																					{/* <img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/> */}
+																					<img className="lazy" 
+																						src={bid.user && bid.user.avatar ? bid.user.avatar : defaultAvatar} 
+																						title={bid.user && bid.user.name ? bid.user.name : ''} 
+																						alt=""/>
 																					<i className="fa fa-check"></i>
 																			</span>
 																	</div>                                    
 																	<div className="p_list_info">
 																		<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
-																		<span>by <b>{bid.user && bid.user.name ? bid.user.name : formatWalletAddr(bid.walletAddr, 'bid')}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
+																		<span>by <b>{bid.user && bid.user.name ? bid.user.name : formatAddress(bid.walletAddr, 'wallet')}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
@@ -1029,8 +1035,9 @@ const ItemDetail = () => {
 																			</span>
 																	</div>                                    
 																	<div className="p_list_info">
-																			<strong>{history.actor}</strong> {history.actionType === 6 ? 'purchased' : history.actionType === 8 ? 'winned timed auction ' : ''} 
-																			<span>From <strong>{history.from}</strong> at {moment(history.timeStamp).format('L, LT')}</span>
+																			<b>{history.actor}</b>
+																			<span>{history.description}</span>
+																			<span>{history.from ? 'From' : ''} <b>{history.from ? history.from : ''}</b> at <b>{moment(history.timeStamp).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
@@ -1045,7 +1052,7 @@ const ItemDetail = () => {
 												{!nft.isOwner && (nft.onSale || nft.onOffer) && 
 													<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
 												}
-												{!nft.isOwner && (!isBidEnded && nft.onAuction) && 
+												{!nft.isOwner && (!isBidEnded && nft.onAuction && !isBidded) && 
 													<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
 												}
 												{!nft.isOwner && (!isBidEnded && isBidded) && 

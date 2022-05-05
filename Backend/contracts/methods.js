@@ -20,6 +20,20 @@ const feeAddress = async () => {
   let feeAddress = await contract.methods.feeAddress().call();
 }
 
+const formatAddress = (address, type) => {
+  if (address.length != 42) {
+    return address;
+  }
+
+  switch (type) {
+    case 'wallet':
+    case 'collection':
+      return address.substr(0, 7) + "..." + address.substr(address.length - 5, 4);
+  }
+
+  return address;
+}
+
 const createCollection = async (type, name, symbol, uri) => {
   try {
     let contract = await new web3.eth.Contract(marketABI, process.env.CONTRACT_ADDRESS);
@@ -81,13 +95,40 @@ const poll_method = async () => {
         }).then(async (result) => {
           const seller = sales[i].seller;
           const user = await User.findOne({walletAddr: seller.toLowerCase()});
-          const lastBid = await Bid.find({saleId: parseInt(sales[i].saleId)}).sort({price: -1}).limit(1);
+          // const lastBid = await Bid.find({saleId: parseInt(sales[i].saleId)}).sort({price: -1}).limit(1);
+          let lastBid = null;
+          await Bid.aggregate([
+            {
+              $match: {
+                saleId: {$eq: parseInt(sales[i].saleId)}
+              }
+            },
+            {
+              $lookup: {
+                from: "users", 
+                localField: "walletAddr", 
+                foreignField: "walletAddr", 
+                as: "bidders"
+              }
+            }
+          ], (err, bids) => {
+            lastBid = bids.length > 0 ? bids[0] : null;
+          });
           
           //save activity
+          let actor = lastBid && lastBid.walletAddr ? lastBid.walletAddr : user.walletAddr;
+          let description = '';
+
+          if (lastBid && lastBid.bidders && lastBid.bidders[0]) {
+            let actorName = lastBid.bidders[0].name ? lastBid.bidders[0].name : formatAddress(lastBid.bidders[0].walletAddr, 'wallet');
+            description = actorName + ": wins from timed auction - " + formatAddress(sales[i].sc, 'collection') + "#" + sales[i].tokenId;
+          } else {
+            description = "Ended without bids - " + formatAddress(sales[i].sc.toLowerCase(), 'collection') + "#" + sales[i].tokenId;
+          }
           const activity = new Activity({
-            actor: lastBid && lastBid[0] && lastBid[0].walletAddr ? lastBid[0].walletAddr : user.walletAddr,
+            actor: actor,
             actionType: 8,
-            description: (lastBid && lastBid[0] && lastBid[0].walletAddr ? lastBid[0].walletAddr : user.walletAddr) + ": wins from timed auction - " + sales[i].sc + "#" + sales[i].tokenId,
+            description: description,
             from: seller.toLowerCase(),
             timeStamp: Math.floor(new Date().getTime() / 1000),
             collectionAddr: sales[i].sc.toLowerCase(),

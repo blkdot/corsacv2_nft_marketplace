@@ -235,7 +235,7 @@ exports.getHistory = (req, res) => {
     {
       $match: {
         $and: [
-          {actionType: {$in: [2, 6, 8]}},
+          {actionType: {$in: [2, 3, 4, 5, 6, 8, 9, 10, 11]}},
           {collectionAddr: {$eq: req.query.collectionAddr}},
           {tokenId: parseInt(req.query.tokenId)}
         ]

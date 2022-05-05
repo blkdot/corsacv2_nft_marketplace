@@ -78,10 +78,26 @@ exports.createCollection = (req, res) => {
 }
 
 exports.getCollections = (req, res) => {
-  Collection.find({
-    walletAddr: { $eq: req.query.walletAddr }
-  },
-  (err, collections) => {
+  Collection.aggregate([
+    {
+      $match: {
+        walletAddr: {$eq: req.query.walletAddr}
+      }
+    }, 
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "walletAddr", 
+        foreignField: "walletAddr", 
+        as: "creators"
+      }
+    }
+  ], (err, collections) => {
     if (err) {
       res.status(500).send({ message: err });
       return;
@@ -93,10 +109,26 @@ exports.getCollections = (req, res) => {
 }
 
 exports.getCollectionByAddress = (req, res) => {
-  Collection.find({
-    collectionAddr: { $in: req.query.collectionAddr }
-  },
-  (err, collections) => {
+  Collection.aggregate([
+    {
+      $match: {
+        collectionAddr: {$eq: req.query.collectionAddr}
+      }
+    }, 
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "walletAddr", 
+        foreignField: "walletAddr", 
+        as: "creators"
+      }
+    }
+  ], (err, collections) => {
     if (err) {
       res.status(500).send({ message: err });
       return;
@@ -144,7 +176,27 @@ exports.updateCollectionStars = (req, res) => {
 }
 
 exports.getAllCollections = (req, res) => {
-  Collection.find({}).then((collections) => {
-    res.send({collections: collections});
-  }).catch((e) => console.log('error', e));
+  Collection.aggregate([
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "walletAddr", 
+        foreignField: "walletAddr", 
+        as: "creators"
+      }
+    }
+  ], (err, collections) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      collections: collections
+    })
+  });
 }
