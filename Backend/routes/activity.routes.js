@@ -21,4 +21,6 @@ module.exports = function(app) {
   app.get("/api/activity/type", controller.getActivitiesByType);
 
   app.get("/api/activity/bestseller", controller.getBestSellers);
+
+  app.get("/api/activity/history", controller.getHistory);
 };

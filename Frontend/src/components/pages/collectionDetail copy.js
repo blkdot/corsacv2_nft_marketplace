@@ -199,139 +199,157 @@ const Collection = props => {
       const options = {
         address: c.collectionAddr,
         // chain: chainId,
-        chain: process.env.REACT_APP_CHAIN_ID,
+        chain: "0x61"
       };
 
       //get nfts of items of collection
       const NFTs = await Web3Api.token.getAllTokenIds(options);
       const itemsCount = NFTs.result.length;
       c.itemsCount = itemsCount;
-      // console.log("nfts:", NFTs);
+      console.log("nfts:", NFTs);
       setCollection(c);
 
       //get all saleItems from marketplace
       let saleItems = [];
       const ops = {
-        chain: process.env.REACT_APP_CHAIN_ID,
-        address: marketAddress,
-        function_name: "getSaleInfo",
+        contractAddress: marketAddress,
+        functionName: "getSaleInfo",
         abi: contractABI,
         params: {
-          startIdx: "0",
-          count: "100000"
+          startIdx: 0,
+          count: 100000
         },
       };
-      saleItems = await Moralis.Web3API.native.runContractFunction(ops);
-      // console.log("saleItems:", saleItems);
+      await contractProcessor.fetch({
+        params: ops,
+        onSuccess: async (result) => {
+          console.log("success");
+          saleItems = result;
 
-      let newNFTs = [];
-      // console.log(NFTs.result);
-      for (let nft of NFTs.result) {
-        let metadata = null;
-        //get metadata
-        const options = {
-          address: nft.token_address,
-          token_id: nft.token_id,
-          chain: process.env.REACT_APP_CHAIN_ID
-        };
-        const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
-        //get author/seller info
-        try {
-          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            params: {
-              walletAddr: tokenIdMetadata.owner_of.toLowerCase()
-            }
-          }).then(res => {
-            nft.author = res.data.user;
-            if (isAuthenticated && account) {
-              nft.isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
-            }
-          });
-        } catch (err) {
-          console.log("fetching user error:", err);
-          nft.author = null;
-        }
+          // console.log("saleItems:", saleItems);
 
-        if (nft.metadata) {
-          if (typeof nft.metadata === "string") {
-            metadata = JSON.parse(nft.metadata);
-          } else {
-            metadata = nft.metadata;
+          let newNFTs = [];
+          // console.log(NFTs.result);
+          for (let nft of NFTs.result) {
+            let metadata = null;
+            //get metadata
+            const options = {
+              address: nft.token_address,
+              token_id: nft.token_id,
+              // chain: chainId
+              chain: '0x61'
+            };
+            const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
+            // console.log("owner:", tokenIdMetadata.owner_of.toLowerCase());
+            //get author/seller info
+            try {
+              await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                params: {
+                  walletAddr: tokenIdMetadata.owner_of.toLowerCase()
+                }
+              }).then(res => {
+                nft.author = res.data.user;
+                if (isAuthenticated && account) {
+                  nft.isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
+                }
+              });
+            } catch (err) {
+              console.log("fetching user error:", err);
+              nft.author = null;
+            }
+
+            if (nft.metadata) {
+              if (typeof nft.metadata === "string") {
+                metadata = JSON.parse(nft.metadata);
+              } else {
+                metadata = nft.metadata;
+              }
+            } else if (nft.token_uri) {
+              const response = await fetch(nft.token_uri);
+              metadata = await response.json();
+            } else {
+              metadata = null;
+            }
+            
+            let sales = saleItems.filter((s, index) => {
+              return nft.token_address.toLowerCase() === s.sc.toLowerCase() 
+                      && parseInt(nft.token_id) === new BigNumber(s.tokenId._hex).toNumber() 
+                      // && s.confirmed === true;
+            });
+
+            if (sales.length > 0) {
+              const sale = sales[0];
+
+              const method = new BigNumber(sale.method._hex).toNumber();
+              const endTime = new BigNumber(sale.endTime._hex).toNumber();
+              const currentTime = Math.floor(new Date().getTime() / 1000);
+              const payment = payments[new BigNumber(sale.payment._hex).toNumber()];
+              const decimals = (payment && payment.decimals != undefined && payment.decimals != null) ? parseInt(payment.decimals) : 18;
+              const basePrice = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
+              
+              metadata.price = basePrice;
+              metadata.payment = payment;
+
+              if (method === 1 && endTime > currentTime) {
+                metadata.onAuction = true;
+                metadata.onSale = false;
+                metadata.onOffer = false;
+                metadata.endTime = endTime;
+              } else if (method === 0) {
+                metadata.onAuction = false;
+                metadata.onSale = true;
+                metadata.onOffer = false;
+              } else if (method === 1) {
+                metadata.onAuction = false;
+                metadata.onSale = false;
+                metadata.onOffer = true;
+              } else {
+                metadata.onAuction = false;
+                metadata.onSale = false;
+                metadata.onOffer = false;
+              }
+            }
+            
+            nft.metadata = metadata;
+
+            let tempNFT = {};
+            tempNFT.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+            tempNFT.author = nft.author ? nft.author : null;
+            tempNFT.metadata = metadata;
+            tempNFT.token_address = nft.token_address;
+            tempNFT.token_id = nft.token_id;
+            tempNFT.name = !nft.metadata ? nft.name : nft.metadata.name;
+            tempNFT.description = !nft.metadata ? '' : nft.metadata.description;
+            tempNFT.collection = !nft.metadata ? nft.name : nft.metadata.collection.label;
+            tempNFT.image = !nft.metadata ? (nft.image ? nft.image : fallbackImg): nft.metadata.image;
+            tempNFT.payment = !nft.metadata ? (nft.payment ? nft.payment : 'Unknown'): nft.metadata.payment;
+            tempNFT.price = !nft.metadata ? (nft.price ? nft.price : 0): nft.metadata.price;
+            tempNFT.onSale = !nft.metadata ? false : (nft.metadata.onSale == null ? false : nft.metadata.onSale);
+            tempNFT.onAuction = !nft.metadata ? false : (nft.metadata.onAuction == null ? false : nft.metadata.onAuction);
+            tempNFT.onOffer = !nft.metadata ? false : (nft.metadata.onOffer == null ? false : nft.metadata.onOffer);
+            tempNFT.endTime = !nft.metadata ? false : (nft.metadata.endTime == null ? 0 : nft.metadata.endTime);
+            tempNFT.isOwner = nft.isOwner ? nft.isOwner : false;
+
+            newNFTs.push(tempNFT);
           }
-        } else if (nft.token_uri) {
-          const response = await fetch(nft.token_uri);
-          metadata = await response.json();
-        } else {
-          metadata = null;
-        }
-        
-        let sales = saleItems.filter((s, index) => {
-          return nft.token_address.toLowerCase() === s[3].toLowerCase() 
-                  && parseInt(nft.token_id) === parseInt(s[4]);
-        });
-
-        if (sales.length > 0) {
-          const sale = sales[0];
-
-          const method = parseInt(sale[8]);
-          const endTime = parseInt(sale[10]);
-          const currentTime = Math.floor(new Date().getTime() / 1000);
-          const payment = payments[parseInt(sale[6])];
-          const decimals = (payment && payment.decimals != undefined && payment.decimals != null) ? parseInt(payment.decimals) : 18;
-          const basePrice = new BigNumber(sale[7]).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
+          // console.log("newNFTs:", newNFTs);
           
-          metadata.price = basePrice;
-          metadata.payment = payment;
+          setItems(newNFTs);
+          setLoading(false);
+        },
+        onError: (error) => {
+          console.log("failed:", error);
 
-          if (method === 1 && endTime > currentTime) {
-            metadata.onAuction = true;
-            metadata.onSale = false;
-            metadata.onOffer = false;
-            metadata.endTime = endTime;
-          } else if (method === 0) {
-            metadata.onAuction = false;
-            metadata.onSale = true;
-            metadata.onOffer = false;
-          } else if (method === 1) {
-            metadata.onAuction = false;
-            metadata.onSale = false;
-            metadata.onOffer = true;
-          } else {
-            metadata.onAuction = false;
-            metadata.onSale = false;
-            metadata.onOffer = false;
-          }
-        }
-        
-        nft.metadata = metadata;
+          setLoading(false);
 
-        let tempNFT = {};
-        tempNFT.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
-        tempNFT.author = nft.author ? nft.author : null;
-        tempNFT.metadata = metadata;
-        tempNFT.token_address = nft.token_address;
-        tempNFT.token_id = nft.token_id;
-        tempNFT.name = !nft.metadata ? nft.name : nft.metadata.name;
-        tempNFT.description = !nft.metadata ? '' : nft.metadata.description;
-        tempNFT.collection = !nft.metadata ? nft.name : nft.metadata.collection.label;
-        tempNFT.image = !nft.metadata ? (nft.image ? nft.image : fallbackImg): nft.metadata.image;
-        tempNFT.payment = !nft.metadata ? (nft.payment ? nft.payment : 'Unknown'): nft.metadata.payment;
-        tempNFT.price = !nft.metadata ? (nft.price ? nft.price : 0): nft.metadata.price;
-        tempNFT.onSale = !nft.metadata ? false : (nft.metadata.onSale == null ? false : nft.metadata.onSale);
-        tempNFT.onAuction = !nft.metadata ? false : (nft.metadata.onAuction == null ? false : nft.metadata.onAuction);
-        tempNFT.onOffer = !nft.metadata ? false : (nft.metadata.onOffer == null ? false : nft.metadata.onOffer);
-        tempNFT.endTime = !nft.metadata ? false : (nft.metadata.endTime == null ? 0 : nft.metadata.endTime);
-        tempNFT.isOwner = nft.isOwner ? nft.isOwner : false;
-
-        newNFTs.push(tempNFT);
-      }
-      console.log("newNFTs:", newNFTs);
-      
-      setItems(newNFTs);
-      setLoading(false);
+          setOpenModal(true);
+          setModalTitle('Error');
+          setModalMessage('Error occurs while fetching data from contract');
+        },
+      });
     }).catch((e) => {
       setLoading(false);
 
@@ -341,10 +359,20 @@ const Collection = props => {
     });
   }
 
+  // useEffect(async () => {
+  //   if (account) {
+  //     getFetchItems();
+  //     setLoading(true);
+  //   }
+  // }, [account]);
+
   useEffect(async () => {
+    if (!isWeb3Enabled && !isWeb3EnableLoading) {
+      await Moralis.enableWeb3();
+    }
     getFetchItems();
     setLoading(true);
-  }, [account]);
+  }, []);
 
   return (
     <div className="greyscheme">

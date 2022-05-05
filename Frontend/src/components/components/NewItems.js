@@ -59,9 +59,8 @@ const NewItems = () => {
   }
 
   const contractProcessor = useWeb3ExecuteFunction();
-  const { account, Moralis, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
-  const { chainId } = useChain();
-  const Web3Api = useMoralisWeb3Api();
+  const { isAuthenticated, account, Moralis, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
+  const { native } = useMoralisWeb3Api();
   const { marketAddress, contractABI } = useMoralisDapp();
 
   const [loading, setLoading] = useState(true);
@@ -69,7 +68,7 @@ const NewItems = () => {
   const [saleNFTs, setSaleNFTs] = useState([]);
   const [payments, setPayments] = useState([]);
   const [clockTop, setClockTop] = useState(true);
-  
+
   const NEW_ITEM_DURATION = 7 * 24 * 3600;
   const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
   const fallbackImg = 
@@ -105,26 +104,41 @@ const NewItems = () => {
   }
 
   async function getSalesInfo() {
+    // const ops = {
+    //   chain: process.env.REACT_APP_CHAIN_ID,
+    //   contractAddress: marketAddress,
+    //   functionName: "getSaleInfo",
+    //   abi: contractABI,
+    //   params: {
+    //     startIdx: 0,
+    //     count: 100000
+    //   },
+    // };
+    // await contractProcessor.fetch({
+    //   params: ops,
+    //   onSuccess: (result) => {
+    //     console.log("success:getSalesInfo");
+    //     setSaleNFTs(result);
+    //   },
+    //   onError: (error) => {
+    //     console.log("failed:getSalesInfo", error);
+    //     setSaleNFTs([]);
+    //   },
+    // });
+
     const ops = {
-      contractAddress: marketAddress,
-      functionName: "getSaleInfo",
+      chain: process.env.REACT_APP_CHAIN_ID,
+      address: marketAddress,
+      function_name: "getSaleInfo",
       abi: contractABI,
       params: {
-        startIdx: 0,
-        count: 100000
+        startIdx: "0",
+        count: "100000"
       },
     };
-    await contractProcessor.fetch({
-      params: ops,
-      onSuccess: (result) => {
-        console.log("success:getSalesInfo");
-        setSaleNFTs(result);
-      },
-      onError: (error) => {
-        console.log("failed:getSalesInfo", error);
-        setSaleNFTs([]);
-      },
-    });
+
+    const data = await Moralis.Web3API.native.runContractFunction(ops);
+    setSaleNFTs(data);
   }
 
   const getNFTCreator = async (walletAddr) => {
@@ -153,15 +167,21 @@ const NewItems = () => {
   };
 
   useEffect(async () => {
-    if (window.web3 === undefined && window.ethereum === undefined)
-        return;
     
-    if (!isWeb3EnableLoading && !isWeb3Enabled) {
-      await Moralis.enableWeb3();
+    if (window.web3 === undefined && window.ethereum === undefined){
+      return;
     }
+    // console.log(Moralis.web3);
+    // console.log(!Moralis.web3);
+        
+    // if ((isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) || !Moralis.web3 || !Moralis.web3._isProvider) {
+    //   if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
+    //     await Moralis.enableWeb3();
+    //   }
+    // }
 
-    getPayments();
-    getSalesInfo();
+    await getPayments();
+    await getSalesInfo();
   }, []);
 
   useEffect(async () => {
@@ -175,22 +195,26 @@ const NewItems = () => {
         if (currentTime - parseInt(saleInfo.startTime) > NEW_ITEM_DURATION) {
           continue;
         }
-
+        // console.log(process.env.REACT_APP_CHAIN_ID);
         try {
           const options = {
-            address: saleInfo.sc,
-            chain: chainId
+            address: saleInfo[3], //saleInfo.sc,
+            chain: process.env.REACT_APP_CHAIN_ID
           };
 
           const result = await Moralis.Web3API.token.getAllTokenIds(options);
           
           const temp = result?.result.filter((nft, index) => {
-            return parseInt(nft.token_id) === parseInt(saleInfo.tokenId.toString());
+            // return parseInt(nft.token_id) === parseInt(saleInfo.tokenId.toString());
+            return parseInt(nft.token_id) === parseInt(saleInfo[4]);
           });
           
           if (temp.length > 0) {
-            temp[0].saleId = parseInt(saleInfo.saleId._hex);
-            temp[0].method = parseInt(saleInfo.method._hex);
+            // temp[0].saleId = parseInt(saleInfo.saleId._hex);
+            // temp[0].method = parseInt(saleInfo.method._hex);
+
+            temp[0].saleId = parseInt(saleInfo[0]);
+            temp[0].method = parseInt(saleInfo[8]);
 
             //get seller info
             try {
@@ -199,10 +223,14 @@ const NewItems = () => {
                   'Content-Type': 'application/json',
                 },
                 params: {
-                  walletAddr: saleInfo.seller.toLowerCase()
+                  // walletAddr: saleInfo.seller.toLowerCase()
+                  walletAddr: saleInfo[2].toLowerCase()
                 }
               }).then(res => {
                 temp[0].author = res.data.user;
+                if (isAuthenticated && account) {
+                  temp[0].isOwner = temp[0].author && temp[0].author.walletAddr.toLowerCase() === account.toLowerCase();
+                }
               });
             } catch (err) {
               console.log("fetching user error:", err);
@@ -212,7 +240,8 @@ const NewItems = () => {
             //get creator of nft
             temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getNFTCreator(temp[0].metadata.creator) : null;
 
-            temp[0].endTime = (temp[0].method === 1) ? parseInt(saleInfo.endTime._hex) : null;
+            // temp[0].endTime = (temp[0].method === 1) ? parseInt(saleInfo.endTime._hex) : null;
+            temp[0].endTime = (temp[0].method === 1) ? parseInt(saleInfo[10]) : null;
             
             if (temp[0].method === 0) {
               temp[0].onSale = true;
@@ -232,10 +261,12 @@ const NewItems = () => {
               temp[0].onOffer = false;
             }
 
-            const payment = (payments.length >= parseInt(saleInfo.payment._hex) + 1) ? payments[parseInt(saleInfo.payment._hex)] : null;
+            // const payment = (payments.length >= parseInt(saleInfo.payment._hex) + 1) ? payments[parseInt(saleInfo.payment._hex)] : null;
+            const payment = (payments.length >= parseInt(saleInfo[6]) + 1) ? payments[parseInt(saleInfo[6])] : null;
             
             if (payment) {
-              temp[0].price = new BigNumber(saleInfo.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+              // temp[0].price = new BigNumber(saleInfo.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+              temp[0].price = new BigNumber(saleInfo[7]).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
               temp[0].payment = payment;
             }
           }
@@ -261,7 +292,7 @@ const NewItems = () => {
         }
       }
 
-      console.log("new items:", promises);
+      // console.log("new items:", promises);
 
       setNfts(promises);
     }
@@ -333,10 +364,13 @@ const NewItems = () => {
                   }
                   <div className="nft__item_action">
                     <>
-                      {(nft.onSale || nft.onOffer) && (
+                      {nft.isOwner && (
+                        <span onClick={() => handleItemClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</span>
+                      )}
+                      {(!nft.isOwner && (nft.onSale || nft.onOffer)) && (
                         <span onClick={() => handleItemClick(nft)}>Buy Now</span>
                       )}
-                      {(nft.onAuction) && (
+                      {(!nft.isOwner && nft.onAuction) && (
                         <span onClick={() => handleItemClick(nft)}>Place a bid</span>
                       )}
                     </>

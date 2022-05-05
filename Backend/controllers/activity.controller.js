@@ -15,6 +15,7 @@ const actionTypes = [
   { value: 11, label: 'Cancel offer'},
   { value: 12, label: 'Like'},
   { value: 13, label: 'Follow'},
+  { value: 14, label: 'Cancel bid'},
   { value: 99, label: 'Other'},
 ];
 
@@ -40,7 +41,9 @@ exports.saveActivity = (req, res) => {
     actionType: req.body.actionType,
     description: req.body.description,
     from: req.body.from,
-    timeStamp: Math.floor(new Date().getTime() / 1000)
+    timeStamp: Math.floor(new Date().getTime() / 1000),
+    collectionAddr: req.body.collectionAddr,
+    tokenId: req.body.tokenId
   });
 
   activity.save((err) => {
@@ -169,7 +172,7 @@ exports.getActivitiesByType = (req, res) => {
     {
       $lookup: {
         from: "users", 
-        localField: "actor", 
+        localField: "from", 
         foreignField: "walletAddr", 
         as: "fromUsers"
       }
@@ -223,6 +226,49 @@ exports.getBestSellers = (req, res) => {
     }
     res.status(200).send({
       sellers: sellers
+    })
+  });
+}
+
+exports.getHistory = (req, res) => {
+  Activity.aggregate([
+    {
+      $match: {
+        $and: [
+          {actionType: {$in: [2, 6, 8]}},
+          {collectionAddr: {$eq: req.query.collectionAddr}},
+          {tokenId: parseInt(req.query.tokenId)}
+        ]
+      }
+    }, 
+    {
+      $sort: {
+        timeStamp: 1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "actor", 
+        foreignField: "walletAddr", 
+        as: "actorUsers"
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "from", 
+        foreignField: "walletAddr", 
+        as: "fromUsers"
+      }
+    }
+  ], (err, history) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      history: history
     })
   });
 }

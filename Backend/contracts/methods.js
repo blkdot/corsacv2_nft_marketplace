@@ -85,11 +85,13 @@ const poll_method = async () => {
           
           //save activity
           const activity = new Activity({
-            actor: lastBid && lastBid[0] && lastBid[0].walletAddr ? lastBid[0].walletAddr : 'Unknown',
+            actor: lastBid && lastBid[0] && lastBid[0].walletAddr ? lastBid[0].walletAddr : user.walletAddr,
             actionType: 8,
-            description: (user && user.name ? user.name : 'Unknown') + ": wins from timed auction - " + sales[i].sc + "#" + sales[i].tokenId,
+            description: (lastBid && lastBid[0] && lastBid[0].walletAddr ? lastBid[0].walletAddr : user.walletAddr) + ": wins from timed auction - " + sales[i].sc + "#" + sales[i].tokenId,
             from: seller.toLowerCase(),
-            timeStamp: Math.floor(new Date().getTime() / 1000)
+            timeStamp: Math.floor(new Date().getTime() / 1000),
+            collectionAddr: sales[i].sc.toLowerCase(),
+            tokenId: parseInt(sales[i].tokenId)
           });
         
           activity.save((err) => {

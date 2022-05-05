@@ -1,8 +1,9 @@
+// import { process } from "dotenv";
 import React, { memo, useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import * as selectors from '../../store/selectors';
 import * as actions from '../../store/actions/thunks';
-import { useChain, useMoralis, useWeb3ExecuteFunction } from "react-moralis";
+import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
 import Footer from '../components/footer';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
@@ -74,8 +75,7 @@ const LiveAuction = () => {
 
   const currentUserState = useSelector(selectors.currentUserState);
   
-  const { Moralis } = useMoralis();
-  const { chainId } = useChain();
+  const { account, Moralis, isAuthenticated } = useMoralis();
   const { marketAddress, contractABI } = useMoralisDapp();
   const contractProcessor = useWeb3ExecuteFunction();
   
@@ -102,31 +102,48 @@ const LiveAuction = () => {
   async function getSalesInfo() {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
-    const web3 = await Moralis.enableWeb3();
+    // const web3 = await Moralis.enableWeb3();
+    // const ops = {
+    //   contractAddress: marketAddress,
+    //   functionName: "getSaleInfo",
+    //   abi: contractABI,
+    //   params: {
+    //     startIdx: 0,
+    //     count: 100000
+    //   },
+    // };
+    // await contractProcessor.fetch({
+    //   params: ops,
+    //   onSuccess: (result) => {
+    //     console.log("success:getSalesInfo");
+    //     // console.log(ops);
+    //     const sales = result.filter((sale, index) => {
+    //       return parseInt(sale.method) === 0x01;
+    //     });
+    //     setSaleNFTs(sales);
+    //   },
+    //   onError: (error) => {
+    //     console.log("failed:getSalesInfo", error);
+    //     setSaleNFTs([]);
+    //   },
+    // });
     const ops = {
-      contractAddress: marketAddress,
-      functionName: "getSaleInfo",
+      chain: process.env.REACT_APP_CHAIN_ID,
+      address: marketAddress,
+      function_name: "getSaleInfo",
       abi: contractABI,
       params: {
-        startIdx: 0,
-        count: 100000
+        startIdx: "0",
+        count: "100000"
       },
     };
-    await contractProcessor.fetch({
-      params: ops,
-      onSuccess: (result) => {
-        console.log("success:getSalesInfo");
-        // console.log(ops);
-        const sales = result.filter((sale, index) => {
-          return parseInt(sale.method) === 0x01;
-        });
-        setSaleNFTs(sales);
-      },
-      onError: (error) => {
-        console.log("failed:getSalesInfo", error);
-        setSaleNFTs([]);
-      },
+    const data = await Moralis.Web3API.native.runContractFunction(ops);
+    // console.log("saleInfo:", data);
+    const sales = data.filter((sale, index) => {
+      console.log(sale[8]);
+      return parseInt(sale[8]) === 0x01;
     });
+    setSaleNFTs(sales);
   }
 
   async function getPayments() {
@@ -195,31 +212,39 @@ const LiveAuction = () => {
       
       let nfts = [];
       for (let sale of saleNFTs) {
+        // console.log(process.env.REACT_APP_CHAIN_ID);
         try {
           const options = {
-            address: sale.sc,
-            chain: chainId
+            // address: sale.sc,
+            address: sale[3],
+            chain: process.env.REACT_APP_CHAIN_ID
           };
           const result = await Moralis.Web3API.token.getAllTokenIds(options);
           
           const temp = result?.result.filter((nft, index) => {
-            return parseInt(nft.token_id) === parseInt(sale.tokenId);
+            // return parseInt(nft.token_id) === parseInt(sale.tokenId);
+            return parseInt(nft.token_id) === parseInt(sale[4]);
           });
 
           if (temp.length > 0) {
             //get price by payment
-            if (payments.length >= parseInt(sale.payment) + 1) {
-              const payment = payments[parseInt(sale.payment)];
-              temp[0].price = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+            // if (payments.length >= parseInt(sale.payment) + 1) {
+            //   const payment = payments[parseInt(sale.payment)];
+            //   temp[0].price = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+            //   temp[0].payment = payment;
+            // }
+            if (payments.length >= parseInt(sale[6]) + 1) {
+              const payment = payments[parseInt(sale[6])];
+              temp[0].price = new BigNumber(sale[7]).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
               temp[0].payment = payment;
             }
-
+            
             //get metadata
             if (temp[0].metadata === null) {
               const ops = {
                 address: temp[0].token_address,
                 token_id: temp[0].token_id,
-                chain: chainId
+                chain: process.env.REACT_APP_CHAIN_ID
               };
               const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(ops);
               if (tokenIdMetadata.token_uri) {
@@ -249,10 +274,14 @@ const LiveAuction = () => {
                   'Content-Type': 'application/json',
                 },
                 params: {
-                  walletAddr: sale.seller.toLowerCase()
+                  // walletAddr: sale.seller.toLowerCase()
+                  walletAddr: sale[2].toLowerCase()
                 }
               }).then(res => {
                 temp[0].author = res.data.user;
+                if (isAuthenticated && account) {
+                  temp[0].isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
+                }
               });
             } catch (err) {
               console.log("fetching user error:", err);
@@ -260,21 +289,39 @@ const LiveAuction = () => {
             }
 
             //set endTime
-            temp[0].endTime = parseInt(sale.endTime);
+            // temp[0].endTime = parseInt(sale.endTime);
+            temp[0].endTime = parseInt(sale[10]);
 
             //get creator of NFT
             temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getNFTCreator(temp[0].metadata.creator) : null;
 
             //check sale type
-            if (parseInt(sale.method) === 0x00) {
+            // if (parseInt(sale.method) === 0x00) {
+            //   temp[0].onSale = true;
+            //   temp[0].onAuction = false;
+            //   temp[0].onOffer = false;
+            // } else if (parseInt(sale.method) === 0x01) {
+            //   temp[0].onSale = false;
+            //   temp[0].onAuction = true;
+            //   temp[0].onOffer = false;
+            // } else if (parseInt(sale.method) === 0x02) {
+            //   temp[0].onSale = false;
+            //   temp[0].onAuction = false;
+            //   temp[0].onOffer = true;
+            // } else {
+            //   temp[0].onSale = false;
+            //   temp[0].onAuction = false;
+            //   temp[0].onOffer = false;
+            // }
+            if (parseInt(sale[8]) === 0x00) {
               temp[0].onSale = true;
               temp[0].onAuction = false;
               temp[0].onOffer = false;
-            } else if (parseInt(sale.method) === 0x01) {
+            } else if (parseInt(sale[8]) === 0x01) {
               temp[0].onSale = false;
               temp[0].onAuction = true;
               temp[0].onOffer = false;
-            } else if (parseInt(sale.method) === 0x02) {
+            } else if (parseInt(sale[8]) === 0x02) {
               temp[0].onSale = false;
               temp[0].onAuction = false;
               temp[0].onOffer = true;
@@ -283,9 +330,9 @@ const LiveAuction = () => {
               temp[0].onAuction = false;
               temp[0].onOffer = false;
             }
-          }
 
-          nfts.push(temp[0]);
+            nfts.push(temp[0]);
+          }
         } catch (e) {
           console.log(e);
         }
@@ -375,11 +422,16 @@ const LiveAuction = () => {
                   </div>
                   }
                   <div className="nft__item_action">
-                    <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
+                    {nft.isOwner && (
+                      <span onClick={() => handleBuyClick(nft)}>Cancel Auction</span>
+                    )}
+                    {!nft.isOwner && (
+                      <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
+                    )}
                   </div>
-                    <div className="nft__item_like">
-                        <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
-                    </div>                            
+                  <div className="nft__item_like">
+                      <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
+                  </div>                            
                 </div> 
               </div>
             </div>

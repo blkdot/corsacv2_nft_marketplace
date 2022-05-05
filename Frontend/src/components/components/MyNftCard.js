@@ -165,7 +165,9 @@ const MyNftCard = ({
                       'actor': account.toLowerCase(),
                       'actionType': (nft.onSale) ? 9 : (nft.onAuction) ? 10 : (nft.onOffer) ? 11 : 99,
                       'description': description,
-                      'from': ''
+                      'from': '',
+                      'collectionAddr': nft.token_address.toLowerCase(),
+                      'tokenId': nft.token_id
                     },
                     {
                       headers: {
@@ -312,10 +314,13 @@ const MyNftCard = ({
                 <div className="nft__item_action">
                   { page && page === 'explore' ? (
                   <>
-                    {(nft.onSale || nft.onOffer) && (
+                    {nft.isOwner && (
+                      <span onClick={() => handleBuyClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</span>
+                    )}
+                    {!nft.isOwner && (nft.onSale || nft.onOffer) && (
                       <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
                     )}
-                    {(nft.onAuction) && (
+                    {!nft.isOwner && (nft.onAuction) && (
                       <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
                     )}
                   </>

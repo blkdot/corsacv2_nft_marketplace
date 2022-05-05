@@ -22,40 +22,53 @@ const SliderCarouselHome = () => {
   const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
-  const { Moralis, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
+  const { account, Moralis, isAuthenticated, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
   const { chainId } = useChain();
 
   const getSalesInfo = async () => {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
 
-    const isWeb3Active = Moralis.ensureWeb3IsInstalled();
-    if (!isWeb3Active || !Moralis.web3 || !Moralis.web3._isProvider) {
-      await Moralis.enableWeb3();
-    }
+    // const isWeb3Active = Moralis.ensureWeb3IsInstalled();
+    // if (!isWeb3Active || !Moralis.web3 || !Moralis.web3._isProvider) {
+    //   await Moralis.enableWeb3();
+    // }
 
+    // const ops = {
+    //   chain: process.env.REACT_APP_CHAIN_ID,
+    //   contractAddress: marketAddress,
+    //   functionName: "getSaleInfo",
+    //   abi: contractABI,
+    //   params: {
+    //     startIdx: 0,
+    //     count: 100000
+    //   },
+    // };
+    // await contractProcessor.fetch({
+    //   params: ops,
+    //   onSuccess: (result) => {
+    //     console.log("success:getSalesInfo");
+    //     // console.log(ops);
+    //     // console.log(result);
+    //     setSales(result);
+    //   },
+    //   onError: (error) => {
+    //     console.log("failed:getSalesInfo", error);
+    //     setSales([]);
+    //   },
+    // });
     const ops = {
-      contractAddress: marketAddress,
-      functionName: "getSaleInfo",
-      abi: contractABI,
-      params: {
-        startIdx: 0,
-        count: 100000
-      },
-    };
-    await contractProcessor.fetch({
-      params: ops,
-      onSuccess: (result) => {
-        console.log("success:getSalesInfo");
-        // console.log(ops);
-        // console.log(result);
-        setSales(result);
-      },
-      onError: (error) => {
-        console.log("failed:getSalesInfo", error);
-        setSales([]);
-      },
-    });
+        chain: process.env.REACT_APP_CHAIN_ID,
+        address: marketAddress,
+        function_name: "getSaleInfo",
+        abi: contractABI,
+        params: {
+          startIdx: "0",
+          count: "100000"
+        },
+      };
+      const data = await Moralis.Web3API.native.runContractFunction(ops);
+      setSales(data);
   };
 
   async function getPayments() {
@@ -129,9 +142,11 @@ const SliderCarouselHome = () => {
   useEffect(async () => {
     const isWeb3Active = Moralis.ensureWeb3IsInstalled();
     
-    if (!isWeb3Active || !Moralis.web3 || !Moralis.web3._isProvider) {
-      await Moralis.enableWeb3();
-    }
+    // if ((isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) || !Moralis.web3 || !Moralis.web3._isProvider) {
+    //   if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
+    //     await Moralis.enableWeb3();
+    //   }
+    // } 
 
     await getPayments();
     await getRecentItems();
@@ -146,7 +161,7 @@ const SliderCarouselHome = () => {
         const ops = {
           address: item.collections[0].collectionAddr,
           token_id: item.tokenId,
-          chain: chainId
+          chain: process.env.REACT_APP_CHAIN_ID,
         };
         const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(ops);
         let metadata = null;
@@ -174,6 +189,9 @@ const SliderCarouselHome = () => {
             }
           }).then(res => {
             newItem.author = res.data.user;
+            if (isAuthenticated && account) {
+              newItem.isOwner = newItem.walletAddr && newItem.author.walletAddr.toLowerCase() === account.toLowerCase();
+            }
           });
         } catch (err) {
           console.log("fetching user error:", err);
@@ -195,29 +213,30 @@ const SliderCarouselHome = () => {
 
   useEffect(async () => {
     for (let ni of newItems) {
-      const sale = sales.filter((s, index) => {
-        return s.sc.toLowerCase() === ni.token_address.toLowerCase() && 
-          parseInt(s.tokenId) === parseInt(ni.tokenId);
+      const ss = sales.filter((s, index) => {
+        return s[3].toLowerCase() === ni.token_address.toLowerCase() && 
+          parseInt(s[4]) === parseInt(ni.tokenId);
       });
-      if (sale.length > 0) {
-        if (parseInt(sale[0].method) === 0x00) {
+      if (ss.length > 0) {
+        let sale = ss[0];
+        if (parseInt(sale[8]) === 0x00) {
           ni.onSale = true;
           ni.onAuction = false;
           ni.onOffer = false;
-        } else if (parseInt(sale[0].method) === 0x01) {
+        } else if (parseInt(sale[8]) === 0x01) {
           ni.onSale = false;
           ni.onAuction = true;
           ni.onOffer = false;
-        } else if (parseInt(sale[0].method) === 0x02) {
+        } else if (parseInt(sale[8]) === 0x02) {
           ni.onSale = false;
           ni.onAuction = false;
           ni.onOffer = true;
         }
-        ni.method = parseInt(sale[0].method);
-        ni.endTime = sale[0].endTime;
-        ni.payment = payments[parseInt(sale[0].payment)];
-        ni.price = Moralis.Units.FromWei(new BigNumber(sale[0].basePrice._hex, 16).toString(), ni.payment.decimals);
-        ni.seller = sale[0].seller;
+        ni.method = parseInt(sale[8]);
+        ni.endTime = sale[10];
+        ni.payment = payments[parseInt(sale[6])];
+        ni.price = Moralis.Units.FromWei(sale[7], ni.payment.decimals);
+        ni.seller = sale[2];
       }
     }
 

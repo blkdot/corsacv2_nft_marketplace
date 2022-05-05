@@ -52,7 +52,9 @@ exports.createItem = (req, res) => {
             actionType: 2,
             description: (user ? user.name : 'Unknown') + ": " + "created new item - " + req.body.title,
             from: '',
-            timeStamp: Math.floor(new Date().getTime() / 1000)
+            timeStamp: Math.floor(new Date().getTime() / 1000),
+            collectionAddr: collection.collectionAddr.toLowerCase(),
+            tokenId: parseInt(req.body.tokenId)
           });
 
           activity.save((err2) => {

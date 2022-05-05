@@ -15,6 +15,7 @@ const mongoose = require("mongoose");
 //11: Cancel offer
 //12: Like
 //13: Follow
+//14: Cancel bid
 //99: Other
 const Activity = mongoose.model(
   "Activity",
@@ -36,6 +37,14 @@ const Activity = mongoose.model(
       default: ''
     },
     timeStamp: {
+      type: Number,
+      default: 0
+    },
+    collectionAddr: {
+      type: String,
+      default: ''
+    },
+    tokenId: {
       type: Number,
       default: 0
     }

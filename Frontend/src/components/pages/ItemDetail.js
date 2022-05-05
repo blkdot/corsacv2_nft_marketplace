@@ -20,6 +20,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button } from "antd";
 import styled from 'styled-components';
+import { formatWalletAddr } from "../../utils";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -131,6 +132,9 @@ const ItemDetail = () => {
 		const [isPageLoading, setIsPageLoading] = useState(true);
 		const [isBidEnded, setIsBidEnded] = useState(false);
 
+		const [isWalletConnected, setIsWalletConnected] = useState(true);
+		const [isBidded, setIsBidded] = useState(false);
+
 		const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
   	const fallbackImg = 
     	"data:image/png;base64,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";
@@ -174,6 +178,13 @@ const ItemDetail = () => {
 		};
 
 		const handleBuyClick = async () => {
+			if (!account) {
+				setIsWalletConnected(false);
+				return;
+			} else {
+				setIsWalletConnected(true);
+			}
+
 			setIsCheckoutLoading(true);
 
 			if ((basePrice + serviceFee) > yourBalance) {
@@ -218,6 +229,13 @@ const ItemDetail = () => {
 		};
 
 		const handlePlacebidClick = async () => {
+			if (!account) {
+				setIsWalletConnected(false);
+				return;
+			} else {
+				setIsWalletConnected(true);
+			}
+
 			setIsCheckoutLoading(true);
 
 			if ((basePrice + serviceFee) > yourBalance) {
@@ -393,7 +411,7 @@ const ItemDetail = () => {
 				functionName: "buy",
 				abi: contractABI,
 				params: {
-					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
+					saleId: parseInt(saleInfo[0]),
 				},
 				msgValue: totalPrice,
 			};
@@ -414,7 +432,9 @@ const ItemDetail = () => {
 								'actor': account.toLowerCase(),
 								'actionType': 6,
 								'description': description,
-								'from': nft.author && nft.author.walletAddr ? nft.author.walletAddr : 'Unknown'
+								'from': nft.author && nft.author.walletAddr ? nft.author.walletAddr : 'Unknown',
+								'collectionAddr': nft.token_address,
+								'tokenId': nft.token_id
 							},
 							{
 								headers: {
@@ -448,7 +468,7 @@ const ItemDetail = () => {
 				functionName: "placeBid",
 				abi: contractABI,
 				params: {
-					saleId: new BigNumber(saleInfo.saleId._hex, 16).toNumber(),
+					saleId: parseInt(saleInfo[0]),
 					price: totalPrice
 				},
 				msgValue: totalPrice
@@ -470,7 +490,9 @@ const ItemDetail = () => {
 								'actor': account.toLowerCase(),
 								'actionType': 7,
 								'description': description,
-								'from': ''
+								'from': '',
+								'collectionAddr': nft.token_address.toLowerCase(),
+								'tokenId': parseInt(nft.token_id)
 							},
 							{
 								headers: {
@@ -542,6 +564,95 @@ const ItemDetail = () => {
 			}
 		}
 
+		const handleCancelClick = async (nft) => {
+			let functionName = null;
+			let action = null;
+			let actionType = null;
+			
+			setIsCheckoutLoading(true);
+
+			if (nft.isOwner && nft.onSale) {
+				functionName = 'removeSale';
+				action = 'sale';
+				actionType = 9;
+			} else if (nft.isOwner && nft.onAuction) {
+				functionName = 'cancelAuction';
+				action = 'auction';
+				actionType = 10;
+			} else if (nft.isOwner && nft.onOffer) {
+				functionName = '';
+				action = 'offer';
+				actionType = 11;
+			} else if (!nft.isOwner && isBidded) {
+				functionName = 'cancelBid';
+				action = 'bid';
+				actionType = 14;
+			} else {
+				functionName = '';
+			}
+
+			if (functionName && functionName) {
+				const ops = {
+					contractAddress: marketAddress,
+					functionName: functionName,
+					abi: contractABI,
+					params: {
+						saleId: parseInt(saleInfo[0]),
+					},
+				};
+				await contractProcessor.fetch({
+					params: ops,
+					onSuccess: async (result) => {
+						console.log("success:cancel " + action);
+						await result.wait();
+
+						//save activity
+						try {
+							const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
+							const description = currentUserState.data.name + ": canceled " + action + " - " + itemName;
+				
+							const res = await axios.post(
+								`${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
+								{
+									'actor': account.toLowerCase(),
+									'actionType': actionType,
+									'description': description,
+									'from': '',
+									'collectionAddr': nft.token_address.toLowerCase(),
+									'tokenId': parseInt(nft.token_id)
+								},
+								{
+									headers: {
+										'Content-Type': 'application/json',
+									}
+								}
+							);
+
+							if (actionType == 14) {
+								setIsBidded(false);
+							}
+						} catch(ex) {
+							console.log(ex);
+						}
+					},
+					onError: (error) => {
+						console.log("failed:cancel " + action, error);
+						// setErrorMessage(error.data.message);
+						// setOpenErrorModal(true);
+						if (error.data) {
+							setPlaceBidErrorMsg(error.data.message);
+						} else if (error.message) {
+							setPlaceBidErrorMsg(error.message);
+						} else {
+							setPlaceBidErrorMsg(error.toString());
+						}
+						setPlaceBidError(true);
+						setIsCheckoutLoading(false);
+					},
+				});
+			}
+		}
+
 		useEffect(() => {
 			if (nftDetailState == undefined) {
 				navigate('/');
@@ -552,102 +663,101 @@ const ItemDetail = () => {
 			}
     }, [nftDetailState]);
 
-		useEffect(() => {
+		useEffect(async () => {
 			async function getSalesInfo(nft) {
         const ops = {
-          contractAddress: marketAddress,
-          functionName: listItemFunction,
+					chain: process.env.REACT_APP_CHAIN_ID,
+          address: marketAddress,
+          function_name: listItemFunction,
           abi: contractABI,
           params: {
-            startIdx: 0,
-            count: 100000
+            startIdx: "0",
+            count: "100000"
           },
         };
-        
-        await contractProcessor.fetch({
-          params: ops,
-          onSuccess: (result) => {
-            console.log("success");
-            const sales = result.filter((sale, index) => {
-							return (nft.token_address.toLowerCase() == sale.sc.toLowerCase() && 
-                      parseInt(nft.token_id) === parseInt(sale.tokenId.toString()));
-						});
+				const result = await Moralis.Web3API.native.runContractFunction(ops);
+				const sales = result.filter((sale, index) => {
+					return (nft.token_address.toLowerCase() == sale[3].toLowerCase() && 
+									parseInt(nft.token_id) === parseInt(sale[4]));
+				});
 
-						if (sales.length > 0) {
-							// console.log("sale INFO:", sales[0]);
-							setPayment(sales[0].payment);
-							setSaleInfo(sales[0]);
-						} else {
-							setPayment(0);
-							setSaleInfo(null);
-						}
-						setIsPageLoading(false);
-          },
-          onError: (error) => {
-            console.log("failed:", error);
-            setSaleInfo(null);
-						isPageLoading(false);
-          },
-        });
+				if (sales.length > 0) {
+					// console.log("sale INFO:", sales[0]);
+					const sale = sales[0];
+					setPayment(sale[6]);
+					setSaleInfo(sale);
+				} else {
+					setPayment(0);
+					setSaleInfo(null);
+				}
+				setIsPageLoading(false);
       }
 
 			if (nft) {
 				// console.log("item detail:", nft);
-				getSalesInfo(nft);
+				await getSalesInfo(nft);
 			}
 		}, [nft]);
 
 		useEffect(() => {
-			async function getAuctionInfo () {
-				const options = {
-					chain: chainId,
-					address: account
-				};
-				
-				const balances = await Web3Api.account.getTokenBalances(options);
-				// console.log(balances);
-								
-				const token = balances.filter((t, index) => {
-					// return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
-					return t.token_address.toLowerCase() == nft.payment.addr.toLowerCase();
-				});
-				
+			async function getDetailedInfo () {
 				let bPrice = 0;
 				let yBalance = 0;
 
-				if (parseInt(saleInfo.payment._hex) === 0x00) {
-					//payment is stable coin like BNB
-					const nativeBalance = await Web3Api.account.getNativeBalance(options);
-					bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(18)).toNumber();
-					yBalance = (new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(18)).toNumber();
+				if (account) {
+					const options = {
+						chain: chainId,
+						address: account
+					};
 					
-					setDecimals(payments[0].decimals);
-					setSymbol(payments[0].symbol);
-				} else {
-					if (token.length > 0) {
-						bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-						yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-
-						setDecimals(token[0].decimals);
-						setSymbol(token[0].symbol);
+					const balances = await Web3Api.account.getTokenBalances(options);
+					// console.log(balances);
+									
+					const token = balances.filter((t, index) => {
+						// return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
+						return t.token_address.toLowerCase() == nft.payment.addr.toLowerCase();
+					});
+					
+					if (parseInt(saleInfo[6]) === 0x00) {
+						//payment is stable coin like BNB
+						const nativeBalance = await Web3Api.account.getNativeBalance(options);
+						bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(18)).toNumber();
+						yBalance = (new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(18)).toNumber();
+						
+						// setDecimals(payments[0].decimals);
+						// setSymbol(payments[0].symbol);
 					} else {
-						//you haven't current token
-						const opt = {
-							chain: chainId,
-							addresses: nft.payment.addr.toLowerCase(),
-						};
-						const tokenMetadata = await Web3Api.token.getTokenMetadata(opt);
-						bPrice = (new BigNumber(saleInfo.basePrice._hex, 16)).dividedBy(new BigNumber(10).pow(parseInt(tokenMetadata[0].decimals))).toNumber();
-						yBalance = 0;
-						setDecimals(nft.payment.decimals);
-						setSymbol(nft.payment.symbol);
+						if (token.length > 0) {
+							bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+							yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+	
+							// setDecimals(token[0].decimals);
+							// setSymbol(token[0].symbol);
+						} else {
+							//you haven't current token
+							const opt = {
+								chain: chainId,
+								addresses: nft.payment.addr.toLowerCase(),
+							};
+							// const tokenMetadata = await Web3Api.token.getTokenMetadata(opt);
+							// bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(parseInt(tokenMetadata[0].decimals))).toNumber();
+							bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(parseInt(nft.payment.decimals))).toNumber();
+							yBalance = 0;
+							// setDecimals(nft.payment.decimals);
+							// setSymbol(nft.payment.symbol);
+						}
 					}
+				} else {
+					bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(nft.payment.decimals)).toNumber();
+					yBalance = 0;
 				}
+				setDecimals(nft.payment.decimals);
+				setSymbol(nft.payment.symbol);
 
 				// const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
 				// const yBalance = new BigNumber(token[0].balance).toNumber();
-				const sFeePercent = (new BigNumber(saleInfo.feeRatio._hex, 16)) / 100;
-				const sFee = bPrice * (new BigNumber(saleInfo.feeRatio._hex, 16)) / 10000;
+				const sFeePercent = (new BigNumber(saleInfo[11])) / 100;
+				const sFee = bPrice * (new BigNumber(saleInfo[12])) / 10000;
 	
 				setBasePrice(bPrice);
 				setYourBalance(yBalance);
@@ -657,7 +767,7 @@ const ItemDetail = () => {
 			}
 
 			if (saleInfo) {
-				getAuctionInfo();
+				getDetailedInfo();
 			}
 		}, [saleInfo]);
 
@@ -669,7 +779,7 @@ const ItemDetail = () => {
 							'Content-Type': 'application/json',
 						},
             params: {
-              saleId: new BigNumber(saleInfo.saleId._hex).toNumber()
+              saleId: parseInt(saleInfo[0])
             }
           }).then(async res => {
 						let bids = [];
@@ -686,16 +796,51 @@ const ItemDetail = () => {
 						
 						nft.bids = bids;
 						setLastBidAmount(max);
+
+						if (res.data.length > 0) {
+							let lastBid = res.data[res.data.length - 1];
+							setIsBidded(lastBid.user.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
+						}
           });
         } catch {
           console.log('error in fetching bids by saleId');
         }
 			}
 
+			async function getHistory() {
+				try {
+          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/activity/history`, {
+						headers: {
+							'Content-Type': 'application/json',
+						},
+            params: {
+              collectionAddr: nft.token_address.toLowerCase(),
+							tokenId: parseInt(nft.token_id)
+            }
+          }).then(async res => {
+						let history = [];
+						for (let h of res.data.history) {
+							history.push({
+								actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatWalletAddr(h.actorUsers[0].walletAddr)) : 'Unknown',
+								actorAvatar: h.actorUsers && h.actorUsers[0] ? h.actorUsers[0].avatar : defaultAvatar,
+								from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatWalletAddr(h.fromUsers[0].walletAddr)) : 'Unknown',
+								actionType: h.actionType,
+								timeStamp: h.timeStamp * 1000
+							});
+						}
+						
+						nft.history = history;
+          });
+        } catch {
+          console.log('error in fetching history by item');
+        }
+			}
+
 			if (saleInfo) {
 				getBidList();
+				getHistory();
 			}
-		}, [symbol, decimals]);
+		}, [saleInfo, symbol, decimals]);
 		
 		return (
 			<div className="greyscheme">
@@ -806,101 +951,107 @@ const ItemDetail = () => {
 																				
 										<div className="de_tab_content">
 											{openMenu0  && (  
-												<div className="tab-1 onStep fadeIn">
-													<div className="d-block mb-3">
-														<div className="mr40">
-															<h6>Owner</h6>
-															<div className="item_author">                                    
-																<div className="author_list_pp">
-																	<span>
-																		<img className="lazy" 
-																				src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-																				title={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
-																				alt=""
-																		/>
-																		<i className="fa fa-check"></i>
-																	</span>
-																</div>                                    
-																<div className="author_list_info">
-																	<span>{nft.author && nft.author.name ? nft.author.name : 'Unknown'}</span>
-																</div>
+											<div className="tab-1 onStep fadeIn">
+												<div className="d-block mb-3">
+													<div className="mr40">
+														<h6>Owner</h6>
+														<div className="item_author">                                    
+															<div className="author_list_pp">
+																<span>
+																	<img className="lazy" 
+																			src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
+																			title={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
+																			alt=""
+																	/>
+																	<i className="fa fa-check"></i>
+																</span>
+															</div>                                    
+															<div className="author_list_info">
+																<span>{nft.author && nft.author.name ? nft.author.name : 'Unknown'}</span>
 															</div>
 														</div>
+													</div>
 
-														<div className="row mt-5">
-															<div className="col-lg-12 col-md-12 col-sm-12">
-																{ nft.price != 0 && nft.price != null && 
-																<div className="nft_attr">
-																	<h3>
-																		Price: {nft.price ? nft.price.toString() + ' ' + nft.payment.symbol : ''}
-																	</h3>
-																	<h3 className="mb-0">
-																		Royalty: {nft.metadata && nft.metadata.royalty ? nft.metadata.royalty.toString() + ' %' : ''}
-																	</h3>
-																</div>
-																}
-																<div className="nft_attr" style={{textAlign: "left"}}>
-																	<h4 className="mb-4">Description:</h4>
-																	<span dangerouslySetInnerHTML={{__html: nft.metadata && nft.metadata.description ? nft.metadata.description.replaceAll('\n', "<br/>") : ''}} />
-																</div>
+													<div className="row mt-5">
+														<div className="col-lg-12 col-md-12 col-sm-12">
+															{ nft.price != 0 && nft.price != null && 
+															<div className="nft_attr">
+																<h3>
+																	Price: {nft.price ? nft.price.toString() + ' ' + nft.payment.symbol : ''}
+																</h3>
+																<h3 className="mb-0">
+																	Royalty: {nft.metadata && nft.metadata.royalty ? nft.metadata.royalty.toString() + ' %' : ''}
+																</h3>
+															</div>
+															}
+															<div className="nft_attr" style={{textAlign: "left"}}>
+																<h4 className="mb-4">Description:</h4>
+																<span dangerouslySetInnerHTML={{__html: nft.metadata && nft.metadata.description ? nft.metadata.description.replaceAll('\n', "<br/>") : ''}} />
 															</div>
 														</div>
 													</div>
 												</div>
-												)}
+											</div>
+											)}
 
-												{openMenu  && (  
-												<div className="tab-1 onStep fadeIn">
-														{nft.bids && nft.bids.map((bid, index) => (
-																<div className="p_list" key={index}>
-																		<div className="p_list_pp">
-																				<span>
-																						{/* <img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/> */}
-																						<i className="fa fa-check"></i>
-																				</span>
-																		</div>                                    
-																		<div className="p_list_info">
-																			<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
-																			<span>by <b>{bid.user && bid.user.name ? bid.user.name : bid.walletAddr}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
-																		</div>
-																</div>
-														))}
-														{(nft.bids === undefined || nft.bids === null || nft.bids.length === 0) &&
-															<div className="p_list">
-																<span><b>No bids</b></span>
+											{openMenu  && (  
+											<div className="tab-1 onStep fadeIn">
+													{nft.bids && nft.bids.map((bid, index) => (
+															<div className="p_list" key={index}>
+																	<div className="p_list_pp">
+																			<span>
+																					{/* <img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/> */}
+																					<i className="fa fa-check"></i>
+																			</span>
+																	</div>                                    
+																	<div className="p_list_info">
+																		<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
+																		<span>by <b>{bid.user && bid.user.name ? bid.user.name : formatWalletAddr(bid.walletAddr, 'bid')}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
+																	</div>
 															</div>
-														}
-												</div>
-												)}
-
-												{openMenu1 && ( 
-												<div className="tab-2 onStep fadeIn">
-														{nft.history && nft.history.map((bid, index) => (
-																<div className="p_list" key={index}>
-																		<div className="p_list_pp">
-																				<span>
-																						<img className="lazy" src={api.baseUrl + bid.author.avatar.url} alt=""/>
-																						<i className="fa fa-check"></i>
-																				</span>
-																		</div>                                    
-																		<div className="p_list_info">
-																				Bid {bid.author.id === nft.author.id && 'accepted'} <b>{bid.value} ETH</b>
-																				<span>by <b>{bid.author.username}</b> at {moment(bid.created_at).format('L, LT')}</span>
-																		</div>
-																</div>
-														))}
-												</div>
-												)}
-
-												{/* button for checkout */}
-												<div className="d-flex flex-row mt-5">
-													{(nft.onSale || nft.onOffer) && 
-														<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
+													))}
+													{(nft.bids === undefined || nft.bids === null || nft.bids.length === 0) &&
+														<div className="p_list">
+															<span><b>No bids</b></span>
+														</div>
 													}
-													{!isBidEnded && nft.onAuction && 
-														<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
-													}
-												</div>
+											</div>
+											)}
+
+											{openMenu1 && ( 
+											<div className="tab-2 onStep fadeIn">
+													{nft.history && nft.history.map((history, index) => (
+															<div className="p_list" key={index}>
+																	<div className="p_list_pp">
+																			<span>
+																					<img className="lazy" src={history.actorAvatar} alt=""/>
+																					<i className="fa fa-check"></i>
+																			</span>
+																	</div>                                    
+																	<div className="p_list_info">
+																			<strong>{history.actor}</strong> {history.actionType === 6 ? 'purchased' : history.actionType === 8 ? 'winned timed auction ' : ''} 
+																			<span>From <strong>{history.from}</strong> at {moment(history.timeStamp).format('L, LT')}</span>
+																	</div>
+															</div>
+													))}
+											</div>
+											)}
+
+											{/* button for checkout */}
+											<div className="d-flex flex-row mt-5">
+												{nft.isOwner &&
+													<button className='btn-main lead mb-5 mr15' onClick={() => handleCancelClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</button>
+												}
+												{!nft.isOwner && (nft.onSale || nft.onOffer) && 
+													<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
+												}
+												{!nft.isOwner && (!isBidEnded && nft.onAuction) && 
+													<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
+												}
+												{!nft.isOwner && (!isBidEnded && isBidded) && 
+													<button className='btn-main btn2 lead mb-5' onClick={() => handleCancelClick(nft)}>Cancel Bid</button>
+												}
+											</div>
 										</div>     
 									</div>          
 								</div>
@@ -956,6 +1107,24 @@ const ItemDetail = () => {
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick()}>
 								{tokenApproved ? 'Checkout' : 'Approve'}
+							</button>
+						</div>
+					</div>
+					)
+				}
+				{ !isWalletConnected &&
+					(
+					<div className='checkout'>
+						<div className='maincheckout'>
+							<button className='btn-close' onClick={() => setIsWalletConnected(true)}>x</button>
+							<div className='heading'>
+								<h3>Note</h3>
+							</div>
+							<p>
+								<span className="bold">Please connect your wallet to purchase.</span>
+							</p>
+							<button className='btn-main lead mb-5' onClick={() => navigate("/wallet")}>
+								Connect wallet
 							</button>
 						</div>
 					</div>

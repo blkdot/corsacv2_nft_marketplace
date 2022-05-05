@@ -174,7 +174,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                 'actor': account.toLowerCase(),
                 'actionType': (method === 0) ? 3 : (method === 1) ? 4 : (method === 2) ? 5 : 99,
                 'description': description,
-                'from': ''
+                'from': '',
+                'collectionAddr': nft.token_address.toLowerCase(),
+                'tokenId': parseInt(nft.token_id)
               },
               {
                 headers: {

@@ -116,7 +116,7 @@ const App = ({ isServerInfo }) => {
     }
   });
 
-  useEffect(() => {
+  useEffect(async () => {
     const connectorId = window.localStorage.getItem("connectorId");
     // console.log("connectorId:", connectorId);
     console.log("isAuthenticated:", isAuthenticated);
@@ -124,12 +124,25 @@ const App = ({ isServerInfo }) => {
     console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
     // console.log("window.web3:", window.web3);
     // console.log("window.ethereum:", window.ethereum);
-    if (isAuthenticated && account) {
-      navigate("/profile/" + account.toLowerCase());
-    }
+    // if (isAuthenticated && account) {
+    //   navigate("/profile/" + account.toLowerCase());
+    // }
     
-    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading)
-      enableWeb3({ provider: connectorId });
+    // if ((isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) || !Moralis.web3 || !Moralis.web3._isProvider) {
+    //   if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
+    //     await enableWeb3({ provider: connectorId });
+    //   }
+    // }
+
+    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
+      if (connectorId) {
+        await enableWeb3({ provider: connectorId });
+      } else {
+        await enableWeb3();
+      }
+    }
+
+    
     
     if (account) {
       dispatch(actions.setCurrentUser(account));

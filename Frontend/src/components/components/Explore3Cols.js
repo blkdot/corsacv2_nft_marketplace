@@ -28,8 +28,7 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
   const { marketAddress, contractABI, corsacTokenAddress } = useMoralisDapp();
   const listItemFunction = "getSaleInfo";
   const Web3Api = useMoralisWeb3Api();
-  const { Moralis, account } = useMoralis();
-  const { chainId } = useChain();
+  const { Moralis, account, isAuthenticated } = useMoralis();
   const { data, error, isLoading } = useMoralisQuery("SalesList");
   const fetchMarketItems = JSON.parse(
     JSON.stringify(data, [
@@ -50,9 +49,16 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
     ])
   );
   const getMarketItem = (nft) => {
+    // const result = fetchMarketItems?.find(
+    //   (e) =>
+    //     parseInt(e.saleId) === parseInt(nft?.saleId._hex) &&
+    //     e.sc.toLowerCase() === nft?.token_address.toLowerCase() &&
+    //     e.tokenId === nft?.token_id 
+    //     // && e.confirmed === true
+    // );
     const result = fetchMarketItems?.find(
       (e) =>
-        parseInt(e.saleId) === parseInt(nft?.saleId._hex) &&
+        parseInt(e.saleId) === parseInt(nft?.saleId) &&
         e.sc.toLowerCase() === nft?.token_address.toLowerCase() &&
         e.tokenId === nft?.token_id 
         // && e.confirmed === true
@@ -75,29 +81,43 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
   async function getSalesInfo() {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
-    const web3 = await Moralis.enableWeb3();
+    // const web3 = await Moralis.enableWeb3();
+    
+    // const ops = {
+    //   contractAddress: marketAddress,
+    //   functionName: listItemFunction,
+    //   abi: contractABI,
+    //   params: {
+    //     startIdx: "0",
+    //     count: "100000"
+    //   },
+    // };
+    // await contractProcessor.fetch({
+    //   params: ops,
+    //   onSuccess: (result) => {
+    //     console.log("success:getSalesInfo");
+    //     // console.log(ops);
+    //     // console.log(result);
+    //     setSaleNFTs(result);
+    //   },
+    //   onError: (error) => {
+    //     console.log("failed:getSalesInfo", error);
+    //     setSaleNFTs([]);
+    //   },
+    // });
     const ops = {
-      contractAddress: marketAddress,
-      functionName: listItemFunction,
+      chain: process.env.REACT_APP_CHAIN_ID,
+      address: marketAddress,
+      function_name: listItemFunction,
       abi: contractABI,
       params: {
-        startIdx: 0,
-        count: 100000
+        startIdx: "0",
+        count: "100000"
       },
     };
-    await contractProcessor.fetch({
-      params: ops,
-      onSuccess: (result) => {
-        console.log("success:getSalesInfo");
-        // console.log(ops);
-        // console.log(result);
-        setSaleNFTs(result);
-      },
-      onError: (error) => {
-        console.log("failed:getSalesInfo", error);
-        setSaleNFTs([]);
-      },
-    });
+    const data = await Moralis.Web3API.native.runContractFunction(ops);
+    // console.log("saleInfo:", data);
+    setSaleNFTs(data);
   }
 
   async function getPayments() {
@@ -150,57 +170,48 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
   };
 
   async function fetchAPIData() {
-    // const web3 = await Moralis.enableWeb3();
-    const ops = {
-      chain: chainId,
-      address: account
-    };
-    
-    // const balances = await Web3Api.account.getTokenBalances(ops);
-    // const token = balances.filter((t, index) => {
-    //   return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
-    // });
-
     if (saleNFTs && saleNFTs.length > 0) {
       const promises = [];
-      // console.log("fetchMarketItems:", fetchMarketItems);
-      // console.log("saleNFTs:", saleNFTs);
       
       for (let saleInfo of saleNFTs) {
         const options = {
-          address: saleInfo.sc,
-          chain: chainId
+          // address: saleInfo.sc,
+          address: saleInfo[3],
+          chain: process.env.REACT_APP_CHAIN_ID
         };
         try {
           const result = await Moralis.Web3API.token.getAllTokenIds(options);
           
           const temp = result?.result.filter((nft, index) => {
-            return parseInt(nft.token_id) === parseInt(saleInfo.tokenId.toString());
+            // return parseInt(nft.token_id) === parseInt(saleInfo.tokenId.toString());
+            return parseInt(nft.token_id) === parseInt(saleInfo[4]);
           });
           
           if (temp.length > 0) {
-            temp[0].saleId = saleInfo.saleId;
+            // temp[0].saleId = saleInfo.saleId;
+            temp[0].saleId = parseInt(saleInfo[0]);
+            temp[0].method = parseInt(saleInfo[8]);
 
             //get price by payment
-            if (payments.length >= parseInt(saleInfo.payment) + 1) {
-              const payment = payments[parseInt(saleInfo.payment)];
-              temp[0].price = new BigNumber(saleInfo.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+            // if (payments.length >= parseInt(saleInfo.payment) + 1) {
+            //   const payment = payments[parseInt(saleInfo.payment)];
+            //   temp[0].price = new BigNumber(saleInfo.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+            //   temp[0].payment = payment;
+            // }
+            if (payments.length >= parseInt(saleInfo[6]) + 1) {
+              const payment = payments[parseInt(saleInfo[6])];
+              temp[0].price = new BigNumber(saleInfo[7]).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
               temp[0].payment = payment;
             }
-
-            // if (token.length > 0) {
-            //   temp[0].price = new BigNumber(saleInfo.basePrice._hex).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-            //   temp[0].price_symbol = token[0].symbol;
-            // }
           }
 
           promises.push(...temp);
+          // console.log(temp[0]);
         } catch (e) {
           console.log(e);
         }
       }
 
-      // console.log("NFTs:", promises);
       let filteredNfts = [];
       for (let nft of promises) {
         if (!nft.metadata) {
@@ -208,13 +219,13 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
           //   address: nft.token_address,
           //   token_id: nft.token_id,
           //   flag: "uri",
-          //   chain: chainId
+          //   chain: process.env.REACT_APP_CHAIN_ID
           // };
           // const result = await Moralis.Web3API.token.reSyncMetadata(options);
           const options1 = {
             address: nft.token_address,
             token_id: nft.token_id,
-            chain: chainId
+            chain: process.env.REACT_APP_CHAIN_ID
           };
           const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options1);
           if (tokenIdMetadata.token_uri) {
@@ -260,6 +271,10 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
               }
             }).then(res => {
               nft.author = res.data.user;
+              // console.log("account:", account);
+              if (isAuthenticated && account) {
+                nft.isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
+              }
             });
           } catch (err) {
             console.log("fetching user error:", err);

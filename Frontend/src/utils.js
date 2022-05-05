@@ -158,3 +158,17 @@ export function getSymbolByChainId(chainId) {
 
   return 'Unknown';
 }
+
+export function formatWalletAddr(walletAddr, type) {
+  if (walletAddr.length != 42) {
+    return walletAddr;
+  }
+
+  switch (type) {
+    case 'bid':
+    case 'activity':
+      return walletAddr.substr(0, 7) + "..." + walletAddr.substr(walletAddr.length - 5, 4);
+  }
+
+  return walletAddr;
+}

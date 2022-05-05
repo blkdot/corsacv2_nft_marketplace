@@ -93,29 +93,16 @@ const Collections = props => {
       },
       params: {}
     }).then(async res => {
-      let cs = [];
+      let cs = res.data.collections;
       
-      for (let c of res.data.collections) {
-        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/collection`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          params: {
-            collectionId: c._id
-          }
-        }).then(items => {
-          let temp = c;
-          temp.itemsCount = items.data.length;
-          temp.url = `/collection/${c.collectionAddr}`;
-
-          cs.push(temp);
-        }).catch((e) => {
-          setLoading(false);
-
-          setOpenModal(false);
-          setModalTitle('Error');
-          setModalMessage('Error occurs while fetching data from backend');
-        });
+      for (let c of cs) {
+        const options = {
+          address: c.collectionAddr,
+          chain: process.env.REACT_APP_CHAIN_ID,
+        };
+        const NFTs = await Web3Api.token.getAllTokenIds(options);
+        c.itemsCount = NFTs.result.length;
+        c.url = `/collection/${c.collectionAddr}`;
       }
       
       setCollections(cs);

@@ -12,6 +12,7 @@ import { Spin, Modal } from "antd";
 import styled from 'styled-components';
 
 import moment from "moment";
+import { formatWalletAddr } from "../../utils";
 
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
@@ -240,7 +241,7 @@ const Activity = () => {
                   <li className={activity.className} key={index}>
                     <img className="lazy" src={activity.avatar} alt=""/>
                     <div className="act_list_text">
-                        <h4>{activity.actor}</h4>
+                        <h4>{ formatWalletAddr(activity.actor, 'activity') }</h4>
                         {activity.description}
                         <span className="act_list_date">
                           {activity.timeStamp}

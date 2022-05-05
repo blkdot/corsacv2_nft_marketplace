@@ -16,7 +16,7 @@ const Wallet= () => {
           key={key}
           onClick={async () => {
             try {
-              await authenticate({provider: connectorId}).then(user => {
+              await authenticate({provider: connectorId, signingMessage: "Log in Corsac V2 Marketplace"}).then(user => {
                 dispatch(actions.setCurrentUser(user.get('ethAddress')));
                 window.localStorage.setItem("connectorId", connectorId);
               }).catch(err => {
