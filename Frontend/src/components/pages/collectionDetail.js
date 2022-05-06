@@ -21,6 +21,7 @@ import Countdown from 'react-countdown';
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import { defaultAvatar, fallbackImg } from "../components/constants";
+import { getFileTypeFromURL } from "../../utils";
 
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
@@ -323,9 +324,20 @@ const Collection = props => {
         tempNFT.endTime = !nft.metadata ? false : (nft.metadata.endTime == null ? 0 : nft.metadata.endTime);
         tempNFT.isOwner = nft.isOwner ? nft.isOwner : false;
 
+        let file = null;
+        if (tempNFT.image) {
+          file = await getFileTypeFromURL(tempNFT.image);
+        } else if (tempNFT.metadata && tempNFT.metadata.image) {
+          file = await getFileTypeFromURL(tempNFT.metadata.image);
+        } else {
+          file = {mimeType: 'image', fileType: 'image'};
+        }
+        tempNFT.item_type = file.fileType;
+        tempNFT.mime_type = file.mimeType;
+
         newNFTs.push(tempNFT);
       }
-      console.log("newNFTs:", newNFTs);
+      // console.log("newNFTs:", newNFTs);
       
       setItems(newNFTs);
       setLoading(false);
@@ -437,7 +449,19 @@ const Collection = props => {
                   <div className="nft__item_wrap" style={{height: `${height}px`}}>
                     <Outer>
                       <span>
-                        <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/>
+                        { nft.item_type && nft.item_type == 'image' &&
+                          <img onLoad={onImgLoad} src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy nft__item_preview" alt=""/>
+                        }
+                        { nft.item_type && nft.item_type == 'video' &&
+                          <video width="100%" height="100%" controls className="lazy nft__item_preview">
+                            <source src={nft.image} type={nft.mime_type} />
+                          </video>
+                        }
+                        { nft.item_type && nft.item_type == 'audio' &&
+                          <audio controls className="lazy nft__item_preview">
+                            <source src={nft.image} type={nft.mime_type} />
+                          </audio>
+                        }
                       </span>
                     </Outer>
                   </div>

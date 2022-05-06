@@ -10,7 +10,7 @@ import axios from "axios";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
 import BigNumber from "bignumber.js";
-
+import { getFileTypeFromURL } from "../../utils";
 
 const SliderCarouselHome = () => {
   const dispatch = useDispatch();
@@ -240,6 +240,17 @@ const SliderCarouselHome = () => {
         ni.price = Moralis.Units.FromWei(sale[7], ni.payment.decimals);
         ni.seller = sale[2];
       }
+
+      let file = null;
+      if (ni.image) {
+        file = await getFileTypeFromURL(ni.image);
+      } else if (ni.metadata && ni.metadata.image) {
+        file = await getFileTypeFromURL(ni.metadata.image);
+      } else {
+        file = {mimeType: 'image', fileType: 'image'};
+      }
+      ni.item_type = file.fileType;
+      ni.mime_type = file.mimeType;
     }
 
     // console.log(newItems);
@@ -260,7 +271,19 @@ const SliderCarouselHome = () => {
                 </span>
               </span>
               <div className="nft_pic_wrap">
-                <img src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy img-fluid" alt=""/>
+                { nft.item_type && nft.item_type == 'image' &&
+                  <img src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy img-fluid" alt=""/>
+                }
+                { nft.item_type && nft.item_type == 'video' &&
+                  <video width="100%" height="100%" controls className="lazy img-fluid">
+                    <source src={nft.image} type={nft.mime_type} />
+                  </video>
+                }
+                { nft.item_type && nft.item_type == 'audio' &&
+                  <audio controls className="lazy img-fluid">
+                    <source src={nft.image} type={nft.mime_type} />
+                  </audio>
+                }
               </div>
             </div>
           </div>

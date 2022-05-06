@@ -13,6 +13,7 @@ import BigNumber from 'bignumber.js';
 import api from "../../core/api";
 import axios from 'axios';
 import * as selectors from '../../store/selectors';
+import { defaultAvatar, fallbackImg } from '../components/constants';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -291,7 +292,19 @@ const MyNftCard = ({
               <div className="nft__item_wrap" style={{height: `${height}px`}}>
                 <Outer>
                   <span>
-                    <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/>
+                    { nft.item_type && nft.item_type == 'image' &&
+                      <img onLoad={onImgLoad} src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy nft__item_preview" alt=""/>
+                    }
+                    { nft.item_type && nft.item_type == 'video' &&
+                      <video width="100%" height="100%" controls className="lazy nft__item_preview">
+                        <source src={nft.image} type={nft.mime_type} />
+                      </video>
+                    }
+                    { nft.item_type && nft.item_type == 'audio' &&
+                      <audio controls className="lazy nft__item_preview">
+                        <source src={nft.image} type={nft.mime_type} />
+                      </audio>
+                    }
                   </span>
                 </Outer>
               </div>

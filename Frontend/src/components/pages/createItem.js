@@ -14,6 +14,7 @@ import { StyledHeader } from '../Styles';
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
 import BigNumber from "bignumber.js";
+import { audioTypes, getFileTypeFromURL, videoTypes } from "../../utils";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -69,18 +70,18 @@ const CreateItem = () => {
   const currentUserState = useSelector(selectors.currentUserState);
 
   const contractProcessor = useWeb3ExecuteFunction();
-  const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
+  const { marketAddress, contractABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
   const { account, Moralis, isAuthenticated } = useMoralis();
   const { saveFile, moralisFile } = useMoralisFile();
   const { chainId } = useChain();
 
   const imgInput = useRef(null);
-  const [image, setImage] = useState({ preview: '', data: '' });
+  const [image, setImage] = useState({ preview: '', data: '', type: '' });
   const [collections, setCollections] = useState([]);
-  const [payments, setPayments] = useState([]);
+  // const [payments, setPayments] = useState([]);
   const [collection, setCollection] = useState(null);
-  const [payment, setPayment] = useState(null);
+  // const [payment, setPayment] = useState(null);
   const [itemName, setItemName] = useState('');
   const [description, setDescription] = useState('');
   const [royalty, setRoyalty] = useState(0);
@@ -91,15 +92,38 @@ const CreateItem = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [openModal, setOpenModal] = useState(false);
 
-  const handleFileChange = (e) => {
+  const [height, setHeight] = useState(0);
+
+  const onImgLoad = (e) => {
+    let currentHeight = height;
+    if(currentHeight < e.target.offsetHeight) {
+        setHeight(e.target.offsetHeight);
+    }
+  }
+
+  const handleFileChange = async (e) => {
     try {
-      const img = {
-        preview: URL.createObjectURL(e.target.files[0]),
-        data: e.target.files[0],
+      const file = e.target.files[0];
+      let fileType = null;
+      
+      if (videoTypes.includes(file.type)) {
+        fileType = 'video';
+      } else if (audioTypes.includes(file.type)) {
+        fileType = 'audio';
+      } else {
+        fileType = 'image';
       }
+      
+      const img = {
+        preview: URL.createObjectURL(file),
+        data: file,
+        type: fileType,
+        mime_type: file.type
+      }
+            
       setImage(img);
     } catch (e) {
-      setImage(image);
+      setImage({ preview: '', data: '', type: '' });
     }
   };
 
@@ -108,16 +132,16 @@ const CreateItem = () => {
   }
 
   const handleImageRemove = () => {
-    setImage({ preview: '', data: '' });
+    setImage({ preview: '', data: '', type: '' });
   }
 
   const handleCollectionChange = (selectedOption) => {
     setCollection(selectedOption);
   };
 
-  const handlePaymentChange = (selectedOption) => {
-    setPayment(selectedOption);
-  };
+  // const handlePaymentChange = (selectedOption) => {
+  //   setPayment(selectedOption);
+  // };
 
   const handleCreateItem = async (e) => {
     //check form data
@@ -130,7 +154,7 @@ const CreateItem = () => {
     }
     if (!image || image.preview == '') {
       setModalTitle('Error');
-      setModalMessage("Choose one image for your item");
+      setModalMessage("Choose media for your item");
       setOpenModal(true);
       return;
     }
@@ -387,39 +411,39 @@ const CreateItem = () => {
     }
   }
 
-  async function getPayments() {
-    try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          allowed: 1
-        }
-      }).then(async res => {
-        let payments = [];
-        for (let p of res.data.payments) {
-          payments.push({
-            value: p.id, 
-            label: p.title + " (" + p.symbol + ")", 
-            addr: p.addr, 
-            title: p.title, 
-            type: p.type,
-            symbol: p.symbol,
-            decimals: p.decimals
-          });
-        }
-        setPayments(payments);
-      });
-    } catch {
-      console.log('error in fetching payments');
-    }
-  }
+  // async function getPayments() {
+  //   try {
+  //     await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       params: {
+  //         allowed: 1
+  //       }
+  //     }).then(async res => {
+  //       let payments = [];
+  //       for (let p of res.data.payments) {
+  //         payments.push({
+  //           value: p.id, 
+  //           label: p.title + " (" + p.symbol + ")", 
+  //           addr: p.addr, 
+  //           title: p.title, 
+  //           type: p.type,
+  //           symbol: p.symbol,
+  //           decimals: p.decimals
+  //         });
+  //       }
+  //       setPayments(payments);
+  //     });
+  //   } catch {
+  //     console.log('error in fetching payments');
+  //   }
+  // }
 
   useEffect(() => {
     if (account != undefined && account != '') {
       getCollections();
-      getPayments();
+      // getPayments();
       setLoadingTitle("Creating your item...");
     }
   }, [account]);
@@ -463,12 +487,12 @@ const CreateItem = () => {
         <div className="row">
           <div className="col-lg-7 offset-lg-1 mb-5">
             <div className="field-set">
-              <h5>Upload image <span className="text-muted">(Required)</span></h5>
+              <h5>Upload image/video/audio <span className="text-muted">(Required)</span></h5>
               <div className="d-create-file">
-                <p id="file_name">Image for your item</p>
+                <p id="file_name">Media file for your item</p>
                 <div className='browse'>
                   <input type="button" id="get_file" className="btn-main" value="Browse"/>
-                  <input id='upload_file' type="file" ref={imgInput} onChange={handleFileChange} accept="image/*" />
+                  <input id='upload_file' type="file" ref={imgInput} onChange={handleFileChange} accept="image/*, audio/*, video/*" />
                 </div>
               </div>
 
@@ -534,17 +558,29 @@ const CreateItem = () => {
           </div>
 
           <div className="col-lg-3 col-sm-6 col-xs-12">
-            <h5>Preview Image</h5>
+            <h5>Preview Media</h5>
             <div className="nft__item m-0">
-              {image.preview &&
-              <>
-              <div className="nft__item_wrap" onClick={handleImageUpload}>
+              { image.preview && image.type && 
+                <>
+                <div className="nft__item_wrap" style={{height: `${height}px`}} onClick={handleImageUpload}>
                   <span>
-                    <img src={image.preview} className="lazy nft__item_preview" alt=""/>
+                  { image.preview && image.type === 'image' &&
+                    <img onLoad={onImgLoad} src={image.preview} className="lazy nft__item_preview" alt=""/>
+                  }
+                  { image.preview && image.type === 'video' &&
+                    <video onLoadStart={onImgLoad} width="100%" height="100%" controls className="lazy nft__item_preview">
+                      <source src={image.preview} type={image.mime_type} />
+                    </video>
+                  }
+                  { image.preview && image.type === 'audio' &&
+                    <audio onLoadStart={onImgLoad} controls className="lazy nft__item_preview">
+                      <source src={image.preview} type={image.mime_type} />
+                    </audio>
+                  }
                   </span>
-              </div>
-              <input type="button" className="btn-main" value="Remove Image" onClick={handleImageRemove}/>
-              </>
+                </div>
+                <input type="button" className="btn-main" value="Remove Media" onClick={handleImageRemove}/>
+                </>
               }
             </div>
           </div>                                         

@@ -12,6 +12,7 @@ import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 import * as selectors from '../../store/selectors';
 import { navigate } from '@reach/router';
+import { getFileTypeFromURL } from '../../utils';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -556,12 +557,23 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.onSale = false;
             nft.onOffer = false;
           }
+
+          let file = null;
+          if (nft.image) {
+            file = await getFileTypeFromURL(nft.image);
+          } else if (nft.metadata && nft.metadata.image) {
+            file = await getFileTypeFromURL(nft.metadata.image);
+          } else {
+            file = {mimeType: 'image', fileType: 'image'};
+          }
+          nft.item_type = file.fileType;
+          nft.mime_type = file.mimeType;
         }
         setIsPageLoading(false);
       } else {
         setIsPageLoading(false);
       }
-
+      
       setMyNfts(nfts);
     }, [saleNFTs, saleNFTs.length]);
 
@@ -597,6 +609,14 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           </div>
         </StyledModal>
 
+        <div className="row">
+          <div className="d-item col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
+            <button id="createButton" className="btn-main" onClick={()=>{navigate("/createItem")}}>
+              Create Item
+            </button>
+          </div>
+        </div>
+
         {!isPageLoading && myNfts.length == 0 &&
           <div className="row">
             <div className="alert alert-danger" role="alert">
@@ -604,20 +624,16 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             </div>
           </div>
         }
-
         {!isPageLoading && myNfts && myNfts.map( (nft, index) => (
-            nft.category === 'music' ?
-            <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
-            :
-            <MyNftCard 
-              nft={nft} 
-              key={`${nft.token_address}_${nft.token_id}`}
-              onImgLoad={onImgLoad} 
-              height={height} 
-              setNftToSend={setNftToSend}
-              setVisibility1={setVisibility1}
-              setVisibility2={setVisibility2}
-            />
+          <MyNftCard 
+            nft={nft} 
+            key={`${nft.token_address}_${nft.token_id}`}
+            onImgLoad={onImgLoad} 
+            height={height} 
+            setNftToSend={setNftToSend}
+            setVisibility1={setVisibility1}
+            setVisibility2={setVisibility2}
+          />
         ))}
         { visible1 && 
         <div className='checkout'>

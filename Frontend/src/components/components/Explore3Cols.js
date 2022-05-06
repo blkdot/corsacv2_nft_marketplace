@@ -7,6 +7,7 @@ import { Spin } from "antd";
 import styled from 'styled-components';
 import BigNumber from 'bignumber.js';
 import axios from "axios";
+import { getFileTypeFromURL } from '../../utils';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -302,6 +303,17 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
           nft.onOffer = false;
         }
 
+        let file = null;
+        if (nft.image) {
+          file = await getFileTypeFromURL(nft.image);
+        } else if (nft.metadata && nft.metadata.image) {
+          file = await getFileTypeFromURL(nft.metadata.image);
+        } else {
+          file = {mimeType: 'image', fileType: 'image'};
+        }
+        nft.item_type = file.fileType;
+        nft.mime_type = file.mimeType;
+
         //apply filters
         const cat = nft.metadata && nft.metadata.collection ? nft.metadata.collection.category : null;
         const saleType = nft.onSale ? 0 : nft.onAuction ? 1 : nft.onOffer ? 2 : null;
@@ -392,9 +404,9 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
         }
         {!isExplorerLoading && nfts && nfts.map( (nft, index) => (
                 // <NftCard nft={nft} key={index} onImgLoad={onImgLoad} height={height} className="d-item col-lg-4 col-md-6 col-sm-6 col-xs-12 mb-4" />
-                nft.category === 'music' ?
-                <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
-                :
+                // nft.category === 'music' ?
+                // <NftMusicCard nft={nft} audioUrl={nft.audio_url} key={index} onImgLoad={onImgLoad} height={height} />
+                // :
                 <MyNftCard 
                   nft={nft} 
                   key={index}

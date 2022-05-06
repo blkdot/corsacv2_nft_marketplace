@@ -19,6 +19,7 @@ import styled from 'styled-components';
 import BigNumber from "bignumber.js";
 import { createGlobalStyle } from 'styled-components';
 import api from "../../core/api";
+import { getFileTypeFromURL } from "../../utils";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
@@ -140,7 +141,6 @@ const LiveAuction = () => {
     const data = await Moralis.Web3API.native.runContractFunction(ops);
     // console.log("saleInfo:", data);
     const sales = data.filter((sale, index) => {
-      console.log(sale[8]);
       return parseInt(sale[8]) === 0x01;
     });
     setSaleNFTs(sales);
@@ -331,6 +331,17 @@ const LiveAuction = () => {
               temp[0].onOffer = false;
             }
 
+            let file = null;
+            if (temp[0].image) {
+              file = await getFileTypeFromURL(temp[0].image);
+            } else if (temp[0].metadata && temp[0].metadata.image) {
+              file = await getFileTypeFromURL(temp[0].metadata.image);
+            } else {
+              file = {mimeType: 'image', fileType: 'image'};
+            }
+            temp[0].item_type = file.fileType;
+            temp[0].mime_type = file.mimeType;
+
             nfts.push(temp[0]);
           }
         } catch (e) {
@@ -397,7 +408,20 @@ const LiveAuction = () => {
                 <div className="nft__item_wrap" style={{height: `${height}px`}}>
                   <Outer>
                     <span>
-                      <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/>
+                      {/* <img onLoad={onImgLoad} src={ nft.image } className="lazy nft__item_preview" alt=""/> */}
+                      { nft.item_type && nft.item_type == 'image' &&
+                        <img onLoad={onImgLoad} src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy nft__item_preview" alt=""/>
+                      }
+                      { nft.item_type && nft.item_type == 'video' &&
+                        <video width="100%" height="100%" controls className="lazy nft__item_preview">
+                          <source src={nft.image} type={nft.mime_type} />
+                        </video>
+                      }
+                      { nft.item_type && nft.item_type == 'audio' &&
+                        <audio controls className="lazy nft__item_preview">
+                          <source src={nft.image} type={nft.mime_type} />
+                        </audio>
+                      }
                     </span>
                   </Outer>
                 </div>

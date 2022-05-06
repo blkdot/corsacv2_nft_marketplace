@@ -1,4 +1,6 @@
 import moment from "moment";
+// import mm from "music-metadata";
+import { makeTokenizer } from "@tokenizer/http";
 
 export function debounce(func, wait, immediate) {
   var timeout;
@@ -171,4 +173,23 @@ export function formatAddress(address, type) {
   }
 
   return address;
+}
+
+export const videoTypes = ['m4v', 'avi', 'mpg', 'mp4', 'video/mp4', 'video/mpg', 'video/avi', 'video/m4v']
+
+export const audioTypes = ['mp3', 'wav', 'ogg', 'audio/mp3', 'audio/wav', 'audio/ogg']
+
+export async function getFileTypeFromURL(url) {
+  const httpTokenizer = await makeTokenizer(url);
+  const mimeType = httpTokenizer.fileInfo.mimeType;
+  let fileType = null;
+  if (videoTypes.includes(httpTokenizer.fileInfo.mimeType)) {
+    fileType = 'video';
+  } else if (audioTypes.includes(httpTokenizer.fileInfo.mimeType)) {
+    fileType = 'audio';
+  } else {
+    fileType = 'image';
+  }
+
+  return {mimeType: mimeType, fileType: fileType};
 }

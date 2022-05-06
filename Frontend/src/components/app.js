@@ -142,8 +142,6 @@ const App = ({ isServerInfo }) => {
       }
     }
 
-    
-    
     if (account) {
       dispatch(actions.setCurrentUser(account));
     }
