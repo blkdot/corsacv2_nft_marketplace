@@ -70,7 +70,7 @@ const Collection = props => {
   const [modalMessage, setModalMessage] = useState('');
   const [openModal, setOpenModal] = useState(false);
 
-  const [height, setHeight] = useState(0);
+  const [height, setHeight] = useState(210);
   const [clockTop, setClockTop] = useState(true);
 
   const onImgLoad = ({target:img}) => {
@@ -453,12 +453,12 @@ const Collection = props => {
                           <img onLoad={onImgLoad} src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy nft__item_preview" alt=""/>
                         }
                         { nft.item_type && nft.item_type == 'video' &&
-                          <video width="100%" height="100%" controls className="lazy nft__item_preview">
+                          <video onLoadedMetadata={onImgLoad} width="100%" height="100%" controls className="lazy nft__item_preview">
                             <source src={nft.image} type={nft.mime_type} />
                           </video>
                         }
                         { nft.item_type && nft.item_type == 'audio' &&
-                          <audio controls className="lazy nft__item_preview">
+                          <audio onLoadedMetadata={onImgLoad} controls className="lazy nft__item_preview">
                             <source src={nft.image} type={nft.mime_type} />
                           </audio>
                         }

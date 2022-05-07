@@ -120,7 +120,6 @@ const CreateItem = () => {
         type: fileType,
         mime_type: file.type
       }
-            
       setImage(img);
     } catch (e) {
       setImage({ preview: '', data: '', type: '' });
@@ -564,17 +563,26 @@ const CreateItem = () => {
                 <>
                 <div className="nft__item_wrap" style={{height: `${height}px`}} onClick={handleImageUpload}>
                   <span>
-                  { image.preview && image.type === 'image' &&
+                  { image.type === 'image' &&
                     <img onLoad={onImgLoad} src={image.preview} className="lazy nft__item_preview" alt=""/>
                   }
-                  { image.preview && image.type === 'video' &&
-                    <video onLoadStart={onImgLoad} width="100%" height="100%" controls className="lazy nft__item_preview">
-                      <source src={image.preview} type={image.mime_type} />
-                    </video>
+                  { image.type === 'video' &&
+                    <video onLoadedMetadata={onImgLoad} 
+                      width="100%" 
+                      height="100%" 
+                      controls 
+                      className="lazy nft__item_preview"
+                      src={image.preview} 
+                      type={image.mime_type}
+                    >
+                  </video>
                   }
-                  { image.preview && image.type === 'audio' &&
-                    <audio onLoadStart={onImgLoad} controls className="lazy nft__item_preview">
-                      <source src={image.preview} type={image.mime_type} />
+                  { image.type === 'audio' &&
+                    <audio onLoadedMetadata={onImgLoad} 
+                      controls 
+                      className="lazy nft__item_preview"
+                      src={image.preview} type={image.mime_type}
+                    >
                     </audio>
                   }
                   </span>

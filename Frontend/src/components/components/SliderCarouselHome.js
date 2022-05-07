@@ -29,34 +29,6 @@ const SliderCarouselHome = () => {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
 
-    // const isWeb3Active = Moralis.ensureWeb3IsInstalled();
-    // if (!isWeb3Active || !Moralis.web3 || !Moralis.web3._isProvider) {
-    //   await Moralis.enableWeb3();
-    // }
-
-    // const ops = {
-    //   chain: process.env.REACT_APP_CHAIN_ID,
-    //   contractAddress: marketAddress,
-    //   functionName: "getSaleInfo",
-    //   abi: contractABI,
-    //   params: {
-    //     startIdx: 0,
-    //     count: 100000
-    //   },
-    // };
-    // await contractProcessor.fetch({
-    //   params: ops,
-    //   onSuccess: (result) => {
-    //     console.log("success:getSalesInfo");
-    //     // console.log(ops);
-    //     // console.log(result);
-    //     setSales(result);
-    //   },
-    //   onError: (error) => {
-    //     console.log("failed:getSalesInfo", error);
-    //     setSales([]);
-    //   },
-    // });
     const ops = {
         chain: process.env.REACT_APP_CHAIN_ID,
         address: marketAddress,
@@ -142,12 +114,6 @@ const SliderCarouselHome = () => {
   useEffect(async () => {
     const isWeb3Active = Moralis.ensureWeb3IsInstalled();
     
-    // if ((isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) || !Moralis.web3 || !Moralis.web3._isProvider) {
-    //   if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
-    //     await Moralis.enableWeb3();
-    //   }
-    // } 
-
     await getPayments();
     await getRecentItems();
     await getSalesInfo();

@@ -175,7 +175,10 @@ export function formatAddress(address, type) {
   return address;
 }
 
-export const videoTypes = ['m4v', 'avi', 'mpg', 'mp4', 'video/mp4', 'video/mpg', 'video/avi', 'video/m4v']
+export const videoTypes = [
+  'm4v', 'avi', 'mpg', 'mp4', 'mkv', '3gpp', 'webm', 
+  'video/mp4', 'video/mpg', 'video/avi', 'video/m4v', 'video/mkv', 'video/3gpp', 'video/webm'
+]
 
 export const audioTypes = ['mp3', 'wav', 'ogg', 'audio/mp3', 'audio/wav', 'audio/ogg']
 

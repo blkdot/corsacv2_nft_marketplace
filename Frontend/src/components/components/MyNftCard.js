@@ -61,8 +61,7 @@ const MyNftCard = ({
                   page = ''
                  }) => {
     const currentUserState = useSelector(selectors.currentUserState);
-    const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
-
+    
     const { account } = useMoralis();
     
     const dispatch = useDispatch();
@@ -296,13 +295,13 @@ const MyNftCard = ({
                       <img onLoad={onImgLoad} src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy nft__item_preview" alt=""/>
                     }
                     { nft.item_type && nft.item_type == 'video' &&
-                      <video width="100%" height="100%" controls className="lazy nft__item_preview">
-                        <source src={nft.image} type={nft.mime_type} />
+                      <video onLoadedMetadata={onImgLoad} width="100%" height="100%" controls className="lazy nft__item_preview">
+                        <source src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} type={nft.mime_type} />
                       </video>
                     }
                     { nft.item_type && nft.item_type == 'audio' &&
-                      <audio controls className="lazy nft__item_preview">
-                        <source src={nft.image} type={nft.mime_type} />
+                      <audio onLoadedMetadata={onImgLoad} controls className="lazy nft__item_preview">
+                        <source src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} type={nft.mime_type} />
                       </audio>
                     }
                   </span>

@@ -652,6 +652,71 @@ const ItemDetail = () => {
 			}
 		}
 
+		async function getBidList() {
+			try {
+				await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/bid/getBids`, {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					params: {
+						saleId: parseInt(saleInfo[0])
+					}
+				}).then(async res => {
+					let bids = [];
+					let max = 0;
+					for (let bid of res.data) {
+						let b = JSON.parse(JSON.stringify(bid));
+						b.price = new BigNumber(bid.price.$numberDecimal).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
+						bids.push(b);
+
+						if (max < b.price) {
+							max = b.price;
+						}
+					}
+					
+					nft.bids = bids;
+					setLastBidAmount(max);
+
+					if (res.data.length > 0) {
+						let lastBid = res.data[res.data.length - 1];
+						setIsBidded(lastBid.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
+					}
+				});
+			} catch {
+				console.log('error in fetching bids by saleId');
+			}
+		}
+
+		async function getHistory() {
+			try {
+				await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/activity/history`, {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					params: {
+						collectionAddr: nft.token_address.toLowerCase(),
+						tokenId: parseInt(nft.token_id ? nft.token_id : nft.tokenId)
+					}
+				}).then(async res => {
+					let history = [];
+					for (let h of res.data.history) {
+						history.push({
+							actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatAddress(h.actorUsers[0].walletAddr, 'wallet')) : '',
+							actorAvatar: h.actorUsers && h.actorUsers[0] ? h.actorUsers[0].avatar : defaultAvatar,
+							from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatAddress(h.fromUsers[0].walletAddr, 'wallet')) : '',
+							actionType: h.actionType,
+							description: h.description,
+							timeStamp: h.timeStamp * 1000
+						});
+					}
+					
+					nft.history = history;
+				});
+			} catch {
+				console.log('error in fetching history by item');
+			}
+		}
+
 		useEffect(() => {
 			if (nftDetailState == undefined) {
 				navigate('/');
@@ -694,6 +759,7 @@ const ItemDetail = () => {
 
 			if (nft) {
 				// console.log("item detail:", nft);
+				await getHistory();
 				await getSalesInfo(nft);
 			}
 		}, [nft]);
@@ -771,75 +837,9 @@ const ItemDetail = () => {
 		}, [saleInfo]);
 
 		useEffect(() => {
-			async function getBidList() {
-				try {
-          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/bid/getBids`, {
-						headers: {
-							'Content-Type': 'application/json',
-						},
-            params: {
-              saleId: parseInt(saleInfo[0])
-            }
-          }).then(async res => {
-						let bids = [];
-						let max = 0;
-						for (let bid of res.data) {
-							let b = JSON.parse(JSON.stringify(bid));
-							b.price = new BigNumber(bid.price.$numberDecimal).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
-							bids.push(b);
-
-							if (max < b.price) {
-								max = b.price;
-							}
-						}
-						
-						nft.bids = bids;
-						setLastBidAmount(max);
-
-						if (res.data.length > 0) {
-							let lastBid = res.data[res.data.length - 1];
-							setIsBidded(lastBid.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
-						}
-          });
-        } catch {
-          console.log('error in fetching bids by saleId');
-        }
-			}
-
-			async function getHistory() {
-				try {
-          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/activity/history`, {
-						headers: {
-							'Content-Type': 'application/json',
-						},
-            params: {
-              collectionAddr: nft.token_address.toLowerCase(),
-							tokenId: parseInt(nft.token_id ? nft.token_id : nft.tokenId)
-            }
-          }).then(async res => {
-						let history = [];
-						for (let h of res.data.history) {
-							history.push({
-								actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatAddress(h.actorUsers[0].walletAddr, 'wallet')) : '',
-								actorAvatar: h.actorUsers && h.actorUsers[0] ? h.actorUsers[0].avatar : defaultAvatar,
-								from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatAddress(h.fromUsers[0].walletAddr, 'wallet')) : '',
-								actionType: h.actionType,
-								description: h.description,
-								timeStamp: h.timeStamp * 1000
-							});
-						}
-						
-						nft.history = history;
-          });
-        } catch {
-          console.log('error in fetching history by item');
-        }
-			}
-
 			if (saleInfo) {
 				getBidList();
 			}
-			getHistory();
 		}, [saleInfo, symbol, decimals]);
 		
 		return (
@@ -876,9 +876,6 @@ const ItemDetail = () => {
 					{ !isPageLoading && nft && 
 						<div className='row mt-md-5 pt-md-4'>
 							<div className="col-md-6 text-center">
-									{/* <img className="img-fluid img-rounded mb-sm-30"
-										src={ nft.image ? nft.image : nft.metadata.image ? nft.metadata.image : fallbackImg} 
-										alt=""/> */}
 									{ nft.item_type && nft.item_type == 'image' &&
 										<img src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="img-fluid img-rounded mb-sm-30" alt=""/>
 									}

@@ -167,94 +167,100 @@ const NewItems = () => {
         try {
           const options = {
             address: saleInfo[3],
-            chain: process.env.REACT_APP_CHAIN_ID,
-            token_id: saleInfo[4],
+            chain: process.env.REACT_APP_CHAIN_ID
           };
 
-          const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
-          let nft = result;
+          const result = await Moralis.Web3API.token.getAllTokenIds(options);
           
-          nft.saleId = parseInt(saleInfo[0]);
-          nft.method = parseInt(saleInfo[8]);
+          const temp = result?.result.filter((nft, index) => {
+            return parseInt(nft.token_id) === parseInt(saleInfo[4]);
+          });
+          
+          if (temp.length > 0) {
+            temp[0].saleId = parseInt(saleInfo[0]);
+            temp[0].method = parseInt(saleInfo[8]);
 
-          //get seller info
-          try {
-            await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              params: {
-                walletAddr: saleInfo[2].toLowerCase()
-              }
-            }).then(res => {
-              nft.author = res.data.user;
-              if (isAuthenticated && account) {
-                nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
-              }
-            });
-          } catch (err) {
-            console.log("fetching user error:", err);
-            nft.author = null;
-          }
-
-          if (nft.metadata) {
-            if (typeof nft.metadata === "string") {
-              nft.metadata = JSON.parse(nft.metadata);
-            } else {
-              nft.metadata = nft.metadata;
+            //get seller info
+            try {
+              await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                params: {
+                  walletAddr: saleInfo[2].toLowerCase()
+                }
+              }).then(res => {
+                temp[0].author = res.data.user;
+                if (isAuthenticated && account) {
+                  temp[0].isOwner = temp[0].author && temp[0].author.walletAddr.toLowerCase() === account.toLowerCase();
+                }
+              });
+            } catch (err) {
+              console.log("fetching user error:", err);
+              temp[0].author = null;
             }
-          } else if (nft.token_uri) {
-            const response = await fetch(nft.token_uri);
-            nft.metadata = await response.json();
-          } else {
-            nft.metadata = null;
-          }
-  
-          let file = null;
-          if (nft.image) {
-            file = await getFileTypeFromURL(nft.image);
-          } else if (nft.metadata && nft.metadata.image) {
-            file = await getFileTypeFromURL(nft.metadata.image);
-          } else {
-            file = {mimeType: 'image', fileType: 'image'};
-          }
-          nft.item_type = file.fileType;
-          nft.mime_type = file.mimeType;
 
-          //get creator of nft
-          nft.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+            //get creator of nft
+            temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getNFTCreator(temp[0].metadata.creator) : null;
 
-          nft.endTime = (nft.method === 1) ? parseInt(saleInfo[10]) : null;
-          
-          if (nft.method === 0) {
-            nft.onSale = true;
-            nft.onAuction = false;
-            nft.onOffer = false;
-          } else if (nft.method === 1) {
-            nft.onSale = false;
-            nft.onAuction = true;
-            nft.onOffer = false;
-          } else if (nft.method === 2) {
-            nft.onSale = false;
-            nft.onAuction = false;
-            nft.onOffer = true;
-          } else {
-            nft.onSale = false;
-            nft.onAuction = false;
-            nft.onOffer = false;
+            temp[0].endTime = (temp[0].method === 1) ? parseInt(saleInfo[10]) : null;
+            
+            if (temp[0].method === 0) {
+              temp[0].onSale = true;
+              temp[0].onAuction = false;
+              temp[0].onOffer = false;
+            } else if (temp[0].method === 1) {
+              temp[0].onSale = false;
+              temp[0].onAuction = true;
+              temp[0].onOffer = false;
+            } else if (temp[0].method === 2) {
+              temp[0].onSale = false;
+              temp[0].onAuction = false;
+              temp[0].onOffer = true;
+            } else {
+              temp[0].onSale = false;
+              temp[0].onAuction = false;
+              temp[0].onOffer = false;
+            }
+
+            const payment = (payments.length >= parseInt(saleInfo[6]) + 1) ? payments[parseInt(saleInfo[6])] : null;
+            
+            if (payment) {
+              temp[0].price = new BigNumber(saleInfo[7]).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
+              temp[0].payment = payment;
+            }
           }
 
-          const payment = (payments.length >= parseInt(saleInfo[6]) + 1) ? payments[parseInt(saleInfo[6])] : null;
-          
-          if (payment) {
-            nft.price = new BigNumber(saleInfo[7]).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
-            nft.payment = payment;
-          }
-
-          promises.push(nft);
+          promises.push(...temp);
         } catch (e) {
           console.log(e);
         }
+      }
+
+      for (let nft of promises) {
+        if (nft.metadata) {
+          if (typeof nft.metadata === "string") {
+            nft.metadata = JSON.parse(nft.metadata);
+          } else {
+            nft.metadata = nft.metadata;
+          }
+        } else if (nft.token_uri) {
+          const response = await fetch(nft.token_uri);
+          nft.metadata = await response.json();
+        } else {
+          nft.metadata = null;
+        }
+
+        let file = null;
+        if (nft.image) {
+          file = await getFileTypeFromURL(nft.image);
+        } else if (nft.metadata && nft.metadata.image) {
+          file = await getFileTypeFromURL(nft.metadata.image);
+        } else {
+          file = {mimeType: 'image', fileType: 'image'};
+        }
+        nft.item_type = file.fileType;
+        nft.mime_type = file.mimeType;
       }
 
       // console.log("new items:", promises);
