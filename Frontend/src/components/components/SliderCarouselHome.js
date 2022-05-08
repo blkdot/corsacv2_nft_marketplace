@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import Slider from "react-slick";
+import { useMoralis } from "react-moralis";
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { carouselCollectionSingle, fallbackImg } from './constants';
@@ -8,9 +9,7 @@ import * as actions from '../../store/actions/thunks';
 import { navigate } from "@reach/router";
 import axios from "axios";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
-import BigNumber from "bignumber.js";
-import { getFileTypeFromURL } from "../../utils";
+import { getFileTypeFromURL, getPayments } from "../../utils";
 
 const SliderCarouselHome = () => {
   const dispatch = useDispatch();
@@ -19,12 +18,9 @@ const SliderCarouselHome = () => {
   const [sales, setSales] = useState([]);
   const [items, setItems] = useState([]);
   const [newItems, setNewItems] = useState([]);
-  const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI } = useMoralisDapp();
-  const Web3Api = useMoralisWeb3Api();
   const { account, Moralis, isAuthenticated, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
-  const { chainId } = useChain();
-
+  
   const getSalesInfo = async () => {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
@@ -42,35 +38,6 @@ const SliderCarouselHome = () => {
       const data = await Moralis.Web3API.native.runContractFunction(ops);
       setSales(data);
   };
-
-  async function getPayments() {
-    try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          allowed: 1
-        }
-      }).then(async res => {
-        let payments = [];
-        for (let p of res.data.payments) {
-          payments.push({
-            value: p.id, 
-            label: p.title + " (" + p.symbol + ")", 
-            addr: p.addr, 
-            title: p.title, 
-            type: p.type,
-            symbol: p.symbol,
-            decimals: p.decimals
-          });
-        }
-        setPayments(payments);
-      });
-    } catch {
-      console.log('error in fetching payments');
-    }
-  }
 
   async function getRecentItems() {
     try {
@@ -108,13 +75,14 @@ const SliderCarouselHome = () => {
 
   const handleBuyClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate('/item-detail');
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
   };
 
   useEffect(async () => {
     const isWeb3Active = Moralis.ensureWeb3IsInstalled();
     
-    await getPayments();
+    setPayments(await getPayments());
+
     await getRecentItems();
     await getSalesInfo();
   }, [isWeb3Enabled, !isWeb3EnableLoading]);

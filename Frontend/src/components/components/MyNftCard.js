@@ -88,7 +88,7 @@ const MyNftCard = ({
 
     const handleBuyClick = (nft) => {
       dispatch(actions.setBuyNFT(nft));
-      navigateTo('/item-detail');
+      navigateTo(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
     };
 
     const handleCancelSaleClick = async (nft) => {
@@ -338,12 +338,18 @@ const MyNftCard = ({
                   </>
                   ) : (
                     (nft.onSale || nft.onOffer || nft.onAuction) ? (
+                      <>
                       <span onClick={() => handleCancelSaleClick(nft)}>
                         Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
-                      </span>
+                      </span><br/>
+                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`)}>View Item</span>
+                      </>
                     )
                     : (
-                      <span onClick={() => handleSellClick(nft)}>Create Sale</span>
+                      <>
+                      <span onClick={() => handleSellClick(nft)}>Create Sale</span><br/>
+                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`)}>View Item</span>
+                      </>
                     )
                   )}
                 </div>

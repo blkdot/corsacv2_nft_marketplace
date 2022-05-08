@@ -34,8 +34,8 @@ export const setCurrentUser = (walletAddr) => async (dispatch) => {
         dispatch(actions.setCurrentUser(res.data.user));
       } else {
         dispatch(actions.setCurrentUser({
-          walletAddr: '',
-          name: 'Unregistered User',
+          walletAddr: walletAddr,
+          name: walletAddr,
           avatar: null,
           banner: null,
           about: null,

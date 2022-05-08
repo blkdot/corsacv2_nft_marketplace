@@ -1,13 +1,11 @@
 import React, { memo, useEffect, useState } from 'react';
 import MyNftCard from './MyNftCard';
-import NftMusicCard from './NftMusicCard';
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import { useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
 import { Spin } from "antd";
 import styled from 'styled-components';
 import BigNumber from 'bignumber.js';
-import axios from "axios";
-import { getFileTypeFromURL } from '../../utils';
+import { getFileTypeFromURL, getPayments, getUserInfo } from '../../utils';
 import { fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
@@ -26,10 +24,8 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
 
   const [isExplorerLoading, setIsExplorerLoading] = useState(true);
 
-  const contractProcessor = useWeb3ExecuteFunction();
-  const { marketAddress, contractABI, corsacTokenAddress } = useMoralisDapp();
+  const { marketAddress, contractABI } = useMoralisDapp();
   const listItemFunction = "getSaleInfo";
-  const Web3Api = useMoralisWeb3Api();
   const { Moralis, account, isAuthenticated } = useMoralis();
   const { data, error, isLoading } = useMoralisQuery("SalesList");
   
@@ -89,55 +85,6 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
     // console.log("saleInfo:", data);
     setSaleNFTs(data);
   }
-
-  async function getPayments() {
-    try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          allowed: 1
-        }
-      }).then(async res => {
-        let payments = [];
-        for (let p of res.data.payments) {
-          payments.push({
-            value: p.id, 
-            label: p.title + " (" + p.symbol + ")", 
-            addr: p.addr, 
-            title: p.title, 
-            type: p.type,
-            symbol: p.symbol,
-            decimals: p.decimals
-          });
-        }
-        setPayments(payments);
-      });
-    } catch {
-      console.log('error in fetching payments');
-    }
-  }
-
-  const getNFTCreator = async (walletAddr) => {
-    let creator = null;
-    
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {
-        walletAddr: walletAddr.toLowerCase()
-      }
-    }).then(res => {
-      creator = res.data.user;
-    }).catch(err => {
-      console.log(err);
-      creator = null;
-    });
-            
-    return creator;
-  };
 
   async function fetchAPIData() {
     if (saleNFTs && saleNFTs.length > 0) {
@@ -204,7 +151,7 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
         }
 
         //get creator of NFT
-        nft.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+        nft.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
 
         const marketItem = getMarketItem(nft);
         // console.log("nft:", nft);
@@ -214,24 +161,10 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
           nft.seller = marketItem.seller;
 
           //get author/seller info
-          try {
-            await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              params: {
-                walletAddr: nft.seller.toLowerCase()
-              }
-            }).then(res => {
-              nft.author = res.data.user;
-              // console.log("account:", account);
-              if (isAuthenticated && account) {
-                nft.isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
-              }
-            });
-          } catch (err) {
-            console.log("fetching user error:", err);
-            nft.author = null;
+          nft.author = await getUserInfo(nft.seller.toLowerCase());
+
+          if (isAuthenticated && account) {
+            nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
           }
 
           if (parseInt(marketItem.method) === 0x00) {
@@ -325,10 +258,14 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
     setIsExplorerLoading(false);
   }
 
-  useEffect(async () => {
+  useEffect(() => {
+    async function getBaseData() {
+      setPayments(await getPayments());
+      await getSalesInfo();
+    }
+
     setIsExplorerLoading(true);
-    await getPayments();
-    await getSalesInfo();
+    getBaseData();
   }, [filterCategories, filterSaleTypes, filterPayments, filterCollections]);
 
   useEffect(() => {

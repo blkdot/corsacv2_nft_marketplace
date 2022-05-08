@@ -1,6 +1,8 @@
+import axios from "axios";
 import moment from "moment";
 // import mm from "music-metadata";
 import { makeTokenizer } from "@tokenizer/http";
+import { defaultAvatar } from "./components/components/constants";
 
 export function debounce(func, wait, immediate) {
   var timeout;
@@ -161,6 +163,18 @@ export function getSymbolByChainId(chainId) {
   return 'Unknown';
 }
 
+export function formatUserName(name) {
+  if (!name) {
+    return 'Unknown';
+  }
+
+  if (name.length == 42) {
+    return name.substr(0, 5) + "..." + name.substr(name.length - 4, 4);
+  } else {
+    return name.substr(0, 20) + (name.length > 20 ? "..." : "");
+  }
+}
+
 export function formatAddress(address, type) {
   if (address.length != 42) {
     return address;
@@ -195,4 +209,84 @@ export async function getFileTypeFromURL(url) {
   }
 
   return {mimeType: mimeType, fileType: fileType};
+}
+
+export async function getUserInfo(walletAddr) {
+  let user = null;
+  
+  await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: {
+      walletAddr: walletAddr.toLowerCase()
+    }
+  }).then(res => {
+    user = res.data.user;
+  }).catch(err => {
+    console.log(err);
+    user = null;
+  });
+          
+  return user;
+};
+
+export async function getPayments() {
+  let payments = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        allowed: 1
+      }
+    }).then(res => {
+      for (let p of res.data.payments) {
+        payments.push({
+          value: p.id, 
+          label: p.title + " (" + p.symbol + ")", 
+          addr: p.addr, 
+          title: p.title, 
+          type: p.type,
+          symbol: p.symbol,
+          decimals: p.decimals
+        });
+      }
+    });
+  } catch {
+    console.log('error in fetching payments');
+  }
+
+  return payments;
+}
+
+export async function getHistory(collectionAddr, tokenId) {
+  let hs = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/activity/history`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        collectionAddr: collectionAddr.toLowerCase(),
+        tokenId: parseInt(tokenId)
+      }
+    }).then(async res => {
+      for (let h of res.data.history) {
+        hs.push({
+          actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatAddress(h.actorUsers[0].walletAddr, 'wallet')) : h.actor,
+          actorAvatar: h.actorUsers && h.actorUsers[0] ? h.actorUsers[0].avatar : defaultAvatar,
+          from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatAddress(h.fromUsers[0].walletAddr, 'wallet')) : h.from,
+          actionType: h.actionType,
+          description: h.description,
+          timeStamp: h.timeStamp * 1000
+        });
+      }
+    });
+  } catch {
+    console.log('error in fetching history by item');
+  }
+
+  return hs;
 }

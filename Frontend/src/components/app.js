@@ -30,10 +30,6 @@ import Helpcenter from './pages/helpcenter';
 import Helpcentergrey from './pages/helpcenterGrey';
 import Colection from './pages/colection';
 import Colectiongrey from './pages/colectionGrey';
-// import ItemDetail from './pages/ItemDetail';
-import ItemDetailRedux from './pages/ItemDetailRedux';
-// import ItemDetailReduxgrey from './pages/ItemDetailReduxGrey';
-import ItemDetail from './pages/ItemDetail';
 import Author from './pages/Author';
 import AuthorGrey from './pages/AuthorGrey';
 import AuthorOpensea from './pages/Opensea/author';
@@ -77,6 +73,7 @@ import MyCollections from "./pages/myCollections";
 import LiveAuction from "./pages/LiveAuction";
 import About from "./pages/About";
 import Faq from "./pages/faq";
+import Item from "./pages/Item";
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -116,35 +113,39 @@ const App = ({ isServerInfo }) => {
     }
   });
 
-  useEffect(async () => {
-    const connectorId = window.localStorage.getItem("connectorId");
-    // console.log("connectorId:", connectorId);
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("isWeb3Enabled:", isWeb3Enabled);
-    console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
-    // console.log("window.web3:", window.web3);
-    // console.log("window.ethereum:", window.ethereum);
-    // if (isAuthenticated && account) {
-    //   navigate("/profile/" + account.toLowerCase());
-    // }
-    
-    // if ((isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) || !Moralis.web3 || !Moralis.web3._isProvider) {
-    //   if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
-    //     await enableWeb3({ provider: connectorId });
-    //   }
-    // }
-
-    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
-      if (connectorId) {
-        await enableWeb3({ provider: connectorId });
-      } else {
-        await enableWeb3();
+  useEffect(() => {
+    async function initializeWeb3() {
+      const connectorId = window.localStorage.getItem("connectorId");
+      // console.log("connectorId:", connectorId);
+      console.log("isAuthenticated:", isAuthenticated);
+      console.log("isWeb3Enabled:", isWeb3Enabled);
+      console.log("isWeb3EnableLoading:", isWeb3EnableLoading);
+      // console.log("window.web3:", window.web3);
+      // console.log("window.ethereum:", window.ethereum);
+      // if (isAuthenticated && account) {
+      //   navigate("/profile/" + account.toLowerCase());
+      // }
+      
+      // if ((isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) || !Moralis.web3 || !Moralis.web3._isProvider) {
+      //   if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
+      //     await enableWeb3({ provider: connectorId });
+      //   }
+      // }
+  
+      if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) {
+        if (connectorId) {
+          await enableWeb3({ provider: connectorId });
+        } else {
+          await enableWeb3();
+        }
       }
+  
+      if (account) {
+        dispatch(actions.setCurrentUser(account));
+      }  
     }
 
-    if (account) {
-      dispatch(actions.setCurrentUser(account));
-    }
+    initializeWeb3();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled, account]);
 
@@ -179,9 +180,6 @@ const App = ({ isServerInfo }) => {
           <Helpcentergrey path="/helpcenterGrey" />
           <Colection path="/colection/:collectionId" />
           <Colectiongrey path="/colectionGrey/:collectionId" />
-          <ItemDetailRedux path="/ItemDetail/:nftId" />
-          {/* <ItemDetailReduxgrey path="/ItemDetailGrey/:nftId" /> */}
-          <ItemDetail path="/item-detail" />
           <Author path="/Author/:authorId" />
           <Profile path="/profile/:userAddr" />
           <AuthorGrey path="/AuthorGrey/:authorId" />
@@ -225,6 +223,7 @@ const App = ({ isServerInfo }) => {
           <LiveAuction path="/liveAuction" />
           <About path="/about" />
           <Faq path="/faq" />
+          <Item path="/collection/:collectionAddr/:tokenId" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

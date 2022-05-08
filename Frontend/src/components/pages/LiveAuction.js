@@ -3,12 +3,10 @@ import React, { memo, useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import * as selectors from '../../store/selectors';
 import * as actions from '../../store/actions/thunks';
-import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
+import { useMoralis } from "react-moralis";
 import Footer from '../components/footer';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-
-import axios from "axios";
 
 import { navigate } from "@reach/router";
 
@@ -18,7 +16,7 @@ import styled from 'styled-components';
 
 import BigNumber from "bignumber.js";
 import { createGlobalStyle } from 'styled-components';
-import { getFileTypeFromURL } from "../../utils";
+import { getFileTypeFromURL, getPayments, getUserInfo } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 //IMPORT DYNAMIC STYLED COMPONENT
@@ -78,13 +76,12 @@ const LiveAuction = () => {
   
   const { account, Moralis, isAuthenticated } = useMoralis();
   const { marketAddress, contractABI } = useMoralisDapp();
-  const contractProcessor = useWeb3ExecuteFunction();
-  
+    
   const [auctions, setAuctions] = useState([]);
   const [saleNFTs, setSaleNFTs] = useState([]);
   const [payments, setPayments] = useState([]);
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadingTitle, setLoadingTitle] = useState("Loading...");
 
   const [height, setHeight] = useState(210);
@@ -118,70 +115,24 @@ const LiveAuction = () => {
     setSaleNFTs(sales);
   }
 
-  async function getPayments() {
-    try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          allowed: 1
-        }
-      }).then(async res => {
-        let payments = [];
-        for (let p of res.data.payments) {
-          payments.push({
-            value: p.id, 
-            label: p.title + " (" + p.symbol + ")", 
-            addr: p.addr, 
-            title: p.title, 
-            type: p.type,
-            symbol: p.symbol,
-            decimals: p.decimals
-          });
-        }
-        setPayments(payments);
-      });
-    } catch {
-      console.log('error in fetching payments');
-    }
-  }
-
-  const getNFTCreator = async (walletAddr) => {
-    let creator = null;
-    
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {
-        walletAddr: walletAddr.toLowerCase()
-      }
-    }).then(res => {
-      creator = res.data.user;
-    }).catch(err => {
-      console.log(err);
-      creator = null;
-    });
-            
-    return creator;
-  };
-
   const handleBuyClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate('/item-detail');
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
   };
 
-  useEffect(async () => {
-    setLoading(true);
-    await getPayments();
-    await getSalesInfo();
+  useEffect(() => {
+    async function getBaseData() {
+      setPayments(await getPayments());
+      await getSalesInfo();
+    }
+
+    getBaseData();
   }, []);
 
-  useEffect(async () => {
-    if (saleNFTs.length > 0) {
+  useEffect(() => {
+    async function getLiveAuctions() {
       setLoading(true);
-      
+
       let nfts = [];
       for (let sale of saleNFTs) {
         try {
@@ -232,30 +183,17 @@ const LiveAuction = () => {
             }
 
             //get author/seller info
-            try {
-              await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                params: {
-                  walletAddr: sale[2].toLowerCase()
-                }
-              }).then(res => {
-                temp[0].author = res.data.user;
-                if (isAuthenticated && account) {
-                  temp[0].isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
-                }
-              });
-            } catch (err) {
-              console.log("fetching user error:", err);
-              temp[0].author = null;
-            }
+            temp[0].author = await getUserInfo(sale[2].toLowerCase());
 
+            if (isAuthenticated && account) {
+              temp[0].isOwner = temp[0].author && temp[0].author.walletAddr.toLowerCase() === account.toLowerCase();
+            }
+            
             //set endTime
             temp[0].endTime = parseInt(sale[10]);
 
             //get creator of NFT
-            temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getNFTCreator(temp[0].metadata.creator) : null;
+            temp[0].creator = temp[0].metadata && temp[0].metadata.creator ? await getUserInfo(temp[0].metadata.creator) : null;
 
             //check sale type
             if (parseInt(sale[8]) === 0x00) {
@@ -293,8 +231,12 @@ const LiveAuction = () => {
           console.log(e);
         }
       }
-      setLoading(false);
+
       setAuctions(nfts);
+      setLoading(false);
+    }
+    if (saleNFTs.length > 0) {
+      getLiveAuctions();
     } else {
       setLoading(false);
     }

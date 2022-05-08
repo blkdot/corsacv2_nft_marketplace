@@ -1,17 +1,16 @@
 import React, { memo, useEffect, useState } from 'react';
 import { Modal, Spin } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction } from "react-moralis";
+import { useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction } from "react-moralis";
 import axios from "axios";
 import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 import Countdown from 'react-countdown';
 import { navigate } from '@reach/router';
-import api from "../../core/api";
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { defaultAvatar, fallbackImg } from './constants';
-import { getFileTypeFromURL } from '../../utils';
+import { getFileTypeFromURL, getPayments, getUserInfo } from '../../utils';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -53,9 +52,7 @@ const NewItems = () => {
 
   const [height, setHeight] = useState(210);
 
-  const contractProcessor = useWeb3ExecuteFunction();
-  const { isAuthenticated, account, Moralis, isWeb3Enabled, isWeb3EnableLoading } = useMoralis();
-  const { native } = useMoralisWeb3Api();
+  const { isAuthenticated, account, Moralis } = useMoralis();
   const { marketAddress, contractABI } = useMoralisDapp();
 
   const [loading, setLoading] = useState(true);
@@ -73,35 +70,6 @@ const NewItems = () => {
     }
   }
   
-  async function getPayments() {
-    try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          allowed: 1
-        }
-      }).then(async res => {
-        let payments = [];
-        for (let p of res.data.payments) {
-          payments.push({
-            value: p.id, 
-            label: p.title + " (" + p.symbol + ")", 
-            addr: p.addr, 
-            title: p.title, 
-            type: p.type,
-            symbol: p.symbol,
-            decimals: p.decimals
-          });
-        }
-        setPayments(payments);
-      });
-    } catch {
-      console.log('error in fetching payments');
-    }
-  }
-
   async function getSalesInfo() {
     const ops = {
       chain: process.env.REACT_APP_CHAIN_ID,
@@ -118,29 +86,9 @@ const NewItems = () => {
     setSaleNFTs(data);
   }
 
-  const getNFTCreator = async (walletAddr) => {
-    let creator = null;
-    
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {
-        walletAddr: walletAddr.toLowerCase()
-      }
-    }).then(res => {
-      creator = res.data.user;
-    }).catch(err => {
-      console.log(err);
-      creator = null;
-    });
-            
-    return creator;
-  };
-
   const handleItemClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate('/item-detail');
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
   };
 
   useEffect(async () => {
@@ -148,7 +96,7 @@ const NewItems = () => {
     if (window.web3 === undefined && window.ethereum === undefined){
       return;
     }
-    await getPayments();
+    setPayments(await getPayments());
     await getSalesInfo();
   }, []);
 
@@ -160,7 +108,7 @@ const NewItems = () => {
       for (let saleInfo of saleNFTs) {
         //check if sale is new
         const currentTime = Math.floor(new Date().getTime() / 1000);
-        if (currentTime - parseInt(saleInfo.startTime) > NEW_ITEM_DURATION) {
+        if (currentTime - parseInt(saleInfo[9]) > NEW_ITEM_DURATION) {
           continue;
         }
         
@@ -222,7 +170,7 @@ const NewItems = () => {
           nft.mime_type = file.mimeType;
 
           //get creator of nft
-          nft.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+          nft.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
 
           nft.endTime = (nft.method === 1) ? parseInt(saleInfo[10]) : null;
           

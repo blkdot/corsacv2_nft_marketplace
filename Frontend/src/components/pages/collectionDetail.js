@@ -8,7 +8,6 @@ import Footer from '../components/footer';
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 
 import axios from "axios";
-import api from "../../core/api";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
@@ -21,7 +20,7 @@ import Countdown from 'react-countdown';
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import { defaultAvatar, fallbackImg } from "../components/constants";
-import { getFileTypeFromURL } from "../../utils";
+import { getFileTypeFromURL, getUserInfo } from "../../utils";
 
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
@@ -54,10 +53,8 @@ const Collection = props => {
 
   const dispatch = useDispatch();
 
-  const { account, Moralis, isAuthenticated, isWeb3EnableLoading, isWeb3Enabled } = useMoralis();
-  const { chainId } = useChain();
+  const { account, Moralis, isAuthenticated } = useMoralis();
   const { marketAddress, contractABI } = useMoralisDapp();
-  const contractProcessor = useWeb3ExecuteFunction();
   const Web3Api = useMoralisWeb3Api();
 
   const [collection, setCollection] = useState({});
@@ -73,10 +70,10 @@ const Collection = props => {
   const [height, setHeight] = useState(210);
   const [clockTop, setClockTop] = useState(true);
 
-  const onImgLoad = ({target:img}) => {
+  const onImgLoad = (e) => {
     let currentHeight = height;
-    if(currentHeight < img.offsetHeight) {
-        setHeight(img.offsetHeight);
+    if(currentHeight < e.target.offsetHeight) {
+        setHeight(e.target.offsetHeight);
     }
   }
 
@@ -98,27 +95,7 @@ const Collection = props => {
 
   const handleItemClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate('/item-detail');
-  };
-
-  const getNFTCreator = async (walletAddr) => {
-    let creator = null;
-    
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {
-        walletAddr: walletAddr.toLowerCase()
-      }
-    }).then(res => {
-      creator = res.data.user;
-    }).catch(err => {
-      console.log(err);
-      creator = null;
-    });
-            
-    return creator;
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
   };
 
   async function getFetchItems() {
@@ -196,7 +173,6 @@ const Collection = props => {
 
       const options = {
         address: c.collectionAddr,
-        // chain: chainId,
         chain: process.env.REACT_APP_CHAIN_ID,
       };
 
@@ -234,23 +210,10 @@ const Collection = props => {
         };
         const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
         //get author/seller info
-        try {
-          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            params: {
-              walletAddr: tokenIdMetadata.owner_of.toLowerCase()
-            }
-          }).then(res => {
-            nft.author = res.data.user;
-            if (isAuthenticated && account) {
-              nft.isOwner = res.data.user && res.data.user.walletAddr.toLowerCase() === account.toLowerCase();
-            }
-          });
-        } catch (err) {
-          console.log("fetching user error:", err);
-          nft.author = null;
+        nft.author = await getUserInfo(tokenIdMetadata.owner_of.toLowerCase());
+
+        if (isAuthenticated && account) {
+          nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
         }
 
         if (nft.metadata) {
@@ -307,7 +270,7 @@ const Collection = props => {
         nft.metadata = metadata;
 
         let tempNFT = {};
-        tempNFT.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+        tempNFT.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
         tempNFT.author = nft.author ? nft.author : null;
         tempNFT.metadata = metadata;
         tempNFT.token_address = nft.token_address;
@@ -472,7 +435,7 @@ const Collection = props => {
                       />
                   }
                   <div className="nft__item_info">
-                      <span onClick={() => navigate(nft.nft_link ? `${nft.nft_link}/${nft.id}` : '')}>
+                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`)}>
                         <h4>{nft.name}</h4>
                       </span>
                       { (nft.onSale || nft.onOffer || nft.onAuction) &&

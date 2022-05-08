@@ -5,14 +5,14 @@ import Footer from '../components/footer';
 import * as selectors from '../../store/selectors';
 
 /*import Checkout from "../components/Checkout";*/
-import api from "../../core/api";
+
 import axios from "axios";
 import moment from "moment";
 import { navigate } from '@reach/router';
 import BigNumber from 'bignumber.js';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {useChain, useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction, useMoralisQuery} from "react-moralis";
+import { useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction } from "react-moralis";
 import Countdown from 'react-countdown';
 
 //IMPORT DYNAMIC STYLED COMPONENT
@@ -20,7 +20,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button } from "antd";
 import styled from 'styled-components';
-import { formatAddress } from "../../utils";
+import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 const StyledSpin = styled(Spin)`
@@ -80,7 +80,7 @@ const PlaceBidModal = styled(Modal)`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-const ItemDetail = () => {
+const Item = props => {
 		const currentUserState = useSelector(selectors.currentUserState);
 
     const inputColorStyle = {
@@ -91,23 +91,19 @@ const ItemDetail = () => {
     const [openMenu, setOpenMenu] = useState(false);
     const [openMenu1, setOpenMenu1] = useState(false);
 		
-    const nftDetailState = useSelector(selectors.buyNFTState);
-
-		const contractProcessor = useWeb3ExecuteFunction();
-    const {marketAddress, contractABI, corsacTokenAddress, corsacTokenABI} = useMoralisDapp();
+    const contractProcessor = useWeb3ExecuteFunction();
+    const { marketAddress, contractABI } = useMoralisDapp();
 		const Web3Api = useMoralisWeb3Api();
-		const {account, Moralis} = useMoralis();
-		const {chainId} = useChain();
-
-    const listItemFunction = "getSaleInfo";
+		const { isAuthenticated, account, Moralis, isInitialized } = useMoralis();
 		
-		const [saleInfo, setSaleInfo] = useState(null);
 		const [nft, setNFT] = useState(null);
 
 		const [basePrice, setBasePrice] = useState(0);
 		const [yourBalance, setYourBalance] = useState(0);
 		const [serviceFee, setServiceFee] = useState(0);
 		const [serviceFeePercent, setServiceFeePercent] = useState(0);
+		const [royaltyFee, setRoyaltyFee] = useState(0);
+		const [royaltyFeePercent, setRoyaltyFeePercent] = useState(0);
 		const [payments, setPayments] = useState([]);
 		const [payment, setPayment] = useState(0);
 		const [decimals, setDecimals] = useState(null);
@@ -135,6 +131,8 @@ const ItemDetail = () => {
 
 		const [isWalletConnected, setIsWalletConnected] = useState(true);
 		const [isBidded, setIsBidded] = useState(false);
+
+		const [foundNFT, setFoundNFT] = useState(true);
 
 		const renderer = props => {
 			if (props.completed) {
@@ -184,7 +182,7 @@ const ItemDetail = () => {
 
 			setIsCheckoutLoading(true);
 
-			if ((basePrice + serviceFee) > yourBalance) {
+			if ((basePrice + serviceFee + royaltyFee) > yourBalance) {
 				setNotAvailableBalance(true);
 			}
 			
@@ -192,9 +190,32 @@ const ItemDetail = () => {
 			if (payment != 0x0) {
 				// in case ERC-20 token, not stable coin
 				const ops = {
-					contractAddress: corsacTokenAddress,
+					contractAddress: nft.payment.addr,
 					functionName: "allowance",
-					abi: corsacTokenABI,
+					abi: [{
+						"inputs": [
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "spender",
+								"type": "address"
+							}
+						],
+						"name": "allowance",
+						"outputs": [
+							{
+								"internalType": "uint256",
+								"name": "",
+								"type": "uint256"
+							}
+						],
+						"stateMutability": "view",
+						"type": "function"
+					}],
 					params: {
 						owner: account,
 						spender: marketAddress
@@ -235,7 +256,7 @@ const ItemDetail = () => {
 
 			setIsCheckoutLoading(true);
 
-			if ((basePrice + serviceFee) > yourBalance) {
+			if ((basePrice + serviceFee + royaltyFee) > yourBalance) {
 				setNotAvailableBalance(true);
 			}
 			
@@ -284,7 +305,7 @@ const ItemDetail = () => {
 			setIsCheckoutLoading(true);
 
 			// check bidAmount
-			const amount = bidAmount + bidAmount * serviceFeePercent / 100;
+			const amount = bidAmount + bidAmount * (serviceFeePercent + royaltyFeePercent) / 100;
 			if (bidAmount < basePrice || amount >= yourBalance) {
 				setIsCheckoutLoading(false);
 				setInvalidBidAmount(true);
@@ -299,9 +320,32 @@ const ItemDetail = () => {
 			if (payment != 0x0) {
 				// in case ERC-20 token, not stable coin
 				const ops = {
-					contractAddress: corsacTokenAddress,
+					contractAddress: nft.payment.addr,
 					functionName: "allowance",
-					abi: corsacTokenABI,
+					abi: [{
+						"inputs": [
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "spender",
+								"type": "address"
+							}
+						],
+						"name": "allowance",
+						"outputs": [
+							{
+								"internalType": "uint256",
+								"name": "",
+								"type": "uint256"
+							}
+						],
+						"stateMutability": "view",
+						"type": "function"
+					}],
 					params: {
 						owner: account,
 						spender: marketAddress
@@ -312,11 +356,10 @@ const ItemDetail = () => {
 					params: ops,
 					onSuccess: async (result) => {
 						console.log("success");
-						
 						const allowance = (new BigNumber(result._hex, 16)).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
 						console.log("allowance:", allowance);
 
-						if (bidAmount + serviceFee > allowance) {
+						if (bidAmount + serviceFee + royaltyFee > allowance) {
 							approveToken('bid');
 						} else {
 							await placeBid();
@@ -340,9 +383,9 @@ const ItemDetail = () => {
 			// const amount = (new BigNumber(2)).pow(256) - 1;
 			let amount = 0;
 			if (type === 'buy') {
-				amount = Moralis.Units.Token(basePrice + serviceFee, decimals);
+				amount = Moralis.Units.Token(basePrice + serviceFee + royaltyFee, decimals);
 			} else if (type === 'bid') {
-				amount = Moralis.Units.Token(bidAmount + bidAmount * serviceFeePercent / 100, decimals);
+				amount = Moralis.Units.Token(bidAmount + bidAmount * (serviceFeePercent + royaltyFeePercent) / 100, decimals);
 			} else {
 				return;
 			}
@@ -400,13 +443,13 @@ const ItemDetail = () => {
 
 		const buyItem = async () => {
 			console.log("buyItem");
-			const totalPrice = Moralis.Units.Token(basePrice + serviceFee, decimals);
+			const totalPrice = Moralis.Units.Token(basePrice + serviceFee + royaltyFee, decimals);
 			const ops = {
 				contractAddress: marketAddress,
 				functionName: "buy",
 				abi: contractABI,
 				params: {
-					saleId: parseInt(saleInfo[0]),
+					saleId: parseInt(nft.saleId),
 				},
 				msgValue: totalPrice,
 			};
@@ -419,7 +462,7 @@ const ItemDetail = () => {
 					//save activity
 					try {
 						const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
-						const description = currentUserState.data.name + ": bought a item - " + itemName;
+						const description = currentUserState.data.name + ": purchased a item - " + itemName;
 			
 						const res = await axios.post(
 							`${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
@@ -453,17 +496,15 @@ const ItemDetail = () => {
 			setPlaceBidErrorMsg('');
 			setPlaceBidError(false);
 
-			// console.log("placeBid");
 			const price = bidAmount * (new BigNumber(10).pow(decimals)).toNumber();
-			const totalPrice = Moralis.Units.Token(bidAmount + bidAmount * serviceFeePercent / 100, decimals);
-			// console.log("bid Amount:", price);
-			// console.log("totalPrice:", totalPrice);
+			const totalPrice = Moralis.Units.Token(bidAmount + bidAmount * (serviceFeePercent + royaltyFeePercent) / 100, decimals);
+			
 			const ops = {
 				contractAddress: marketAddress,
 				functionName: "placeBid",
 				abi: contractABI,
 				params: {
-					saleId: parseInt(saleInfo[0]),
+					saleId: parseInt(nft.saleId),
 					price: totalPrice
 				},
 				msgValue: totalPrice
@@ -530,35 +571,6 @@ const ItemDetail = () => {
 			});
 		}
 
-		async function getPayments() {
-			try {
-				await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					params: {
-						allowed: 1
-					}
-				}).then(async res => {
-					let payments = [];
-					for (let p of res.data.payments) {
-						payments.push({
-							value: p.id, 
-							label: p.title + " (" + p.symbol + ")", 
-							addr: p.addr, 
-							title: p.title, 
-							type: p.type,
-							symbol: p.symbol,
-							decimals: p.decimals
-						});
-					}
-					setPayments(payments);
-				});
-			} catch {
-				console.log('error in fetching payments');
-			}
-		}
-
 		const handleCancelClick = async (nft) => {
 			let functionName = null;
 			let action = null;
@@ -592,7 +604,7 @@ const ItemDetail = () => {
 					functionName: functionName,
 					abi: contractABI,
 					params: {
-						saleId: parseInt(saleInfo[0]),
+						saleId: parseInt(nft.saleId),
 					},
 				};
 				await contractProcessor.fetch({
@@ -650,218 +662,248 @@ const ItemDetail = () => {
 			}
 		}
 
-		async function getBidList() {
+		async function getNFTData(collectionAddr, tokenId) {
+			setIsPageLoading(true);
+
+			//get payments data
+			const payments = await getPayments();
+
+			//get sales data
+			const ops = {
+				chain: process.env.REACT_APP_CHAIN_ID,
+				address: marketAddress,
+				function_name: "getSaleInfo",
+				abi: contractABI,
+				params: {
+					startIdx: "0",
+					count: "100000"
+				},
+			};
+	
+			const sales = await Moralis.Web3API.native.runContractFunction(ops);
+			
+			const options = {
+				chain: process.env.REACT_APP_CHAIN_ID,
+				address: collectionAddr,
+				token_id: tokenId,
+			};
+
+			if (!isInitialized || !Moralis.Web3API) {
+				const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+				const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+
+				Moralis.start({
+					serverUrl: SERVER_URL,
+					appId: APP_ID
+				});
+			}
+			
+			let nft = null;
 			try {
-				await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/bid/getBids`, {
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					params: {
-						saleId: parseInt(saleInfo[0])
-					}
-				}).then(async res => {
-					let bids = [];
-					let max = 0;
-					for (let bid of res.data) {
-						let b = JSON.parse(JSON.stringify(bid));
-						b.price = new BigNumber(bid.price.$numberDecimal).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
-						bids.push(b);
-
-						if (max < b.price) {
-							max = b.price;
-						}
-					}
-					
-					nft.bids = bids;
-					setLastBidAmount(max);
-
-					if (res.data.length > 0) {
-						let lastBid = res.data[res.data.length - 1];
-						setIsBidded(lastBid.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
-					}
-				});
-			} catch {
-				console.log('error in fetching bids by saleId');
-			}
-		}
-
-		async function getHistory() {
-			try {
-				await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/activity/history`, {
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					params: {
-						collectionAddr: nft.token_address.toLowerCase(),
-						tokenId: parseInt(nft.token_id ? nft.token_id : nft.tokenId)
-					}
-				}).then(async res => {
-					let history = [];
-					for (let h of res.data.history) {
-						history.push({
-							actor: (h.actorUsers && h.actorUsers[0]) ? (h.actorUsers[0].name ? h.actorUsers[0].name : formatAddress(h.actorUsers[0].walletAddr, 'wallet')) : '',
-							actorAvatar: h.actorUsers && h.actorUsers[0] ? h.actorUsers[0].avatar : defaultAvatar,
-							from: (h.fromUsers && h.fromUsers[0]) ? (h.fromUsers[0].name ? h.fromUsers[0].name : formatAddress(h.fromUsers[0].walletAddr, 'wallet')) : '',
-							actionType: h.actionType,
-							description: h.description,
-							timeStamp: h.timeStamp * 1000
-						});
-					}
-					
-					nft.history = history;
-				});
-			} catch {
-				console.log('error in fetching history by item');
-			}
-		}
-
-		useEffect(() => {
-			if (nftDetailState == undefined) {
-				navigate('/');
-			} else {
-				setNFT(nftDetailState.data);
-
-				getPayments();
-			}
-    }, [nftDetailState]);
-
-		useEffect(() => {
-			async function getSalesInfo(nft) {
-        const ops = {
-					chain: process.env.REACT_APP_CHAIN_ID,
-          address: marketAddress,
-          function_name: listItemFunction,
-          abi: contractABI,
-          params: {
-            startIdx: "0",
-            count: "100000"
-          },
-        };
-				const result = await Moralis.Web3API.native.runContractFunction(ops);
-				const sales = result.filter((sale, index) => {
-					return (nft.token_address.toLowerCase() == sale[3].toLowerCase() && 
-									parseInt(nft.tokenId ? nft.tokenId : nft.token_id) === parseInt(sale[4]));
-				});
-				
-				if (sales.length > 0) {
-					// console.log("sale INFO:", sales[0]);
-					const sale = sales[0];
-					setPayment(sale[6]);
-					setSaleInfo(sale);
-				} else {
-					setPayment(0);
-					setSaleInfo(null);
-				}
+				const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
+				nft = result;
+			} catch (err) {
+				console.log(err);
 				setIsPageLoading(false);
-      }
-
-			async function fetchData() {
-				await getHistory();
-				await getSalesInfo(nft);
+				setFoundNFT(false);
+				return;
 			}
 
-			if (nft) {
-				// console.log("item detail:", nft);
-				fetchData();
+			if (!nft) {
+				setIsPageLoading(false);
+				setFoundNFT(false);
+				return;
 			}
-		}, [nft]);
+			
+			//get metadata
+			if (nft.metadata) {
+				if (typeof nft.metadata === "string") {
+					nft.metadata = JSON.parse(nft.metadata);
+				} else {
+					nft.metadata = nft.metadata;
+				}
+			} else if (nft.token_uri) {
+				const response = await fetch(nft.token_uri);
+				nft.metadata = await response.json();
+			} else {
+				nft.metadata = null;
+			}
 
-		useEffect(() => {
-			async function getDetailedInfo () {
+			//get author info
+			nft.author = await getUserInfo(nft.owner_of.toLowerCase());
+
+			if (isAuthenticated && account) {
+				nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
+			}
+			
+			//get item type
+			let file = null;
+			if (nft.image) {
+				file = await getFileTypeFromURL(nft.image);
+			} else if (nft.metadata && nft.metadata.image) {
+				file = await getFileTypeFromURL(nft.metadata.image);
+			} else {
+				file = {mimeType: 'image', fileType: 'image'};
+			}
+			nft.item_type = file.fileType;
+			nft.mime_type = file.mimeType;
+
+			//get creator of nft
+			nft.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
+
+			const s = sales.filter((s, index) => {
+				return s[3].toLowerCase() === collectionAddr && parseInt(s[4]) === parseInt(tokenId);
+			});
+			
+			const sale = s.length > 0 ? s[0] : null;
+
+			if (sale) {
+				nft.saleId = parseInt(sale[0]);
+				nft.seller = sale[2];
+				nft.method = parseInt(sale[8]);
+				nft.endTime = parseInt(sale[10]);
+
+				if (nft.method === 0) {
+					nft.onSale = true;
+					nft.onAuction = false;
+					nft.onOffer = false;
+				} else if (nft.method === 1) {
+					nft.onSale = false;
+					nft.onAuction = true;
+					nft.onOffer = false;
+				} else if (nft.method === 2) {
+					nft.onSale = false;
+					nft.onAuction = false;
+					nft.onOffer = true;
+				} else {
+					nft.onSale = false;
+					nft.onAuction = false;
+					nft.onOffer = false;
+				}
+
+				const p = (payments.length >= parseInt(sale[6]) + 1) ? payments[parseInt(sale[6])] : null;
+				if (p) {
+					nft.price = new BigNumber(sale[7]).dividedBy(new BigNumber(10).pow(p.decimals)).toNumber();
+					nft.payment = p;
+					setPayment(sale[6]);
+				}
+
+				//get price and balance
 				let bPrice = 0;
 				let yBalance = 0;
-
 				if (account) {
 					const options = {
-						chain: chainId,
+						chain: process.env.REACT_APP_CHAIN_ID,
 						address: account
 					};
-					
 					const balances = await Web3Api.account.getTokenBalances(options);
-					// console.log(balances);
-									
 					const token = balances.filter((t, index) => {
-						// return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
 						return t.token_address.toLowerCase() == nft.payment.addr.toLowerCase();
 					});
 					
-					if (parseInt(saleInfo[6]) === 0x00) {
+					if (parseInt(sale[6]) === 0x00) {
 						//payment is stable coin like BNB
 						const nativeBalance = await Web3Api.account.getNativeBalance(options);
-						bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(18)).toNumber();
+						bPrice = (new BigNumber(sale[7])).dividedBy(new BigNumber(10).pow(18)).toNumber();
 						yBalance = (new BigNumber(nativeBalance.balance)).dividedBy(new BigNumber(10).pow(18)).toNumber();
-						
-						// setDecimals(payments[0].decimals);
-						// setSymbol(payments[0].symbol);
 					} else {
 						if (token.length > 0) {
-							bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
+							bPrice = (new BigNumber(sale[7])).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
 							yBalance = (new BigNumber(token[0].balance)).dividedBy(new BigNumber(10).pow(token[0].decimals)).toNumber();
-	
-							// setDecimals(token[0].decimals);
-							// setSymbol(token[0].symbol);
 						} else {
 							//you haven't current token
 							const opt = {
-								chain: chainId,
+								chain: process.env.REACT_APP_CHAIN_ID,
 								addresses: nft.payment.addr.toLowerCase(),
 							};
-							// const tokenMetadata = await Web3Api.token.getTokenMetadata(opt);
-							// bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(parseInt(tokenMetadata[0].decimals))).toNumber();
-							bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(parseInt(nft.payment.decimals))).toNumber();
+							bPrice = (new BigNumber(sale[7])).dividedBy(new BigNumber(10).pow(parseInt(nft.payment.decimals))).toNumber();
 							yBalance = 0;
-							// setDecimals(nft.payment.decimals);
-							// setSymbol(nft.payment.symbol);
 						}
 					}
 				} else {
-					bPrice = (new BigNumber(saleInfo[7])).dividedBy(new BigNumber(10).pow(nft.payment.decimals)).toNumber();
+					bPrice = (new BigNumber(sale[7])).dividedBy(new BigNumber(10).pow(nft.payment.decimals)).toNumber();
 					yBalance = 0;
 				}
 				setDecimals(nft.payment.decimals);
 				setSymbol(nft.payment.symbol);
 
-				// const bPrice = new BigNumber(saleInfo.basePrice._hex, 16).toNumber();
-				// const yBalance = new BigNumber(token[0].balance).toNumber();
-				const sFeePercent = (new BigNumber(saleInfo[11])) / 100;
-				const sFee = bPrice * (new BigNumber(saleInfo[12])) / 10000;
+				const sFeePercent = (new BigNumber(sale[11])) / 100;
+				const rFeePercent = (new BigNumber(sale[12])) / 100;
+				const sFee = bPrice * (new BigNumber(sale[11])) / 10000;
+				const rFee = bPrice * (new BigNumber(sale[12])) / 10000;
 	
 				setBasePrice(bPrice);
 				setYourBalance(yBalance);
 				setServiceFeePercent(sFeePercent);
 				setServiceFee(sFee);
-				setIsPageLoading(false);
+				setRoyaltyFeePercent(rFeePercent);
+				setRoyaltyFee(rFee);
+				
+				//get bids
+				try {
+					await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/bid/getBids`, {
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						params: {
+							saleId: parseInt(sale[0])
+						}
+					}).then(async res => {
+						let bids = [];
+						let max = 0;
+						for (let bid of res.data) {
+							let b = JSON.parse(JSON.stringify(bid));
+							b.price = new BigNumber(bid.price.$numberDecimal).dividedBy(new BigNumber(10).pow(nft.payment.decimals)).toNumber();
+							bids.push(b);
+	
+							if (max < b.price) {
+								max = b.price;
+							}
+						}
+						
+						nft.bids = bids;
+						setLastBidAmount(max);
+	
+						if (res.data.length > 0) {
+							let lastBid = res.data[res.data.length - 1];
+							setIsBidded(lastBid.walletAddr.toLowerCase() === (account ? account.toLowerCase() : null));
+						}
+					});
+				} catch {
+					console.log('error in fetching bids by saleId');
+				}
 			}
+			
+			nft.history = await getHistory(nft.token_address, nft.token_id);
 
-			if (saleInfo) {
-				getDetailedInfo();
-			}
-		}, [saleInfo]);
+			setNFT(nft);
+			setIsPageLoading(false);
+		}
 
 		useEffect(() => {
-			if (saleInfo) {
-				getBidList();
+			async function getBaseData() {
+				setPayments(await getPayments());
 			}
-		}, [saleInfo, symbol, decimals]);
+			if (props.collectionAddr && props.tokenId) {
+				getBaseData();
+			} else {
+				navigate("/");
+			}
+		}, []);
+
+		useEffect(() => {
+			if (props.collectionAddr && props.tokenId) {
+				getNFTData(props.collectionAddr, props.tokenId);	
+			} else {
+				navigate("/");
+			}
+		}, [payments, account]);
 
 		return (
 			<div className="greyscheme">
 				<StyledHeader theme={theme} />
 				
 				<section className='container'>
-					<StyledModal
-						key="1"
-						title=''
-						visible={isPageLoading}
-						centered
-						footer={null}
-						closable={false}
-					>
-						<div className="row">
-						<StyledSpin tip="Loading..." size="large" />
-						</div>
-					</StyledModal>
-
 					<StyledModal
 						key="2"
 						title=''
@@ -874,7 +916,28 @@ const ItemDetail = () => {
 						<StyledSpin tip="Loading..." size="large" />
 						</div>
 					</StyledModal>
-					
+
+					<Modal
+						key="3"
+						title='Error'
+						visible={!foundNFT}
+						centered
+						onOk={() => navigate("/")} 
+						onCancel={() => navigate("/")}
+						footer={[
+							<Button type="primary" danger onClick={() => navigate("/")} key="1">Okay, got it</Button>
+						]}
+					>
+						<div className="row">
+							<h4>Can't find this item with {props.collectionAddr}#{props.tokenId}</h4>
+						</div>
+					</Modal>
+
+					{isPageLoading && 
+						<div className='row mt-md-5 pt-md-4'>
+							<StyledSpin tip="Loading..." size="large" />
+						</div>
+					}
 					{ !isPageLoading && nft && 
 						<div className='row mt-md-5 pt-md-4'>
 							<div className="col-md-6 text-center">
@@ -972,14 +1035,14 @@ const ItemDetail = () => {
 																<span>
 																	<img className="lazy" 
 																			src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-																			title={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
+																			title={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.owner_of.toString(), 'wallet')} 
 																			alt=""
 																	/>
 																	<i className="fa fa-check"></i>
 																</span>
 															</div>                                    
 															<div className="author_list_info">
-																<span>{nft.author && nft.author.name ? nft.author.name : 'Unknown'}</span>
+																<span>{nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.owner_of.toString(), 'wallet')}</span>
 															</div>
 														</div>
 													</div>
@@ -992,7 +1055,7 @@ const ItemDetail = () => {
 																	Price: {nft.price ? nft.price.toString() + ' ' + nft.payment.symbol : ''}
 																</h3>
 																<h3 className="mb-0">
-																	Royalty: {nft.metadata && nft.metadata.royalty ? nft.metadata.royalty.toString() + ' %' : ''}
+																	Royalty: {nft.metadata && nft.metadata.royalty ? (parseInt(nft.metadata.royalty) / 100).toFixed(2) + ' %' : ''}
 																</h3>
 															</div>
 															}
@@ -1014,14 +1077,14 @@ const ItemDetail = () => {
 																			<span>
 																					<img className="lazy" 
 																						src={bid.user && bid.user.avatar ? bid.user.avatar : defaultAvatar} 
-																						title={bid.user && bid.user.name ? bid.user.name : ''} 
+																						title={bid.user && bid.user.name ? formatUserName(bid.user.name) : ''} 
 																						alt=""/>
 																					<i className="fa fa-check"></i>
 																			</span>
 																	</div>                                    
 																	<div className="p_list_info">
 																		<span className="text-danger">{bid.walletAddr === account && 'Your'} Bid: <b>{bid.price} {symbol}</b></span>
-																		<span>by <b>{bid.user && bid.user.name ? bid.user.name : formatAddress(bid.walletAddr, 'wallet')}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
+																		<span>by <b>{bid.user && bid.user.name ? formatUserName(bid.user.name) : formatAddress(bid.walletAddr, 'wallet')}</b> at <b>{moment(bid.created_at).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
@@ -1044,9 +1107,9 @@ const ItemDetail = () => {
 																			</span>
 																	</div>                                    
 																	<div className="p_list_info">
-																			<b>{history.actor}</b>
+																			<b>{formatUserName(history.actor)}</b>
 																			<span>{history.description}</span>
-																			<span>{history.from ? 'From' : ''} <b>{history.from ? history.from : ''}</b> at <b>{moment(history.timeStamp).format('L, LT')}</b></span>
+																			<span>{history.from ? 'From' : ''} <b>{history.from ? formatUserName(history.from) : ''}</b> at <b>{moment(history.timeStamp).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
@@ -1087,7 +1150,7 @@ const ItemDetail = () => {
 							</div>
 							<p>
 								You are about to purchase a <span className="bold">{nft.metadata && nft.metadata.name ? nft.metadata.name : ''}({nft.name} #{nft.token_id})</span> 
-								<span className="bold"> from {nft.author && nft.author.name ? nft.author.name : saleInfo.seller}</span>
+								<span className="bold"> from {nft.author && nft.author.name ? nft.author.name : formatAddress(nft.seller, 'wallet')}</span>
 							</p>
 							{/* <div className='detailcheckout mt-4'>
 								<div className='listcheckout'>
@@ -1116,9 +1179,15 @@ const ItemDetail = () => {
 								</div>
 							</div>
 							<div className='heading'>
+								<p>Royalty fee {royaltyFeePercent}%</p>
+								<div className='subtotal'>
+									{royaltyFee} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
 								<p>You will pay</p>
 								<div className='subtotal'>
-									{basePrice + serviceFee} {symbol}
+									{basePrice + serviceFee + royaltyFee} {symbol}
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick()}>
@@ -1176,9 +1245,15 @@ const ItemDetail = () => {
 								</div>
 							</div>
 							<div className='heading'>
+								<p>Royalty fee {royaltyFeePercent}%</p>
+								<div className='subtotal'>
+									{royaltyFee} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
 								<p>You have to pay</p>
 								<div className='subtotal'>
-									{basePrice + serviceFee} {symbol}
+									{basePrice + serviceFee + royaltyFee} {symbol}
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => setOpenCheckout(false)}>Okay, got it!</button>
@@ -1196,8 +1271,8 @@ const ItemDetail = () => {
           onOk={() => handleCheckoutbidClick()} 
           onCancel={() => closeCheckoutbid()}
           footer={[
-            <Button onClick={() => closeCheckoutbid()}>Cancel</Button>,
-            <Button type="primary" danger onClick={() => handleCheckoutbidClick()}>Place a bid</Button>
+            <Button key="cancel-button" onClick={() => closeCheckoutbid()}>Cancel</Button>,
+            <Button key="bid-button" type="primary" danger onClick={() => handleCheckoutbidClick()}>Place a bid</Button>
           ]}
         >
 					{placeBidError &&
@@ -1252,9 +1327,15 @@ const ItemDetail = () => {
 						</div>
 					</div>
 					<div className='price-detail-row'>
+						<p>Royalty fee {royaltyFeePercent}%</p>
+						<div className='subtotal'>
+							{bidAmount * royaltyFeePercent / 100} {symbol}
+						</div>
+					</div>
+					<div className='price-detail-row'>
 						<p>You will pay</p>
 						<div className='subtotal'>
-							{bidAmount * (100 + serviceFeePercent) / 100} {symbol}
+							{bidAmount * (100 + serviceFeePercent + royaltyFeePercent) / 100} {symbol}
 						</div>
 					</div>
 				</PlaceBidModal>
@@ -1288,9 +1369,15 @@ const ItemDetail = () => {
 								</div>
 							</div>
 							<div className='heading'>
+								<p>Royalty fee {royaltyFeePercent}%</p>
+								<div className='subtotal'>
+									{royaltyFee} {symbol}
+								</div>
+							</div>
+							<div className='heading'>
 								<p>You will pay minimum</p>
 								<div className='subtotal'>
-									{basePrice + serviceFee} {symbol}
+									{basePrice + serviceFee + royaltyFee} {symbol}
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => setOpenCheckoutbid(false)}>Okay, got it!</button>
@@ -1365,4 +1452,4 @@ const ItemDetail = () => {
     );
 }
 
-export default memo(ItemDetail);
+export default memo(Item);

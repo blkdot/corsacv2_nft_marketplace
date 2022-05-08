@@ -12,7 +12,7 @@ import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 import * as selectors from '../../store/selectors';
 import { navigate } from '@reach/router';
-import { getFileTypeFromURL } from '../../utils';
+import { getFileTypeFromURL, getUserInfo, getPayments } from '../../utils';
 import { defaultAvatar, fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
@@ -132,7 +132,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       }
 
       const p = price * ("1e" + payments[payment].decimals);
-      
+            
       const ops = {
         contractAddress: marketAddress,
         functionName: listItemFunction,
@@ -146,7 +146,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           duration: duration,
           basePrice: String(p),
           feeRatio: 0,
-          royaltyRatio: 0,
+          royaltyRatio: parseInt(nft.royaltyRatio),
           isOther: 1
         },
       };
@@ -186,16 +186,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           } catch(ex) {
             console.log(ex);
           }
-
-          // const options = {
-          //   chain: chainId,
-          //   address: account
-          // };
-          
-          // const balances = await Web3Api.account.getTokenBalances(options);
-          // const token = balances.filter((t, index) => {
-          //   return t.token_address.toLowerCase() == corsacTokenAddress.toLowerCase();
-          // });
 
           if (payments.length >= payment + 1) {
             nft.price = new BigNumber(ops.params.basePrice).dividedBy(new BigNumber(10).pow(payments[payment].decimals)).toNumber();
@@ -314,62 +304,13 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       setLoading(false);
     }
 
-    async function getPayments() {
-      try {
-        await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          params: {
-            allowed: 1
-          }
-        }).then(async res => {
-          let payments = [];
-          for (let p of res.data.payments) {
-            payments.push({
-              value: p.id, 
-              label: p.title + " (" + p.symbol + ")", 
-              addr: p.addr, 
-              title: p.title, 
-              type: p.type,
-              symbol: p.symbol,
-              decimals: p.decimals
-            });
-          }
-          setPayments(payments);
-        });
-      } catch {
-        console.log('error in fetching payments');
-      }
-    }
-
-    const getNFTCreator = async (walletAddr) => {
-      let creator = null;
-      
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        params: {
-          walletAddr: walletAddr.toLowerCase()
-        }
-      }).then(res => {
-        creator = res.data.user;
-      }).catch(err => {
-        console.log(err);
-        creator = null;
-      });
-              
-      return creator;
-    };
-
     useEffect(async () => {
       const isWeb3Active = Moralis.ensureWeb3IsInstalled();
       if (!isWeb3Active) {
         await Moralis.enableWeb3();
       }
       
-      getPayments();
+      setPayments(await getPayments());
     }, []);
 
     useEffect(() => {
@@ -381,23 +322,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     useEffect(async () => {
       let collections = [];
 
-      //get collections from contract
-      // const ops = {
-      //   contractAddress: marketAddress,
-      //   functionName: "getCollections",
-      //   abi: contractABI,
-      //   params: {}
-      // };
-      // await contractProcessor.fetch({
-      //   params: ops,
-      //   onSuccess: (chainCollections) => {
-      //     collections = chainCollections;
-      //   },
-      //   onError: (error) => {
-      //     console.log("failed:", error);
-      //   },
-      // });
-      
       //get collections from backend
       await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
         headers: {
@@ -437,7 +361,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               chain: chainId
             };
             const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options1);
-            // console.log('TokenIdMetadata:', tokenIdMetadata);
+            
             if (tokenIdMetadata.token_uri) {
               await fetch((tokenIdMetadata.token_uri))
                 .then((response) => response.json())
@@ -451,7 +375,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             } else {
               nft.image = fallbackImg;
             }
-            // nft.image = fallbackImg;
           } else {
             if (!nft.image) {
               nft.image = JSON.parse(JSON.stringify(nft.metadata)).image.replace('ipfs://', 'https://ipfs.io/ipfs/');
@@ -459,24 +382,13 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           }
 
           //get author/seller info
-          try {
-            await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              params: {
-                walletAddr: nft.owner_of.toLowerCase()
-              }
-            }).then(res => {
-              nft.author = res.data.user;
-            });
-          } catch (err) {
-            console.log("fetching user error:", err);
-            nft.author = null;
-          }
-
+          nft.author = await getUserInfo(nft.owner_of.toLowerCase());
+          
           //get creator of nft
-          nft.creator = nft.metadata && nft.metadata.creator ? await getNFTCreator(nft.metadata.creator) : null;
+          nft.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
+
+          //get royalty fee
+          nft.royaltyRatio = nft.metadata && nft.metadata.royalty ? nft.metadata.royalty : 0;
 
           myNFTs.push(nft);
         }
@@ -534,6 +446,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               nft.price = new BigNumber(sale.basePrice._hex).dividedBy(new BigNumber(10).pow(payment.decimals)).toNumber();
               nft.payment = payment;
             }
+            
+            nft.serviceFee = sale.feeRatio;
+            nft.royaltyRatio = sale.royaltyRatio;
             
             const method = new BigNumber(sale.method._hex).toNumber();
             if (method === 0x00) {

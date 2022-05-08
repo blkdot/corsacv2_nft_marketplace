@@ -105,7 +105,7 @@ const CreateItem = () => {
     try {
       const file = e.target.files[0];
       let fileType = null;
-      
+
       if (videoTypes.includes(file.type)) {
         fileType = 'video';
       } else if (audioTypes.includes(file.type)) {
@@ -113,7 +113,7 @@ const CreateItem = () => {
       } else {
         fileType = 'image';
       }
-      
+
       const img = {
         preview: URL.createObjectURL(file),
         data: file,
@@ -217,7 +217,7 @@ const CreateItem = () => {
       collection: collection,
       image: GATEWAY_URL + imageFileIpfs.hash(),
       // payment: payment,
-      royalty: royalty,
+      royalty: royalty * 100,
       creator: account.toLowerCase()
     };
     let metadataFileIpfs = null;
@@ -409,35 +409,6 @@ const CreateItem = () => {
       console.log('error in fetching collections');
     }
   }
-
-  // async function getPayments() {
-  //   try {
-  //     await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       params: {
-  //         allowed: 1
-  //       }
-  //     }).then(async res => {
-  //       let payments = [];
-  //       for (let p of res.data.payments) {
-  //         payments.push({
-  //           value: p.id, 
-  //           label: p.title + " (" + p.symbol + ")", 
-  //           addr: p.addr, 
-  //           title: p.title, 
-  //           type: p.type,
-  //           symbol: p.symbol,
-  //           decimals: p.decimals
-  //         });
-  //       }
-  //       setPayments(payments);
-  //     });
-  //   } catch {
-  //     console.log('error in fetching payments');
-  //   }
-  // }
 
   useEffect(() => {
     if (account != undefined && account != '') {
