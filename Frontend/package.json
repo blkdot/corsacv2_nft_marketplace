@@ -1,5 +1,5 @@
 {
-  "name": "gigaland",
+  "name": "corsac-v2-marketplace",
   "version": "0.1.0",
   "private": true,
   "homepage": "./",
@@ -45,6 +45,7 @@
     "redux-thunk": "^2.3.0",
     "reselect": "^4.0.0",
     "sass": "^1.39.2",
+    "serve": "^13.0.2",
     "slick-carousel": "^1.8.1",
     "styled-components": "^5.3.1",
     "typesafe-actions": "^5.1.0",
