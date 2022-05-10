@@ -162,6 +162,9 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
 
           //get author/seller info
           nft.author = await getUserInfo(nft.seller.toLowerCase());
+          if (!nft.author) {
+            nft.author = {walletAddr: nft.seller.toLowerCase()};
+          }
 
           if (isAuthenticated && account) {
             nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();

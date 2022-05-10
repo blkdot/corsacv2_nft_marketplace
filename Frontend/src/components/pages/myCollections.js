@@ -1,10 +1,8 @@
 import React, { memo, useEffect, useState } from "react";
 import { useSelector } from 'react-redux';
 import * as selectors from '../../store/selectors';
-import {useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances} from "react-moralis";
+import { useMoralis, useNFTBalances } from "react-moralis";
 import Footer from '../components/footer';
-
-import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
 
 import axios from "axios";
 
@@ -46,20 +44,15 @@ const Outer = styled.div`
 const MyCollections = props => {
   const currentUserState = useSelector(selectors.currentUserState);
   
-  const { account, Moralis } = useMoralis();
-  const { chainId } = useChain();
-  const { marketAddress, contractABI } = useMoralisDapp();
-  const contractProcessor = useWeb3ExecuteFunction();
-  const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } = useMoralis();
-  const Web3Api = useMoralisWeb3Api();
+  const { account } = useMoralis();
   const { data: NFTBalances, isLoading} = useNFTBalances();
 
   const [myCollections, setMyCollections] = useState([]);
 
-  const [pageTitle, setPageTitle] = useState("My Collections");
+  const [pageTitle] = useState("My Collections");
 
   const [loading, setLoading] = useState(false);
-  const [loadingTitle, setLoadingTitle] = useState("Loading...");
+  const [loadingTitle] = useState("Loading...");
 
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
@@ -86,7 +79,7 @@ const MyCollections = props => {
     }
   }, [isLoading]);
   
-  useEffect(async () => {
+  useEffect(() => {
     async function getMyCollections() {
       setOpenModal(false);
       
@@ -129,7 +122,7 @@ const MyCollections = props => {
     if (account && !isLoading && NFTBalances) {
       getMyCollections();
     }
-  }, [account, NFTBalances]);
+  }, [account, NFTBalances, isLoading]);
 
   return (
     <div className="greyscheme">
@@ -169,7 +162,7 @@ const MyCollections = props => {
               </button>
             </div>
           </div>
-          {!loading && myCollections.length == 0 &&
+          {!loading && myCollections.length === 0 &&
           <div className="row">
             <div className="alert alert-danger" role="alert">
               No collections

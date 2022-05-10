@@ -11,7 +11,7 @@ import axios from "axios";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
-import { navigate } from "@reach/router";
+import { navigate, useParams } from "@reach/router";
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
@@ -20,7 +20,7 @@ import Countdown from 'react-countdown';
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import { defaultAvatar, fallbackImg } from "../components/constants";
-import { getFileTypeFromURL, getUserInfo } from "../../utils";
+import { getFileTypeFromURL, getUserInfo, formatUserName, formatAddress } from "../../utils";
 
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
@@ -48,9 +48,10 @@ const Outer = styled.div`
   border-radius: 8px;
 `
 
-const Collection = props => {
+const Collection = () => {
+  const params = useParams();
   const currentUserState = useSelector(selectors.currentUserState);
-
+  
   const dispatch = useDispatch();
 
   const { account, Moralis, isAuthenticated } = useMoralis();
@@ -99,7 +100,7 @@ const Collection = props => {
   };
 
   async function getFetchItems() {
-    if (!props.address) {
+    if (!params.address) {
       setOpenModal(true);
       setModalTitle('Error');
       setModalMessage('Missing collection address');
@@ -146,7 +147,7 @@ const Collection = props => {
       return;
     }
 
-    const collectionAddr = props.address;
+    const collectionAddr = params.address;
 
     //get collection from backend
     await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/address`, {
@@ -211,6 +212,9 @@ const Collection = props => {
         const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
         //get author/seller info
         nft.author = await getUserInfo(tokenIdMetadata.owner_of.toLowerCase());
+        if (!nft.author) {
+          nft.author = {walletAddr: tokenIdMetadata.owner_of.toLowerCase()};
+        }
 
         if (isAuthenticated && account) {
           nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
@@ -318,6 +322,12 @@ const Collection = props => {
     setLoading(true);
   }, [account]);
 
+  useEffect(() => {
+    if (!params.address) {
+      navigate("/");
+    }
+  }, []);
+
   return (
     <div className="greyscheme">
       <StyledHeader theme={theme} />
@@ -404,7 +414,7 @@ const Collection = props => {
                       <span onClick={()=> navigate(nft.author && nft.author.walletAddr ? '/author/' + nft.author.walletAddr : '/')}>                                    
                           <img className="lazy" 
                               src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-                              title={nft.author && nft.author.name ? nft.author.name : 'Unknown'}
+                              title={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr.toLowerCase(), 'wallet')}
                               alt=""/>
                           <i className="fa fa-check"></i>
                       </span>

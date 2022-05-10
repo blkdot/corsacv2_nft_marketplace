@@ -16,7 +16,7 @@ import styled from 'styled-components';
 
 import BigNumber from "bignumber.js";
 import { createGlobalStyle } from 'styled-components';
-import { getFileTypeFromURL, getPayments, getUserInfo } from "../../utils";
+import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 //IMPORT DYNAMIC STYLED COMPONENT
@@ -184,6 +184,9 @@ const LiveAuction = () => {
 
             //get author/seller info
             temp[0].author = await getUserInfo(sale[2].toLowerCase());
+            if (!temp[0].author) {
+              temp[0].author = {walletAddr: sale[2].toLowerCase()};
+            }
 
             if (isAuthenticated && account) {
               temp[0].isOwner = temp[0].author && temp[0].author.walletAddr.toLowerCase() === account.toLowerCase();
@@ -287,7 +290,7 @@ const LiveAuction = () => {
                   <span onClick={()=> navigate(nft.author && nft.author.walletAddr ? "/author/" + nft.author.walletAddr : '')}>
                     <img className="lazy" 
                         src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-                        title={nft.author && nft.author.name ? nft.author.name : 'Unknown'}
+                        title={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr.toLowerCase(), 'wallet')}
                         alt=""/>
                     <i className="fa fa-check"></i>
                   </span>

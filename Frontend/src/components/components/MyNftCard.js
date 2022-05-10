@@ -14,6 +14,7 @@ import api from "../../core/api";
 import axios from 'axios';
 import * as selectors from '../../store/selectors';
 import { defaultAvatar, fallbackImg } from '../components/constants';
+import { formatAddress, formatUserName } from '../../utils';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -247,7 +248,7 @@ const MyNftCard = ({
       });
       return flag;
     }
-    
+        
     return (
         <div className={className}>
           <StyledModal
@@ -283,7 +284,7 @@ const MyNftCard = ({
                 <span onClick={()=> navigateTo(nft.author && nft.author.walletAddr ? "/author/" + nft.author.walletAddr : '')}>
                   <img className="lazy" 
                       src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-                      title={nft.author && nft.author.name ? nft.author.name : 'Unknown'}
+                      title={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr, 'wallet')}
                       alt=""/>
                   <i className="fa fa-check"></i>
                 </span>

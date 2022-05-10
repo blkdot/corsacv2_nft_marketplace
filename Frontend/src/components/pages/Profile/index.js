@@ -6,22 +6,16 @@ import * as actions from '../../../store/actions/thunks';
 import axios from "axios";
 
 import Footer from '../../components/footer';
-import Select from 'react-select';
-
-import moment from "moment";
 
 import { navigate } from '@reach/router';
-import { useMoralisDapp } from "../../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralisWeb3Api, useMoralis, useMoralisFile, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import { useMoralis, useMoralisFile } from "react-moralis";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../../Styles';
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
-import BigNumber from "bignumber.js";
 import api from "../../../core/api";
-import { categories } from "../../components/constants/filters";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -44,46 +38,12 @@ const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
 const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
 
 const Profile = ({ userAddr }) => {
-  const defaultValue = {
-    value: null,
-    label: 'Select Filter'
-  };
-
-  const customStyles = {
-    option: (base, state) => ({
-      ...base,
-      background: "#fff",
-      color: "#333",
-      borderRadius: state.isFocused ? "0" : 0,
-      "&:hover": {
-          background: "#eee",
-      }
-    }),
-    menu: base => ({
-      ...base,
-      borderRadius: 0,
-      marginTop: 0
-    }),
-    menuList: base => ({
-      ...base,
-      padding: 0
-    }),
-    control: (base, state) => ({
-      ...base,
-      padding: 2
-    })
-  };
-
   const dispatch = useDispatch();
   const currentUserState = useSelector(selectors.currentUserState);
   
-  const contractProcessor = useWeb3ExecuteFunction();
-  const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
-  const Web3Api = useMoralisWeb3Api();
   const { account, Moralis, isAuthenticated } = useMoralis();
-  const { saveFile, moralisFile } = useMoralisFile();
-  const { chainId } = useChain();
-
+  const { saveFile } = useMoralisFile();
+  
   const [user, setUser] = useState(null);
 
   const avatarInput = useRef(null);
@@ -292,7 +252,7 @@ const Profile = ({ userAddr }) => {
   }, [currentUserState]);
 
   useEffect(() => {
-    if (account != undefined && account != '') {
+    if (account) {
       setLoadingTitle("Updating your profile...");
     }
   }, [account]);

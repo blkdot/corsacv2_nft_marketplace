@@ -8,7 +8,7 @@ import * as selectors from '../../store/selectors';
 
 import axios from "axios";
 import moment from "moment";
-import { navigate } from '@reach/router';
+import { navigate, useParams } from '@reach/router';
 import BigNumber from 'bignumber.js';
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
@@ -80,7 +80,8 @@ const PlaceBidModal = styled(Modal)`
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
-const Item = props => {
+const Item = () => {
+		const params = useParams();
 		const currentUserState = useSelector(selectors.currentUserState);
 
     const inputColorStyle = {
@@ -731,6 +732,9 @@ const Item = props => {
 
 			//get author info
 			nft.author = await getUserInfo(nft.owner_of.toLowerCase());
+			if (!nft.author) {
+				nft.author = {walletAddr: nft.owner_of.toLowerCase()};
+			}
 
 			if (isAuthenticated && account) {
 				nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
@@ -750,6 +754,9 @@ const Item = props => {
 
 			//get creator of nft
 			nft.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
+			if (!nft.creator) {
+				nft.creator = {walletAddr: nft.metadata.creator};
+			}
 
 			const s = sales.filter((s, index) => {
 				return s[3].toLowerCase() === collectionAddr && parseInt(s[4]) === parseInt(tokenId);
@@ -884,7 +891,7 @@ const Item = props => {
 			async function getBaseData() {
 				setPayments(await getPayments());
 			}
-			if (props.collectionAddr && props.tokenId) {
+			if (params.collectionAddr && params.tokenId) {
 				getBaseData();
 			} else {
 				navigate("/");
@@ -892,8 +899,8 @@ const Item = props => {
 		}, []);
 
 		useEffect(() => {
-			if (props.collectionAddr && props.tokenId) {
-				getNFTData(props.collectionAddr, props.tokenId);	
+			if (params.collectionAddr && params.tokenId) {
+				getNFTData(params.collectionAddr, params.tokenId);	
 			} else {
 				navigate("/");
 			}
@@ -929,7 +936,7 @@ const Item = props => {
 						]}
 					>
 						<div className="row">
-							<h4>Can't find this item with {props.collectionAddr}#{props.tokenId}</h4>
+							<h4>Can't find this item with {params.collectionAddr}#{params.tokenId}</h4>
 						</div>
 					</Modal>
 
@@ -980,33 +987,33 @@ const Item = props => {
 										<div className="mr40">
 											<h6>Creator</h6>
 											<div className="item_author">                                    
-												<div className="author_list_pp">
+												<div className="author_list_pp" onClick={() => navigate(`/author/${nft.creator && nft.creator.walletAddr ? nft.creator.walletAddr.toLowerCase() : ''}`)}>
 													<span>
 														<img className="lazy" 
 																src={nft.creator && nft.creator.avatar ? nft.creator.avatar : defaultAvatar} 
-																title={nft.creator && nft.creator.name ? nft.creator.name : 'Unknown'} 
+																title={nft.creator && nft.creator.name ? formatUserName(nft.creator.name) : formatAddress(nft.creator.walletAddr.toLowerCase(), 'wallet')} 
 																alt=""
 														/>
 														<i className="fa fa-check"></i>
 													</span>
 												</div>
 												<div className="author_list_info">
-													<span>{nft.creator && nft.creator.name ? nft.creator.name : 'Unknown'}</span>
+													<span>{nft.creator && nft.creator.name ? formatUserName(nft.creator.name) : formatAddress(nft.creator.walletAddr.toLowerCase(), 'wallet')}</span>
 												</div>
 											</div>
 										</div>
 										<div className="mr40">
 											<h6>Collection</h6>
-											<div className="item_author">                                    
+											<div className="item_author">
 												<div className="author_list_pp" onClick={() => navigate("/collection/" + (nft.collection && nft.collection.addr ? nft.collection.addr : (nft.metadata && nft.metadata.collection ? nft.metadata.collection.addr : '')))}>
 													<span>
 														<img className="lazy" 
 																src={nft.metadata && nft.metadata.collection && nft.metadata.collection.image ? nft.metadata.collection.image : fallbackImg}
-																title={nft.metadata && nft.metadata.collection && nft.metadata.collection.label ? nft.metadata.collection.label : 'Unknown'} 
+																title={nft.metadata && nft.metadata.collection && nft.metadata.collection.label ? formatUserName(nft.metadata.collection.label) : formatAddress(nft.metadata.collection.addr, 'collection')} 
 																alt=""/>
 														<i className="fa fa-check"></i>
 													</span>
-												</div>                                    
+												</div>
 												<div className="author_list_info">
 													<span>{nft.metadata && nft.metadata.collection && nft.metadata.collection.label ? nft.metadata.collection.label : 'Unknown'}</span>
 												</div>
@@ -1031,7 +1038,7 @@ const Item = props => {
 													<div className="mr40">
 														<h6>Owner</h6>
 														<div className="item_author">                                    
-															<div className="author_list_pp">
+															<div className="author_list_pp" onClick={() => navigate(`/author/${nft.author && nft.author.walletAddr ? nft.author.walletAddr.toLowerCase() : ''}`)}>
 																<span>
 																	<img className="lazy" 
 																			src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 

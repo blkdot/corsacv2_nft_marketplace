@@ -168,7 +168,7 @@ export function formatUserName(name) {
     return 'Unknown';
   }
 
-  if (name.length == 42) {
+  if (name.length === 42) {
     return name.substr(0, 5) + "..." + name.substr(name.length - 4, 4);
   } else {
     return name.substr(0, 20) + (name.length > 20 ? "..." : "");
@@ -176,7 +176,7 @@ export function formatUserName(name) {
 }
 
 export function formatAddress(address, type) {
-  if (address.length != 42) {
+  if (address.length !== 42) {
     return address;
   }
 
@@ -184,6 +184,7 @@ export function formatAddress(address, type) {
     case 'wallet':
     case 'collection':
       return address.substr(0, 5) + "..." + address.substr(address.length - 4, 4);
+    default:
   }
 
   return address;
@@ -289,4 +290,20 @@ export async function getHistory(collectionAddr, tokenId) {
   }
 
   return hs;
+}
+
+export async function getAllCollection() {
+  let collections = [];
+  await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: {}
+  }).then(res => {
+    collections = res.data.collections;
+  }).catch((e) => {
+    console.log(e);
+  });
+
+  return collections;
 }

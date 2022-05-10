@@ -4,10 +4,9 @@ import * as selectors from '../../store/selectors';
 import Footer from '../components/footer';
 import Select from 'react-select';
 import axios from "axios";
-import moment from "moment";
 import { navigate } from '@reach/router';
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralisWeb3Api, useMoralis, useMoralisFile, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
+import { useMoralis, useMoralisFile, useWeb3ExecuteFunction } from "react-moralis";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
@@ -71,12 +70,10 @@ const CreateCollection = () => {
   const currentUserState = useSelector(selectors.currentUserState);
 
   const contractProcessor = useWeb3ExecuteFunction();
-  const { marketAddress, contractABI, corsacTokenAddress, corsacTokenABI } = useMoralisDapp();
-  const Web3Api = useMoralisWeb3Api();
-  const { authenticate, account, Moralis, isAuthenticated } = useMoralis();
-  const { saveFile, moralisFile } = useMoralisFile();
-  const { chainId } = useChain();
-
+  const { marketAddress, contractABI } = useMoralisDapp();
+  const { account, Moralis, isAuthenticated } = useMoralis();
+  const { saveFile } = useMoralisFile();
+  
   const imgInput = useRef(null);
   const [title, setTitle] = useState('');
   const [collectionType, setCollectionType] = useState(0);
