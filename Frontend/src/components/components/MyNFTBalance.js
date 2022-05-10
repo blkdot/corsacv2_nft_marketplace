@@ -383,6 +383,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
           //get author/seller info
           nft.author = await getUserInfo(nft.owner_of.toLowerCase());
+          if (!nft.author) {
+            nft.author = {walletAddr: nft.owner_of.toLowerCase()};
+          }
           
           //get creator of nft
           nft.creator = nft.metadata && nft.metadata.creator ? await getUserInfo(nft.metadata.creator) : null;
@@ -398,6 +401,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     useEffect(() => {
       async function getSalesOf(seller) {
+        setIsPageLoading(true);
+
         const ops = {
           contractAddress: marketAddress,
           functionName: 'getSaleInfo',
@@ -490,15 +495,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       setMyNfts(nfts);
     }, [saleNFTs, saleNFTs.length]);
 
-    const updateNFTs = (newNFT, index) => {
-      console.log("calling updateNFTs:", newNFT, index);
-      const tempNFTs = JSON.parse(JSON.stringify(nfts));
-      if (tempNFTs.length >= index + 1) {
-        tempNFTs[index] = newNFT;
-        setNfts(tempNFTs);
-      }
-    };
-    
     const handleSalePaymentChange = (value) => {
       setSalePayment(value);
     };

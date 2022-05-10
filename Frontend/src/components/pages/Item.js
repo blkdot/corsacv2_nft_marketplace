@@ -241,6 +241,8 @@ const Item = () => {
 						console.log("failed:", error);
 					},
 				});
+			} else {
+				setTokenApproved(true);
 			}
 
 			setIsCheckoutLoading(false);

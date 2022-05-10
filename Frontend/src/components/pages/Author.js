@@ -1,9 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
-import {useMoralis, useNFTBalances, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
-import { useSelector, useDispatch } from 'react-redux';
-import * as selectors from '../../store/selectors';
+import {useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
 import Footer from '../components/footer';
-import api from "../../core/api";
 import { defaultAvatar, defaultBanner, fallbackImg } from "../components/constants"; 
 
 import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
@@ -45,7 +42,6 @@ const Outer = styled.div`
 
 const Author = () => {
   const params = useParams();
-  const currentUserState = useSelector(selectors.currentUserState);
   
   const [openMenu, setOpenMenu] = React.useState(true);
   const [openMenu1, setOpenMenu1] = React.useState(false);
@@ -69,9 +65,7 @@ const Author = () => {
   const {account} = useMoralis();
   const [copied, setCopied] = useState(false);
   const {marketAddress, contractABI} = useMoralisDapp();
-  const contractProcessor = useWeb3ExecuteFunction();
-  const listItemFunction = "createSale";
-  const { Moralis, isInitialized, isAuthenticated, isWeb3EnableLoading } = useMoralis();
+  const { Moralis, isInitialized, isAuthenticated } = useMoralis();
   const Web3Api = useMoralisWeb3Api();
 
   const [height, setHeight] = useState(210);
@@ -128,6 +122,7 @@ const Author = () => {
           count: "100000"
         },
       };
+
       saleItems = await Moralis.Web3API.native.runContractFunction(ops);
       
       let author = await getUserInfo(params.walletAddr);
@@ -144,8 +139,15 @@ const Author = () => {
         chain: process.env.REACT_APP_CHAIN_ID,
         address: params.walletAddr,
       };
-      const result = await Web3Api.account.getNFTs(options);
-      const items = result.result;
+
+      let result = null;
+      try {
+        result = await Web3Api.account.getNFTs(options);
+      } catch (e) {
+        console.log(e);
+      }
+      
+      const items = result && result.result ? result.result : [];
       const nfts = [];
       const saleNFTs = [];
       for (let item of items) {

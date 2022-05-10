@@ -9,7 +9,7 @@ import * as actions from '../../store/actions/thunks';
 import { navigate } from "@reach/router";
 import axios from "axios";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { getFileTypeFromURL, getPayments } from "../../utils";
+import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo } from "../../utils";
 
 const SliderCarouselHome = () => {
   const dispatch = useDispatch();
@@ -54,25 +54,6 @@ const SliderCarouselHome = () => {
     }
   }
 
-  const getNFTCreator = async (walletAddr) => {
-    let creator = null;
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {
-        walletAddr: walletAddr.toString().toLowerCase()
-      }
-    }).then(res => {
-      creator = res.data.user;
-    }).catch(err => {
-      console.log(err);
-      creator = null;
-    });
-            
-    return creator;
-  };
-
   const handleBuyClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
     navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
@@ -90,7 +71,7 @@ const SliderCarouselHome = () => {
   useEffect(async () => {
     let newItems = [];
     for (let item of items) {
-      let newItem = item;
+      let newItem = JSON.parse(JSON.stringify(item));
       if (item.collections.length > 0 && item.tokenId) {
         const ops = {
           address: item.collections[0].collectionAddr,
@@ -115,35 +96,34 @@ const SliderCarouselHome = () => {
         }
 
         //get author/seller info
-        try {
-          await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            params: {
-              walletAddr: tokenIdMetadata.owner_of.toLowerCase()
-            }
-          }).then(res => {
-            newItem.author = res.data.user;
-            if (isAuthenticated && account) {
-              newItem.isOwner = newItem.walletAddr && newItem.author.walletAddr.toLowerCase() === account.toLowerCase();
-            }
-          });
-        } catch (err) {
-          console.log("fetching user error:", err);
-          newItem.author = null;
+        newItem.author = await getUserInfo(tokenIdMetadata.owner_of.toLowerCase());
+        if (!newItem.author) {
+          newItem.author = {walletAddr: tokenIdMetadata.owner_of.toLowerCase()};
         }
-
+        if (isAuthenticated && account) {
+          newItem.isOwner = newItem.walletAddr && newItem.author.walletAddr.toLowerCase() === account.toLowerCase();
+        }
+        
         newItem.token_address = item.collections[0].collectionAddr;
         newItem.image = item.image;
         newItem.metadata = metadata;
-        newItem.creator = item.creator ? await getNFTCreator(item.creator) : null;
+        
+        if (item.creator) {
+          newItem.creator = await getUserInfo(item.creator.toLowerCase());
+          
+          if (!newItem.creator) {
+            newItem.creator = {walletAddr: item.creator.toLowerCase()};
+          }
+        } else {
+          newItem.creator = '';
+        }
+        
         newItem.collection = metadata && metadata.collection ? metadata.collection : null;
 
         newItems.push(newItem);
       }
     }
-    // console.log("bbb:", newItems);
+    
     setNewItems(newItems);
   }, [items]);
 
@@ -200,8 +180,8 @@ const SliderCarouselHome = () => {
             <div className="nft_pic">
               <span>
                 <span className="nft_pic_info">
-                  <span className="nft_pic_title">{nft.metadata && nft.metadata.name ? nft.metadata.name : 'Unknown'}</span>
-                  <span className="nft_pic_by">{nft.author && nft.author.name ? nft.author.name : 'Unknown'}</span>
+                  <span className="nft_pic_title">{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</span>
+                  <span className="nft_pic_by">{nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr.toLowerCase(), 'wallet')}</span>
                 </span>
               </span>
               <div className="nft_pic_wrap">

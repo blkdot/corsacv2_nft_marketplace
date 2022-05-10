@@ -1,15 +1,11 @@
 import React, { memo, useEffect, useState } from "react";
-import { useSelector, useDispatch } from 'react-redux';
 import UserTopSeller from './UserTopSeller';
-import * as selectors from '../../store/selectors';
-import { fetchAuthorList } from "../../store/actions/thunks";
 import axios from "axios";
-import api from "../../core/api";
+import { formatAddress, formatUserName } from "../../utils";
+import { defaultAvatar } from "./constants";
 
 const TopSeller = () => {
   const [topSellers, setTopSellers] = useState([]);
-
-  const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
 
   useEffect(async () => {
     try {
@@ -24,7 +20,7 @@ const TopSeller = () => {
         for (let s of res.data.sellers) {
           sellers.push({
             rank: rank++,
-            name: s.users && s.users[0] ? s.users[0].name : 'Unknown',
+            name: s.users && s.users[0] ? formatUserName(s.users[0].name) : formatAddress(s._id, 'wallet'),
             avatar: s.users && s.users[0] ? s.users[0].avatar : defaultAvatar,
             walletAddr: s._id,
             sales: s.sales

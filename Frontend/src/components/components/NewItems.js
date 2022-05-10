@@ -10,7 +10,7 @@ import { navigate } from '@reach/router';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { defaultAvatar, fallbackImg } from './constants';
-import { getFileTypeFromURL, getPayments, getUserInfo } from '../../utils';
+import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo } from '../../utils';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -126,25 +126,14 @@ const NewItems = () => {
           nft.method = parseInt(saleInfo[8]);
 
           //get seller info
-          try {
-            await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              params: {
-                walletAddr: saleInfo[2].toLowerCase()
-              }
-            }).then(res => {
-              nft.author = res.data.user;
-              if (isAuthenticated && account) {
-                nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
-              }
-            });
-          } catch (err) {
-            console.log("fetching user error:", err);
-            nft.author = null;
+          nft.author = await getUserInfo(saleInfo[2].toLowerCase());
+          if (!nft.author) {
+            nft.author = {walletAddr: saleInfo[2].toLowerCase()};
           }
-
+          if (isAuthenticated && account) {
+            nft.isOwner = nft.author && nft.author.walletAddr.toLowerCase() === account.toLowerCase();
+          }
+          
           if (nft.metadata) {
             if (typeof nft.metadata === "string") {
               nft.metadata = JSON.parse(nft.metadata);
@@ -236,11 +225,11 @@ const NewItems = () => {
             }
               <div className="author_list_pp">
                 {/* <span onClick={()=> navigate('/author/' + (nft.seller ? nft.seller.walletAddress : ''))}> */}
-                <span>
+                <span onClick={() => navigate(`/author/${nft.author.walletAddr.toLowerCase()}`)}>
                   <img className="lazy" 
                       src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-                      title={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
-                      alt={nft.author && nft.author.name ? nft.author.name : 'Unknown'} 
+                      title={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr, 'wallet')} 
+                      alt={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr, 'wallet')} 
                   />
                   <i className="fa fa-check"></i>
                 </span>
