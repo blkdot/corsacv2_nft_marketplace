@@ -110,7 +110,7 @@ const App = ({ isServerInfo }) => {
           </Home>
           
           <Explore path="/explore" />
-          <LiveAuction path="/liveAuction" />
+          <LiveAuction path="/auctions" />
           <Collections path="/collections" />
 
           <CreateCollection path="/createCollection" />

@@ -1140,10 +1140,10 @@ const Item = () => {
 											)}
 
 											{openMenu  && (  
-											<div className="tab-1 onStep fadeIn">
+											<div className="tab-1 onStep fadeIn" style={{overflowY: "auto", maxHeight: "230px"}}>
 													{nft.bids && nft.bids.map((bid, index) => (
-															<div className="p_list" key={index}>
-																	<div className="p_list_pp">
+															<div className="p_list" key={index} style={{position: "relative"}}>
+																	<div className="p_list_pp" style={{marginTop: "5px"}}>
 																			<span>
 																					<img className="lazy" 
 																						src={bid.user && bid.user.avatar ? bid.user.avatar : defaultAvatar} 
@@ -1167,7 +1167,7 @@ const Item = () => {
 											)}
 
 											{openMenu1 && ( 
-											<div className="tab-2 onStep fadeIn" style={{overflowY: "scroll", maxHeight: "230px"}}>
+											<div className="tab-2 onStep fadeIn" style={{overflowY: "auto", maxHeight: "230px"}}>
 													{nft.history && nft.history.map((history, index) => (
 															<div className="p_list" key={index} style={{position: "relative"}}>
 																	<div className="p_list_pp" style={{marginTop: "5px"}}>
