@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch } from 'react-redux';
 import { useMoralis } from "react-moralis";
 import * as actions from '../store/actions/thunks';
-import { Router, Location, Redirect, navigate } from '@reach/router';
+import { Router, Location, Redirect, navigate, createHistory } from '@reach/router';
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
 import Home from './pages/home';
@@ -25,6 +25,8 @@ import Item from "./pages/Item";
 
 import { createGlobalStyle } from 'styled-components';
 
+const history = createHistory(window);
+
 const GlobalStyles = createGlobalStyle`
   :root {
     scroll-behavior: unset;
@@ -37,7 +39,7 @@ export const ScrollTop = ({ children, location }) => {
 }
 
 const PosedRouter = ({ children }) => (
-  <Location>
+  <Location history={history}>
     {({ location }) => (
       <div id='routerhang'>
         <div key={location.key}>
