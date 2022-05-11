@@ -307,3 +307,62 @@ export async function getAllCollection() {
 
   return collections;
 }
+
+export async function getFavoriteCount(collectionAddr, tokenId, walletAddr = null) {
+  let count = 0;
+  let liked = false;
+
+  try {
+    const result = await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/like/item`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        collectionAddr: collectionAddr.toLowerCase(),
+        tokenId: parseInt(tokenId),
+        walletAddr: walletAddr ? walletAddr.toLowerCase() : null
+      }
+    });
+
+    count = result.data.count;
+    liked = result.data.liked;
+  } catch (e) {
+    console.log(e);
+    count = 0;
+    liked = false;
+  }
+
+  return {count: count, liked: liked};
+}
+
+export async function addLike(walletAddr, collectionAddr, tokenId) {
+  const res = await axios.post(
+    `${process.env.REACT_APP_SERVER_URL}/api/like/add`, 
+    {
+      'walletAddr': walletAddr.toLowerCase(),
+      'collectionAddr': collectionAddr.toLowerCase(),
+      'tokenId': parseInt(tokenId),
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+}
+
+export async function removeLike(walletAddr, collectionAddr, tokenId) {
+  const res = await axios.post(
+    `${process.env.REACT_APP_SERVER_URL}/api/like/remove`, 
+    {
+      'walletAddr': walletAddr.toLowerCase(),
+      'collectionAddr': collectionAddr.toLowerCase(),
+      'tokenId': parseInt(tokenId),
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+}

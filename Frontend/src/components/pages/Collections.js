@@ -172,10 +172,10 @@ const Collections = props => {
                     )
                   }
                   <div className="author_list_pp">
-                    <span onClick={()=> navigate(collection.creators[0] && collection.creators[0].walletAddr ? '/author/' + collection.creators[0].walletAddr : '')}>
+                    <span onClick={()=> navigate(`/author/${collection.creators[0] && collection.creators[0].walletAddr ? collection.creators[0].walletAddr : collection.walletAddr}`)}>
                       <img className="lazy" 
                         src={collection.creators[0] && collection.creators[0].avatar ? collection.creators[0].avatar : defaultAvatar} 
-                        title={collection.creators[0] && collection.creators[0].name ? collection.creators[0].name : (collection.creators[0] && collection.creators[0].walletAddr ? formatAddress(collection.creators[0].walletAddr, 'wallet') : 'Unknown')}
+                        title={collection.creators[0] && collection.creators[0].name ? collection.creators[0].name : (collection.creators[0] && collection.creators[0].walletAddr ? formatAddress(collection.creators[0].walletAddr, 'wallet') : formatAddress(collection.walletAddr, 'wallet'))}
                         alt=""/>
                       <i className="fa fa-check"></i>
                     </span>

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { clearNfts, clearFilter } from '../../store/actions';
 import MyNftCard from './MyNftCard';
-import NftMusicCard from './NftMusicCard';
 import { Modal, Input, Select, Option, Spin, Button, Tabs, DatePicker } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
@@ -12,7 +11,7 @@ import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 import * as selectors from '../../store/selectors';
 import { navigate } from '@reach/router';
-import { getFileTypeFromURL, getUserInfo, getPayments } from '../../utils';
+import { getFileTypeFromURL, getUserInfo, getPayments, getFavoriteCount } from '../../utils';
 import { defaultAvatar, fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
@@ -486,6 +485,17 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           }
           nft.item_type = file.fileType;
           nft.mime_type = file.mimeType;
+
+          //get favorites
+          try {
+            const favorites = await getFavoriteCount(nft.token_address, nft.token_id, account ? account : null);
+            nft.likes = favorites.count;
+            nft.liked = favorites.liked;
+          } catch (e) {
+            console.log(e);
+            nft.likes = 0;
+            nft.liked = false;
+          }
         }
         setIsPageLoading(false);
       } else {

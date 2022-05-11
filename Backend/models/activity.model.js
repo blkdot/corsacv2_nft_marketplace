@@ -16,6 +16,8 @@ const mongoose = require("mongoose");
 //12: Like
 //13: Follow
 //14: Cancel bid
+//15: Unlike
+//16: Unfollow
 //99: Other
 const Activity = mongoose.model(
   "Activity",

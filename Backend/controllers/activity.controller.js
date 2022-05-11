@@ -16,6 +16,8 @@ const actionTypes = [
   { value: 12, label: 'Like'},
   { value: 13, label: 'Follow'},
   { value: 14, label: 'Cancel bid'},
+  { value: 15, label: 'Unlike'},
+  { value: 16, label: 'Unfollow'},
   { value: 99, label: 'Other'},
 ];
 
@@ -235,7 +237,7 @@ exports.getHistory = (req, res) => {
     {
       $match: {
         $and: [
-          {actionType: {$in: [2, 3, 4, 5, 6, 8, 9, 10, 11]}},
+          {actionType: {$in: [2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16]}},
           {collectionAddr: {$eq: req.query.collectionAddr}},
           {tokenId: parseInt(req.query.tokenId)}
         ]

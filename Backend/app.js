@@ -50,6 +50,7 @@ require("./routes/bid.routes")(app);
 require("./routes/user.routes")(app);
 require("./routes/payment.routes")(app);
 require("./routes/activity.routes")(app);
+require("./routes/like.routes")(app);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);

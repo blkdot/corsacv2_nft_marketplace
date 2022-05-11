@@ -14,7 +14,7 @@ import api from "../../core/api";
 import axios from 'axios';
 import * as selectors from '../../store/selectors';
 import { defaultAvatar, fallbackImg } from '../components/constants';
-import { formatAddress, formatUserName } from '../../utils';
+import { formatAddress, formatUserName, addLike, removeLike } from '../../utils';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -75,6 +75,9 @@ const MyNftCard = ({
     }
 
     const [isLoading, setIsLoading] = useState(false);
+
+    const [likes, setLikes] = useState(0);
+    const [liked, setLiked] = useState(false);
 
     const handleSellClick = async (nft) => {
       setIsLoading(true);
@@ -248,6 +251,37 @@ const MyNftCard = ({
       });
       return flag;
     }
+
+    const handleFavorite = async (nft) => {
+      if (account && nft.author && (account.toLowerCase() !== nft.author.walletAddr.toLowerCase())) {
+        if (liked) {
+          //will unlike
+          await removeLike(
+            account.toLowerCase(), 
+            nft.token_address.toLowerCase(), 
+            (nft.token_id ? nft.token_id : nft.tokenId)
+          ).then((res) => {
+            setLikes(--nft.likes);
+            setLiked(false);
+          });
+        } else {
+          //will like
+          await addLike(
+            account.toLowerCase(), 
+            nft.token_address.toLowerCase(), 
+            (nft.token_id ? nft.token_id : nft.tokenId)
+          ).then((res) => {
+            setLikes(++nft.likes);
+            setLiked(true);
+          });
+        }
+      }
+    }
+
+    useEffect(() => {
+      setLikes(nft.likes);
+      setLiked(nft.liked);
+    }, [nft])
         
     return (
         <div className={className}>
@@ -354,9 +388,10 @@ const MyNftCard = ({
                     )
                   )}
                 </div>
-                  <div className="nft__item_like">
-                      <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
-                  </div>                            
+                <div className="nft__item_like" onClick={() => handleFavorite(nft)}>
+                  <i className="fa fa-heart" style={liked ? {color: '#FF3F34'} : {}} title={liked ? 'UnFavorate' : 'Favorite'}></i>
+                  <span>{likes ? likes : 0}</span>
+                </div>
               </div> 
           </div>
           }

@@ -78,9 +78,9 @@ const Activity = () => {
           className = 'act_sale';
         } else if ([5, 11].includes(parseInt(a.actionType))) {
           className = 'act_offer';
-        } else if (parseInt(a.actionType) == 12) {
+        } else if ([12, 15].includes(parseInt(a.actionType))) {
           className = 'act_like';
-        } else if (parseInt(a.actionType) == 13) {
+        } else if ([13, 16].includes(parseInt(a.actionType))) {
           className = 'follow';
         } else {
           className = '';
@@ -119,7 +119,7 @@ const Activity = () => {
         document.getElementById("like").classList.remove("active");
         break;
       case "like":
-        types = [12];
+        types = [12, 15];
         document.getElementById("follow").classList.remove("active");
         document.getElementById("sale").classList.remove("active");
         document.getElementById("offer").classList.remove("active");
@@ -133,7 +133,7 @@ const Activity = () => {
         document.getElementById("like").classList.remove("active");
         break;
       case "follow":
-        types = [13];
+        types = [13, 16];
         document.getElementById("follow").classList.add("active");
         document.getElementById("sale").classList.remove("active");
         document.getElementById("offer").classList.remove("active");
@@ -157,9 +157,9 @@ const Activity = () => {
           className = 'act_sale';
         } else if ([5, 11].includes(parseInt(a.actionType))) {
           className = 'act_offer';
-        } else if (parseInt(a.actionType) == 12) {
+        } else if ([12, 15].includes(parseInt(a.actionType))) {
           className = 'act_like';
-        } else if (parseInt(a.actionType) == 13) {
+        } else if ([13, 16].includes(parseInt(a.actionType))) {
           className = 'follow';
         } else {
           className = '';

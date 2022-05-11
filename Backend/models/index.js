@@ -11,5 +11,6 @@ db.item = require("./item.model");
 db.bid = require("./bid.model");
 db.user = require("./user.model");
 db.activity = require("./activity.model");
+db.like = require("./like.model");
 
 module.exports = db;

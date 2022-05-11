@@ -1,16 +1,16 @@
 import React, { memo, useEffect, useState } from 'react';
 import { Modal, Spin } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction } from "react-moralis";
-import axios from "axios";
+import { useMoralis } from "react-moralis";
 import BigNumber from "bignumber.js";
 import styled from 'styled-components';
-import Countdown from 'react-countdown';
+
 import { navigate } from '@reach/router';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { defaultAvatar, fallbackImg } from './constants';
-import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo } from '../../utils';
+import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount } from '../../utils';
+import NftCard from './NftCard';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -25,16 +25,6 @@ const StyledModal = styled(Modal)`
     background-color: transparent;
   }
 `
-const renderer = props => {
-  if (props.completed) {
-    // Render a completed state
-    return <span>Ended</span>;
-  } else {
-    // Render a countdown
-    return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
-  }
-};
-
 const Outer = styled.div`
   display: flex;
   justify-content: center;
@@ -50,8 +40,6 @@ const NewItems = () => {
 
   const [nfts, setNfts] = useState([]);
 
-  const [height, setHeight] = useState(210);
-
   const { isAuthenticated, account, Moralis } = useMoralis();
   const { marketAddress, contractABI } = useMoralisDapp();
 
@@ -63,13 +51,6 @@ const NewItems = () => {
 
   const NEW_ITEM_DURATION = 7 * 24 * 3600;
 
-  const onImgLoad = (e) => {
-    let currentHeight = height;
-    if(currentHeight < e.target.offsetHeight) {
-        setHeight(e.target.offsetHeight);
-    }
-  }
-  
   async function getSalesInfo() {
     const ops = {
       chain: process.env.REACT_APP_CHAIN_ID,
@@ -92,7 +73,6 @@ const NewItems = () => {
   };
 
   useEffect(async () => {
-    
     if (window.web3 === undefined && window.ethereum === undefined){
       return;
     }
@@ -188,6 +168,17 @@ const NewItems = () => {
             nft.payment = payment;
           }
 
+          //get favorites
+          try {
+            const favorites = await getFavoriteCount(nft.token_address, nft.token_id, account ? account : null);
+            nft.likes = favorites.count;
+            nft.liked = favorites.liked;
+          } catch (e) {
+            console.log(e);
+            nft.likes = 0;
+            nft.liked = false;
+          }
+          
           promises.push(nft);
         } catch (e) {
           console.log(e);
@@ -207,97 +198,13 @@ const NewItems = () => {
       <StyledSpin tip="Loading..." size="large" spinning={loading}/>
         
       { nfts && nfts.map( (nft, index) => (
-        <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
-          <div className="nft__item m-0">
-            { nft.item_type && nft.item_type === 'single_items' ? (
-              <div className='icontype'><i className="fa fa-bookmark"></i></div>   
-              ) : (  
-              <div className='icontype'><i className="fa fa-shopping-basket"></i></div>
-                )
-            }
-            { nft.endTime && clockTop &&
-              <div className="de_countdown">
-                <Countdown
-                  date={parseInt(nft.endTime) * 1000}
-                  renderer={renderer}
-                />
-              </div>
-            }
-              <div className="author_list_pp">
-                {/* <span onClick={()=> navigate('/author/' + (nft.seller ? nft.seller.walletAddress : ''))}> */}
-                <span onClick={() => navigate(`/author/${nft.author.walletAddr.toLowerCase()}`)}>
-                  <img className="lazy" 
-                      src={nft.author && nft.author.avatar ? nft.author.avatar : defaultAvatar} 
-                      title={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr, 'wallet')} 
-                      alt={nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr, 'wallet')} 
-                  />
-                  <i className="fa fa-check"></i>
-                </span>
-              </div>
-              <div className="nft__item_wrap" style={{height: `${height}px`}}>
-                <Outer>
-                  <span>
-                    { nft.item_type && nft.item_type == 'image' &&
-                      <img onLoad={onImgLoad} src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} className="lazy nft__item_preview" alt=""/>
-                    }
-                    { nft.item_type && nft.item_type == 'video' &&
-                      <video onLoadedMetadata={onImgLoad} width="100%" height="100%" controls className="lazy nft__item_preview">
-                        <source src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} type={nft.mime_type} />
-                      </video>
-                    }
-                    { nft.item_type && nft.item_type == 'audio' &&
-                      <audio onLoadedMetadata={onImgLoad} controls className="lazy nft__item_preview">
-                        <source src={nft.image ? nft.image : nft.metadata && nft.metadata.image ? nft.metadata.image : fallbackImg} type={nft.mime_type} />
-                      </audio>
-                    }
-                  </span>
-                </Outer>
-              </div>
-              { nft.endTime && !clockTop &&
-                <Countdown
-                  date={parseInt(nft.endTime) * 1000}
-                  renderer={renderer}
-                />
-              }
-              <div className="nft__item_info">
-                <span onClick={() => handleItemClick(nft)}>
-                  <h4>{nft.metadata.name ? nft.metadata.name : nft.name}</h4>
-                </span>
-                  { nft.onSale || nft.onOffer || nft.onAuction ? (
-                      <div className="nft__item_price">
-                        {nft.price} {nft.payment ? nft.payment.symbol : 'Unknown'}
-                        {/* { nft.onAuction && 
-                            <span>{nft.bid}/{nft.max_bid}</span>
-                        } */}
-                      </div>
-                    ) : (
-                      <div className="nft__item_price">
-                        {nft.price} {nft.payment ? nft.payment.symbol : 'Unknown'}
-                      </div>
-                      )
-                  }
-                  <div className="nft__item_action">
-                    <>
-                      {nft.isOwner && (
-                        <span onClick={() => handleItemClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</span>
-                      )}
-                      {(!nft.isOwner && (nft.onSale || nft.onOffer)) && (
-                        <span onClick={() => handleItemClick(nft)}>Buy Now</span>
-                      )}
-                      {(!nft.isOwner && nft.onAuction) && (
-                        <span onClick={() => handleItemClick(nft)}>Place a bid</span>
-                      )}
-                    </>
-                  </div>
-                  <div className="nft__item_like">
-                      <i className="fa fa-heart"></i><span>{nft.likes ? nft.likes : 0}</span>
-                  </div>                            
-              </div> 
-          </div>
-        </div>
-        )
-      )
-      }
+        <NftCard
+          nft={nft}
+          handleItemClick={handleItemClick}
+          key={index}
+          clockTop={clockTop}
+        />
+      ))}
     </div>
   );
 };

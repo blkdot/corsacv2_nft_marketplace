@@ -5,7 +5,7 @@ import { useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery 
 import { Spin } from "antd";
 import styled from 'styled-components';
 import BigNumber from 'bignumber.js';
-import { getFileTypeFromURL, getPayments, getUserInfo } from '../../utils';
+import { getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount } from '../../utils';
 import { fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
@@ -201,6 +201,17 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
         }
         nft.item_type = file.fileType;
         nft.mime_type = file.mimeType;
+
+        //get favorites
+        try {
+          const favorites = await getFavoriteCount(nft.token_address, nft.token_id, account ? account : null);
+          nft.likes = favorites.count;
+          nft.liked = favorites.liked;
+        } catch (e) {
+          console.log(e);
+          nft.likes = 0;
+          nft.liked = false;
+        }
 
         //apply filters
         const cat = nft.metadata && nft.metadata.collection ? nft.metadata.collection.category : null;

@@ -20,7 +20,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button } from "antd";
 import styled from 'styled-components';
-import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName } from "../../utils";
+import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 const StyledSpin = styled(Spin)`
@@ -134,6 +134,9 @@ const Item = () => {
 		const [isBidded, setIsBidded] = useState(false);
 
 		const [foundNFT, setFoundNFT] = useState(true);
+
+		const [likes, setLikes] = useState(0);
+  	const [liked, setLiked] = useState(false);
 
 		const renderer = props => {
 			if (props.completed) {
@@ -574,6 +577,32 @@ const Item = () => {
 			});
 		}
 
+		const handleFavorite = async (nft) => {
+			if (account && nft.author && (account.toLowerCase() !== nft.author.walletAddr.toLowerCase())) {
+				if (liked) {
+					//will unlike
+					await removeLike(
+						account.toLowerCase(), 
+						nft.token_address.toLowerCase(), 
+						(nft.token_id ? nft.token_id : nft.tokenId)
+					).then((res) => {
+						setLikes(--nft.likes);
+						setLiked(false);
+					});
+				} else {
+					//will like
+					await addLike(
+						account.toLowerCase(), 
+						nft.token_address.toLowerCase(), 
+						(nft.token_id ? nft.token_id : nft.tokenId)
+					).then((res) => {
+						setLikes(++nft.likes);
+						setLiked(true);
+					});
+				}
+			}
+		}
+
 		const handleCancelClick = async (nft) => {
 			let functionName = null;
 			let action = null;
@@ -640,6 +669,18 @@ const Item = () => {
 
 							if (actionType == 14) {
 								setIsBidded(false);
+							}
+
+							//reset item
+							if ([9, 10, 11].includes(parseInt(actionType))) {
+								let temp = JSON.parse(JSON.stringify(nft));
+								temp.onSale = false;
+								temp.onAuction = false;
+								temp.onOffer = false;
+								temp.price = null;
+								temp.payment = null;
+								temp.endTime = null;
+								setNFT(temp);
 							}
 						} catch(ex) {
 							console.log(ex);
@@ -885,6 +926,17 @@ const Item = () => {
 			
 			nft.history = await getHistory(nft.token_address, nft.token_id);
 
+			//get favorites
+			try {
+				const favorites = await getFavoriteCount(nft.token_address, nft.token_id, account ? account : null);
+				nft.likes = favorites.count;
+				nft.liked = favorites.liked;
+			} catch (e) {
+				console.log(e);
+				nft.likes = 0;
+				nft.liked = false;
+			}
+
 			setNFT(nft);
 			setIsPageLoading(false);
 		}
@@ -907,6 +959,13 @@ const Item = () => {
 				navigate("/");
 			}
 		}, [payments, account]);
+
+		useEffect(() => {
+			if (nft) {
+				setLikes(nft.likes);
+				setLiked(nft.liked);
+			}
+		}, [nft])
 
 		return (
 			<div className="greyscheme">
@@ -982,7 +1041,9 @@ const Item = () => {
 									<div className="item_info_counts">
 										<div className="item_info_type"><i className="fa fa-image"></i>{nft.metadata && nft.metadata.collection.category ? nft.metadata.collection.category : nft.category}</div>
 										<div className="item_info_views"><i className="fa fa-eye"></i>{nft.views}</div>
-										<div className="item_info_like"><i className="fa fa-heart"></i>{nft.likes}</div>
+										<div className="item_info_like" onClick={() => handleFavorite(nft)}>
+											<i className="fa fa-heart" style={liked ? {color: '#FF3F34'} : {}} title={liked ? 'UnFavorate' : 'Favorite'}></i>{nft.likes}
+										</div>
 									</div>
 									
 									<div className="d-flex flex-row">
@@ -1106,19 +1167,19 @@ const Item = () => {
 											)}
 
 											{openMenu1 && ( 
-											<div className="tab-2 onStep fadeIn">
+											<div className="tab-2 onStep fadeIn" style={{overflowY: "scroll", maxHeight: "230px"}}>
 													{nft.history && nft.history.map((history, index) => (
-															<div className="p_list" key={index}>
-																	<div className="p_list_pp">
-																			<span>
-																					<img className="lazy" src={history.actorAvatar} alt=""/>
-																					<i className="fa fa-check"></i>
-																			</span>
+															<div className="p_list" key={index} style={{position: "relative"}}>
+																	<div className="p_list_pp" style={{marginTop: "5px"}}>
+																		<span>
+																			<img className="lazy" src={history.actorAvatar} alt=""/>
+																			<i className="fa fa-check"></i>
+																		</span>
 																	</div>                                    
 																	<div className="p_list_info">
-																			<b>{formatUserName(history.actor)}</b>
-																			<span>{history.description}</span>
-																			<span>{history.from ? 'From' : ''} <b>{history.from ? formatUserName(history.from) : ''}</b> at <b>{moment(history.timeStamp).format('L, LT')}</b></span>
+																		<b>{formatUserName(history.actor)}</b>
+																		<span>{history.description}</span>
+																		<span>{history.from ? 'From' : ''} <b>{history.from ? formatUserName(history.from) : ''}</b> at <b>{moment(history.timeStamp).format('L, LT')}</b></span>
 																	</div>
 															</div>
 													))}
