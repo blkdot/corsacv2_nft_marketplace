@@ -105,6 +105,8 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
           if (temp.length > 0) {
             temp[0].saleId = parseInt(saleInfo[0]);
             temp[0].method = parseInt(saleInfo[8]);
+            temp[0].saleAmount = parseInt(saleInfo[5]);
+            temp[0].saleBalance = parseInt(saleInfo[13]);
 
             if (payments.length >= parseInt(saleInfo[6]) + 1) {
               const payment = payments[parseInt(saleInfo[6])];

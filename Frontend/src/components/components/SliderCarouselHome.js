@@ -56,7 +56,7 @@ const SliderCarouselHome = () => {
 
   const handleBuyClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr : ''}`);
   };
 
   useEffect(async () => {

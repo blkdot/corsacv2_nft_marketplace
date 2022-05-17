@@ -15,6 +15,7 @@ import { Spin, Modal } from "antd";
 import styled from 'styled-components';
 import BigNumber from "bignumber.js";
 import { audioTypes, getFileTypeFromURL, videoTypes } from "../../utils";
+import moment from "moment";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -73,18 +74,17 @@ const CreateItem = () => {
   const { marketAddress, contractABI } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
   const { account, Moralis, isAuthenticated } = useMoralis();
-  const { saveFile, moralisFile } = useMoralisFile();
+  const { saveFile } = useMoralisFile();
   const { chainId } = useChain();
 
   const imgInput = useRef(null);
   const [image, setImage] = useState({ preview: '', data: '', type: '' });
   const [collections, setCollections] = useState([]);
-  // const [payments, setPayments] = useState([]);
   const [collection, setCollection] = useState(null);
-  // const [payment, setPayment] = useState(null);
   const [itemName, setItemName] = useState('');
   const [description, setDescription] = useState('');
   const [royalty, setRoyalty] = useState(0);
+  const [copy, setCopy] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingTitle, setLoadingTitle] = useState("Loading...");
 
@@ -136,11 +136,8 @@ const CreateItem = () => {
 
   const handleCollectionChange = (selectedOption) => {
     setCollection(selectedOption);
+    setCopy(1);
   };
-
-  // const handlePaymentChange = (selectedOption) => {
-  //   setPayment(selectedOption);
-  // };
 
   const handleCreateItem = async (e) => {
     //check form data
@@ -178,6 +175,12 @@ const CreateItem = () => {
     if (parseInt(royalty) < 0 || parseInt(royalty) > 40) {
       setModalTitle('Error');
       setModalMessage("Enter royalty for your item (max 40%)");
+      setOpenModal(true);
+      return;
+    }
+    if (copy < 0) {
+      setModalTitle('Error');
+      setModalMessage("Enter number of copy");
       setOpenModal(true);
       return;
     }
@@ -255,102 +258,78 @@ const CreateItem = () => {
       params: {
         collectionAddr: collection.addr,
         _to: account,
-        uri: metadataUrl
+        _uri: metadataUrl,
+        _quantity: collection.type === 1 ? Math.floor(copy) : 1
       }
     };
     await contractProcessor.fetch({
       params: ops,
       onSuccess: async (result) => {
         console.log("success:mintTo");
-        await result.wait();
-
-        //get token id
-        let token_id = null;
-        ops.functionName = "getTokenId";
-        ops.params = {collectionAddr: collection.addr};
-        await contractProcessor.fetch({
-          params: ops,
-          onSuccess: async (result) => {
-            console.log("success:getTokenId");
-
-            token_id = new BigNumber(result._hex).toNumber() - 1;
-
-            //save item into db
-            try {
-              const res = await axios.post(
-                `${process.env.REACT_APP_SERVER_URL}/api/item/create`, 
-                {
-                  'walletAddr': account.toLowerCase(),
-                  'collectionId': collection.value,
-                  'tokenId': token_id,
-                  // 'payment': payment.value,
-                  'title': itemName,
-                  'description': description,
-                  'image': GATEWAY_URL + imageFileIpfs.hash(),
-                  'royalty': royalty,
-                  'timeStamp': Math.floor(new Date().getTime() / 1000),
-                  'creator': account.toLowerCase()
-                },
-                {
-                  headers: {
-                    'Content-Type': 'application/json',
-                  }
-                }
-              );
-
-              const options = {
-                address: collection.addr,
-                token_id: token_id,
-                flag: "uri",
-                chain: chainId
-              };
-              const result = await Moralis.Web3API.token.reSyncMetadata(options);
-              
-              setLoading(false);
-
-              if (res) {
-                if (res.data.type === 'error') {
-                  setModalTitle('Error');
-                  setModalMessage(res.data.message);
-                  setOpenModal(true);
-                } else {
-                  setModalTitle('Success');
-                  setModalMessage(res.data.message);
-                  setOpenModal(true);
-
-
-                  setTimeout(async () => {
-                    
-                    navigate('/collection/' + collection.addr);
-                  }, 2000);
-                }
+        const tx = await result.wait();
+        const event = tx.events?.filter((e) => {return e.event === "MintTo"});
+        const token_id = parseInt(event[0].args.tokenId);
+        //save item into db
+        try {
+          const res = await axios.post(
+            `${process.env.REACT_APP_SERVER_URL}/api/item/create`, 
+            {
+              'walletAddr': account.toLowerCase(),
+              'collectionId': collection.value,
+              'tokenId': token_id,
+              'title': itemName,
+              'description': description,
+              'image': GATEWAY_URL + imageFileIpfs.hash(),
+              'royalty': royalty,
+              'amount': copy,
+              'timeStamp': Math.floor(new Date().getTime() / 1000),
+              'creator': account.toLowerCase()
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
               }
-            } catch(ex) {
-              console.log(ex);
-              setLoading(false);
+            }
+          );
 
+          const options = {
+            address: collection.addr,
+            token_id: token_id,
+            flag: "uri",
+            chain: chainId
+          };
+          const result = await Moralis.Web3API.token.reSyncMetadata(options);
+          
+          setLoading(false);
+
+          if (res) {
+            if (res.data.type === 'error') {
               setModalTitle('Error');
-              setModalMessage(ex.message);
+              setModalMessage(res.data.message);
               setOpenModal(true);
-              return;
-            }
-            // navigate("/");
-            setLoading(false);
-          },
-          onError: (error) => {
-            console.log("failed:getTokenId", error);
-            setLoading(false);
-
-            setModalTitle('Error');
-            if (error.message) {
-              setModalMessage(error.message);
             } else {
-              setModalMessage(error);
+              setModalTitle('Success');
+              setModalMessage(res.data.message);
+              setOpenModal(true);
+
+
+              setTimeout(async () => {
+                
+                navigate('/collection/' + collection.addr);
+              }, 2000);
             }
-            setOpenModal(true);
-            return;
           }
-        });
+        } catch(ex) {
+          console.log(ex);
+          setLoading(false);
+
+          setModalTitle('Error');
+          setModalMessage(ex.message);
+          setOpenModal(true);
+          return;
+        }
+        // navigate("/");
+        setLoading(false);
       },
       onError: (error) => {
         console.log("failed:mintTo", error);
@@ -388,19 +367,18 @@ const CreateItem = () => {
           walletAddr: account.toLowerCase()
         }
       }).then(async res => {
-        const erc721Collections = res.data.collections.filter((c, index) => {
-          return c.collectionType === 0;
-        });
-
         let myCollections = [];
-        for (let c of erc721Collections) {
+        for (let c of res.data.collections) {
           myCollections.push({
             value: c._id, 
-            label: c.title, 
+            label: `${c.title} (${c.collectionType === 0 ? 'BEP-721' : c.collectionType === 1 ? 'BEP-1155' : 'Unknown'})`, 
+            title: c.title,
             addr: c.collectionAddr, 
+            type: c.collectionType,
             symbol: c.symbol,
             category: c.category,
-            image: c.image
+            image: c.image,
+            timeStamp: c.timeStamp
           });
         }
         setCollections(myCollections);
@@ -420,10 +398,10 @@ const CreateItem = () => {
 
   useEffect(() => {
     if (!isAuthenticated || !account) {
-      navigate('/');
+      navigate('/wallet');
     }
   }, []);
-  
+
   return (
     <div className="greyscheme">
       <StyledHeader theme={theme} />
@@ -480,15 +458,29 @@ const CreateItem = () => {
               
               <div className="spacer-30"></div>
 
-              {/* <h5>Choose payment <span className="text-muted">(Required)</span></h5>
-              <Select 
-                  styles={customStyles}
-                  options={[defaultValue, ...payments]}
-                  onChange={handlePaymentChange}
-              />
-              
-              <div className="spacer-30"></div> */}
+              {collection && collection.type != null &&
+                <>
+                  <h5>Collection Information:</h5>
+                  <div className="nft__item_price">
+                    Title: {collection.title}
+                  </div>
+                  <div className="nft__item_price">
+                    Symbol: {collection.symbol}
+                  </div>
+                  <div className="nft__item_price">
+                    Type: {collection.type === 0 ? 'BEP-721' : collection.type === 1 ? 'BEP-1155' : 'Unknown'}
+                  </div>
+                  <div className="nft__item_price">
+                    Category: {collection.category}
+                  </div>
+                  <div className="nft__item_price">
+                    Created At: {moment(collection.timeStamp * 1000).format('L, LT')}
+                  </div>
 
+                  <div className="spacer-30"></div>
+                </>
+              }
+              
               <h5>Item Name <span className="text-muted">(30 available, required)</span></h5>
               <input type="text" 
                     name="item_name" 
@@ -522,6 +514,25 @@ const CreateItem = () => {
               />
               
               <div className="spacer-10"></div>
+
+              {collection && collection.type === 1 &&
+                <>
+                  <h5>Number of copy <span className="text-muted">(Required)</span></h5>
+                  <input type="number" 
+                        name="copy" 
+                        id="copy" 
+                        className="form-control" 
+                        placeholder="Enter number of copy" 
+                        value={copy} 
+                        onChange={(e) => setCopy(e.target.value)}
+                        min={1}
+                        step={1}
+                        required
+                  />
+                  
+                  <div className="spacer-10"></div>
+                </>
+              }
 
               <input type="button" id="submit" className="btn-main" value="Create Item" onClick={handleCreateItem}/>
             </div>

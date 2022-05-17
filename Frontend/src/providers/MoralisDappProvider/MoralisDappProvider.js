@@ -7,13 +7,8 @@ function MoralisDappProvider({ children }) {
   const [walletAddress, setWalletAddress] = useState();
   const [chainId, setChainId] = useState();
   
-  // ERC-20 token contract address and ABI
-  const [corsacTokenAddress, setCorsacTokenAddress] = 
-    useState('0x0b1B6859b760911D8d60BDB46728D96dbdc3062c');
-  const corsacTokenABI = require("../../contracts/corsac-token.json");
-  
   //Marketplace contract address and ABI here  
-  const [marketAddress, setMarketAddress] = useState("0x0e21827271e082f3A422A2e0c86Bb9CB579fE4D5");
+  const [marketAddress, setMarketAddress] = useState(process.env.REACT_APP_MARKETPLACE_CONTRACT_ADDRESS);
   const contractABI = require("../../contracts/marketplace.json");
   
   // console.log(web3, Moralis, user);
@@ -39,9 +34,6 @@ function MoralisDappProvider({ children }) {
     <MoralisDappContext.Provider value={{ 
         walletAddress, 
         chainId, 
-        corsacTokenAddress, 
-        setCorsacTokenAddress,
-        corsacTokenABI,
         marketAddress, 
         setMarketAddress, 
         contractABI

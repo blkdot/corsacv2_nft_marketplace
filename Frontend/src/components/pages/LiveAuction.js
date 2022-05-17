@@ -88,13 +88,6 @@ const LiveAuction = () => {
 
   const [height, setHeight] = useState(210);
 
-  const onImgLoad = (e) => {
-    let currentHeight = height;
-    if(currentHeight < e.target.offsetHeight) {
-        setHeight(e.target.offsetHeight);
-    }
-  }
-
   async function getSalesInfo() {
     if (window.web3 === undefined && window.ethereum === undefined)
       return;
@@ -119,7 +112,7 @@ const LiveAuction = () => {
 
   const handleBuyClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr : ''}`);
   };
 
   useEffect(() => {
@@ -183,6 +176,9 @@ const LiveAuction = () => {
                 temp[0].image = temp[0].metadata.image ? temp[0].metadata.image : fallbackImg;
               }
             }
+
+            temp[0].saleAmount = parseInt(sale[5]);
+            temp[0].saleBalance = parseInt(sale[13]);
 
             //get author/seller info
             temp[0].author = await getUserInfo(sale[2].toLowerCase());

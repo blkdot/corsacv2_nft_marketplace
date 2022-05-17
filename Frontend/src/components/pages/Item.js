@@ -18,7 +18,7 @@ import Countdown from 'react-countdown';
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
 
-import { Spin, Modal, Button } from "antd";
+import { Spin, Modal, Button, InputNumber } from "antd";
 import styled from 'styled-components';
 import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
@@ -138,6 +138,8 @@ const Item = () => {
 		const [likes, setLikes] = useState(0);
   	const [liked, setLiked] = useState(false);
 
+		const [copy, setCopy] = useState(1);
+
 		const renderer = props => {
 			if (props.completed) {
 				setIsBidEnded(true);
@@ -186,7 +188,7 @@ const Item = () => {
 
 			setIsCheckoutLoading(true);
 
-			if ((basePrice + serviceFee + royaltyFee) > yourBalance) {
+			if ((basePrice + serviceFee + royaltyFee) * copy > yourBalance) {
 				setNotAvailableBalance(true);
 			}
 			
@@ -234,7 +236,7 @@ const Item = () => {
 						const allowance = (new BigNumber(result._hex, 16)).dividedBy(new BigNumber(10).pow(decimals)).toNumber();
 						console.log("allowance:", allowance);
 
-						if (basePrice + serviceFee > allowance) {
+						if ((basePrice + serviceFee + royaltyFee) * copy > allowance) {
 							setTokenApproved(false);
 						} else {
 							setTokenApproved(true);
@@ -262,7 +264,7 @@ const Item = () => {
 
 			setIsCheckoutLoading(true);
 
-			if ((basePrice + serviceFee + royaltyFee) > yourBalance) {
+			if ((basePrice + serviceFee + royaltyFee) * copy > yourBalance) {
 				setNotAvailableBalance(true);
 			}
 			
@@ -389,7 +391,7 @@ const Item = () => {
 			// const amount = (new BigNumber(2)).pow(256) - 1;
 			let amount = 0;
 			if (type === 'buy') {
-				amount = Moralis.Units.Token(basePrice + serviceFee + royaltyFee, decimals);
+				amount = Moralis.Units.Token((basePrice + serviceFee + royaltyFee) * copy, decimals);
 			} else if (type === 'bid') {
 				amount = Moralis.Units.Token(bidAmount + bidAmount * (serviceFeePercent + royaltyFeePercent) / 100, decimals);
 			} else {
@@ -449,13 +451,14 @@ const Item = () => {
 
 		const buyItem = async () => {
 			console.log("buyItem");
-			const totalPrice = Moralis.Units.Token(basePrice + serviceFee + royaltyFee, decimals);
+			const totalPrice = Moralis.Units.Token((basePrice + serviceFee + royaltyFee) * copy, decimals);
 			const ops = {
 				contractAddress: marketAddress,
 				functionName: "buy",
 				abi: contractABI,
 				params: {
 					saleId: parseInt(nft.saleId),
+					amount: copy
 				},
 				msgValue: totalPrice,
 			};
@@ -511,7 +514,7 @@ const Item = () => {
 				abi: contractABI,
 				params: {
 					saleId: parseInt(nft.saleId),
-					price: totalPrice
+					price: Moralis.Units.Token(bidAmount, decimals)
 				},
 				msgValue: totalPrice
 			};
@@ -726,12 +729,6 @@ const Item = () => {
 	
 			const sales = await Moralis.Web3API.native.runContractFunction(ops);
 			
-			const options = {
-				chain: process.env.REACT_APP_CHAIN_ID,
-				address: collectionAddr,
-				token_id: tokenId,
-			};
-
 			if (!isInitialized || !Moralis.Web3API) {
 				const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
 				const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
@@ -741,11 +738,29 @@ const Item = () => {
 					appId: APP_ID
 				});
 			}
-			
+
 			let nft = null;
+
+			const options = {
+				chain: process.env.REACT_APP_CHAIN_ID,
+				address: collectionAddr,
+				token_id: tokenId,
+			};
+						
 			try {
-				const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
-				nft = result;
+				// const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
+				// nft = result;
+				const result = await Moralis.Web3API.token.getTokenIdOwners(options);
+				let temps = [];
+				if (params.ownerAddr) {
+					temps = result.result?.filter((item, index) => {
+						return item.owner_of.toLowerCase() === params.ownerAddr.toLowerCase();
+					});
+					nft = temps[0];
+				} else {
+					nft = result.result[0];
+				}
+				// console.log(nft);
 			} catch (err) {
 				console.log(err);
 				setIsPageLoading(false);
@@ -802,7 +817,9 @@ const Item = () => {
 			}
 
 			const s = sales.filter((s, index) => {
-				return s[3].toLowerCase() === collectionAddr && parseInt(s[4]) === parseInt(tokenId);
+				return s[3].toLowerCase() === collectionAddr && 
+					parseInt(s[4]) === parseInt(tokenId) &&
+					s[2].toLowerCase() === (params.ownerAddr ? params.ownerAddr.toLowerCase() : s[2].toLowerCase());
 			});
 			
 			const sale = s.length > 0 ? s[0] : null;
@@ -812,6 +829,8 @@ const Item = () => {
 				nft.seller = sale[2];
 				nft.method = parseInt(sale[8]);
 				nft.endTime = parseInt(sale[10]);
+				nft.saleAmount = parseInt(sale[5]);
+				nft.saleBalance = parseInt(sale[13]);
 
 				if (nft.method === 0) {
 					nft.onSale = true;
@@ -877,10 +896,10 @@ const Item = () => {
 				setDecimals(nft.payment.decimals);
 				setSymbol(nft.payment.symbol);
 
-				const sFeePercent = (new BigNumber(sale[11])) / 100;
-				const rFeePercent = (new BigNumber(sale[12])) / 100;
-				const sFee = bPrice * (new BigNumber(sale[11])) / 10000;
-				const rFee = bPrice * (new BigNumber(sale[12])) / 10000;
+				const sFeePercent = (new BigNumber(sale[11])).dividedBy(new BigNumber(10).pow(2)).toNumber();
+				const rFeePercent = (new BigNumber(sale[12])).dividedBy(new BigNumber(10).pow(2)).toNumber();
+				const sFee = bPrice * (new BigNumber(sale[11])).dividedBy(new BigNumber(10).pow(4)).toNumber();
+				const rFee = bPrice * (new BigNumber(sale[12])).dividedBy(new BigNumber(10).pow(4)).toNumber();
 	
 				setBasePrice(bPrice);
 				setYourBalance(yBalance);
@@ -958,7 +977,7 @@ const Item = () => {
 			} else {
 				navigate("/");
 			}
-		}, [payments, account]);
+		}, [account]);
 
 		useEffect(() => {
 			if (nft) {
@@ -1124,9 +1143,19 @@ const Item = () => {
 																<h3>
 																	Price: {nft.price ? nft.price.toString() + ' ' + nft.payment.symbol : ''}
 																</h3>
-																<h3 className="mb-0">
+																<h3>
 																	Royalty: {nft.metadata && nft.metadata.royalty ? (parseInt(nft.metadata.royalty) / 100).toFixed(2) + ' %' : ''}
 																</h3>
+																{ (nft.onSale || nft.onAuction || nft.onOffer) &&
+																<>
+																	<h3>
+																		Amount: {nft.amount ? nft.amount : 0}
+																	</h3>
+																	<h3 className="mb-0">
+																		Amount on sale: {nft.saleBalance ? nft.saleBalance : 0} of {nft.saleAmount ? nft.saleAmount : 0}
+																	</h3>
+																</>
+																}
 															</div>
 															}
 															<div className="nft_attr" style={{textAlign: "left"}}>
@@ -1186,6 +1215,13 @@ const Item = () => {
 											</div>
 											)}
 
+											{!nft.isOwner && nft.contract_type === 'ERC1155' && nft.saleBalance > 0 &&
+											<div className="d-flex flex-row mt-5">
+												<h3 className="mb-0" style={{marginRight: "10px"}}>Amount to buy:</h3>
+												<InputNumber min={1} max={nft.saleBalance} value={copy} onChange={setCopy} />
+											</div>
+											}
+
 											{/* button for checkout */}
 											<div className="d-flex flex-row mt-5">
 												{nft.isOwner && (nft.onSale || nft.onAuction || nft.onOffer) &&
@@ -1237,27 +1273,33 @@ const Item = () => {
 								</div>
 							</div>
 							<div className='heading mt-3'>
-								<p>Item Price</p>
+								<p>Item Base Price</p>
 								<div className='subtotal'>
 									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading mt-3'>
+								<p>Items To Buy</p>
+								<div className='subtotal'>
+									{copy}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>Service fee {serviceFeePercent}%</p>
 								<div className='subtotal'>
-									{serviceFee} {symbol}
+									{serviceFee * copy} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>Royalty fee {royaltyFeePercent}%</p>
 								<div className='subtotal'>
-									{royaltyFee} {symbol}
+									{royaltyFee * copy} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>You will pay</p>
 								<div className='subtotal'>
-									{basePrice + serviceFee + royaltyFee} {symbol}
+									{((basePrice + serviceFee + royaltyFee) * copy).toFixed(5)} {symbol}
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => handleCheckoutClick()}>
@@ -1302,28 +1344,34 @@ const Item = () => {
 									{yourBalance} {symbol}
 								</div>
 							</div>
-							<div className='heading'>
-								<p>Item Price</p>
+							<div className='heading mt-3'>
+								<p>Item Base Price</p>
 								<div className='subtotal'>
 									{basePrice} {symbol}
+								</div>
+							</div>
+							<div className='heading mt-3'>
+								<p>Items To Buy</p>
+								<div className='subtotal'>
+									{copy}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>Service fee {serviceFeePercent}%</p>
 								<div className='subtotal'>
-									{serviceFee} {symbol}
+									{serviceFee * copy} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>Royalty fee {royaltyFeePercent}%</p>
 								<div className='subtotal'>
-									{royaltyFee} {symbol}
+									{royaltyFee * copy} {symbol}
 								</div>
 							</div>
 							<div className='heading'>
 								<p>You have to pay</p>
 								<div className='subtotal'>
-									{basePrice + serviceFee + royaltyFee} {symbol}
+									{((basePrice + serviceFee + royaltyFee) * copy).toFixed(5)} {symbol}
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => setOpenCheckout(false)}>Okay, got it!</button>
@@ -1405,7 +1453,7 @@ const Item = () => {
 					<div className='price-detail-row'>
 						<p>You will pay</p>
 						<div className='subtotal'>
-							{bidAmount * (100 + serviceFeePercent + royaltyFeePercent) / 100} {symbol}
+							{(bidAmount * (100 + serviceFeePercent + royaltyFeePercent) / 100).toFixed(5)} {symbol}
 						</div>
 					</div>
 				</PlaceBidModal>
@@ -1447,7 +1495,7 @@ const Item = () => {
 							<div className='heading'>
 								<p>You will pay minimum</p>
 								<div className='subtotal'>
-									{basePrice + serviceFee + royaltyFee} {symbol}
+									{(basePrice + serviceFee + royaltyFee).toFixed(5)} {symbol}
 								</div>
 							</div>
 							<button className='btn-main lead mb-5' onClick={() => setOpenCheckoutbid(false)}>Okay, got it!</button>

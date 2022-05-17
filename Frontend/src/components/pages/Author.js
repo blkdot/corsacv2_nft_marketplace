@@ -73,25 +73,8 @@ const Author = () => {
   const [height, setHeight] = useState(210);
   const [clockTop, setClockTop] = useState(true);
 
-  // const onImgLoad = (e) => {
-  //   let currentHeight = height;
-  //   if(currentHeight < e.target.offsetHeight) {
-  //       setHeight(e.target.offsetHeight);
-  //   }
-  // }
-
-  // const renderer = props => {
-  //   if (props.completed) {
-  //     // Render a completed state
-  //     return <span>Ended</span>;
-  //   } else {
-  //     // Render a countdown
-  //     return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
-  //   }
-  // }
-
   const handleItemClick = (nft) => {
-    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr : ''}`);
   };
     
   const inputColorStyle = {
@@ -163,10 +146,15 @@ const Author = () => {
 
         //check if item is on sale
         const sales = saleItems.filter((sale, index) => {
-          return sale[3].toLowerCase() === item.token_address.toLowerCase() && parseInt(sale[4]) === parseInt(item.token_id);
+          return sale[3].toLowerCase() === item.token_address.toLowerCase() && 
+            parseInt(sale[4]) === parseInt(item.token_id) && 
+            sale[2].toLowerCase() === (item.owner_of ? item.owner_of.toLowerCase() : sale[2].toLowerCase());
         });
         if (sales.length > 0) {
           const sale = sales[0];
+
+          item.saleAmount = parseInt(sale[5]);
+          item.saleBalance = parseInt(sale[13]);
 
           item.payment = payments[sale[6]];
           item.price = new BigNumber(sale[7]).dividedBy(new BigNumber(10).pow(item.payment.decimals)).toNumber();

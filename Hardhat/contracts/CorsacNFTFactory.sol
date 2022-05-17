@@ -13,6 +13,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./ICorsacNFTFactory.sol";
 import "./ICorsacContract.sol";
 import "./IERC721Tradable.sol";
+import "./IERC1155Tradable.sol";
 import "hardhat/console.sol";
 
 contract CorsacNFTFactory is 
@@ -36,12 +37,12 @@ contract CorsacNFTFactory is
         uint256 endTime;
         uint256 feeRatio;
         uint256 royaltyRatio;
+        uint256 balance;
     }
 
     struct BookInfo {
         address user;
-        uint256 totalPrice;
-        uint256 serviceFee;
+        uint256 salePrice;
     }
 
     /*
@@ -195,7 +196,8 @@ contract CorsacNFTFactory is
     event Buy(
         address indexed user,
         uint256 saleId,
-        CorsacNFTSale saleInfo
+        CorsacNFTSale saleInfo,
+        uint256 amount
     );
 
     /**
@@ -213,8 +215,7 @@ contract CorsacNFTFactory is
      */
     event AuctionResult(
         address indexed winner,
-        uint256 totalPrice,
-        uint256 serviceFee,
+        uint256 salePrice,
         uint256 saleId,
         CorsacNFTSale saleInfo
     );
@@ -225,6 +226,7 @@ contract CorsacNFTFactory is
     event Trade(
         uint256 saleId,
         CorsacNFTSale sale,
+        uint256 amount,
         uint256 timestamp,
         uint256 paySeller,
         address owner,
@@ -277,7 +279,10 @@ contract CorsacNFTFactory is
     event MintTo(
         address collectionAddr,
         address _to,
-        string uri
+        string _uri,
+        uint256 _quantity,
+        bytes data,
+        uint256 tokenId
     );
 
     /**
@@ -453,13 +458,25 @@ contract CorsacNFTFactory is
      * @dev this function creates/mints new NFT by owner
      * @param collectionAddr - collection
      * @param _to - to account
-     * @param uri - uri for NFT
+     * @param _uri - uri for NFT
+     * @param _quantity - NFT quantity
      */
-    function mintTo(address collectionAddr, address _to, string memory uri) external {
+    function mintTo(
+        address collectionAddr, 
+        address _to, 
+        string memory _uri,
+        uint256 _quantity
+    ) external {
         require(collectionOccupation[collectionAddr] == true);
-        IERC721Tradable(collectionAddr).mintTo(_to, uri);
 
-        emit MintTo(collectionAddr, _to, uri);
+        if (IERC165(collectionAddr).supportsInterface(type(IERC721).interfaceId)) {
+            IERC721Tradable(collectionAddr).mintTo(_to, _uri);
+            bytes memory nbytes = new bytes(0);
+            emit MintTo(collectionAddr, _to, _uri, _quantity, nbytes, IERC721Tradable(collectionAddr).getTokenId() - 1);
+        } else if (IERC165(collectionAddr).supportsInterface(type(IERC1155).interfaceId)) {
+            bytes memory nbytes = new bytes(0);
+            emit MintTo(collectionAddr, _to, _uri, _quantity, nbytes, IERC1155Tradable(collectionAddr).create(_to, _quantity, _uri, nbytes));
+        } else revert("Not supported NFT contract");
     }
 
     /**
@@ -551,10 +568,10 @@ contract CorsacNFTFactory is
     /**
      * @dev this function returns URI string by checking its ERC721 or ERC1155 type.
      */
-    function getURIString(address sc, uint256 tokenId)
-        internal
-        view
-        returns (string memory uri, uint256 sc_type)
+    function getURIString(address sc, uint256 tokenId) 
+        internal 
+        view 
+        returns (string memory uri, uint256 sc_type) 
     {
         if (IERC165(sc).supportsInterface(type(IERC721).interfaceId)) {
             uri = IContractInfoWrapper(sc).tokenURI(tokenId);
@@ -633,6 +650,7 @@ contract CorsacNFTFactory is
         csns.sc = sc;
         csns.tokenId = tokenId;
         csns.copy = copy;
+        csns.balance = copy;
 
         csns.payment = payment;
         csns.basePrice = basePrice;
@@ -741,6 +759,7 @@ contract CorsacNFTFactory is
         csns.sc = sc;
         csns.tokenId = tokenId;
         csns.copy = copy;
+        csns.balance = copy;
 
         csns.payment = payment;
         csns.basePrice = unitPrice;
@@ -755,10 +774,11 @@ contract CorsacNFTFactory is
 
         uint256 salePrice = csns.copy * csns.basePrice;
         uint256 serviceFee = salePrice * csns.feeRatio / 10000;
-        uint256 totalPay = salePrice + serviceFee;
+        uint256 royaltyFee = salePrice * csns.royaltyRatio / 10000;
+        uint256 totalPay = salePrice + serviceFee + royaltyFee;
 
         BookInfo[] storage bi = bookInfo[curSaleIndex];
-        BookInfo memory newBI = BookInfo(msg.sender, salePrice, serviceFee);
+        BookInfo memory newBI = BookInfo(msg.sender, salePrice);
         bi.push(newBI);
 
         if (csns.payment == 0) {
@@ -785,8 +805,9 @@ contract CorsacNFTFactory is
     /**
      * @dev this function lets a buyer buy NFTs on sale
      * @param saleId - index of the sale
+     * @param amount - amount to purchase from sale
      */
-    function buy(uint256 saleId) public payable nonReentrant {
+    function buy(uint256 saleId, uint256 amount) public payable nonReentrant {
         require(isSaleValid(saleId), "sale is not valid");
 
         CorsacNFTSale storage csns = saleList[saleId];
@@ -798,10 +819,12 @@ contract CorsacNFTFactory is
         );
         require(csns.method == 0, "offer not for fixed-price sale");
         require(msg.sender != csns.seller, "Seller is not allowed to buy his NFT");
+        require(csns.balance >= amount, "exceeded amount than balance of sale");
 
-        uint256 salePrice = csns.copy * csns.basePrice;
+        uint256 salePrice = amount * csns.basePrice;
         uint256 serviceFee = salePrice * csns.feeRatio / 10000;
-        uint256 totalPay = salePrice + serviceFee;
+        uint256 royaltyFee = salePrice * csns.royaltyRatio / 10000;
+        uint256 totalPay = salePrice + serviceFee + royaltyFee;
         
         if (csns.payment == 0) {
             require(
@@ -818,13 +841,13 @@ contract CorsacNFTFactory is
         }
 
         BookInfo[] storage bi = bookInfo[saleId];
-        BookInfo memory newBI = BookInfo(msg.sender, salePrice, serviceFee);
+        BookInfo memory newBI = BookInfo(msg.sender, salePrice);
 
         bi.push(newBI);
 
-        emit Buy(msg.sender, saleId, csns);
+        emit Buy(msg.sender, saleId, csns, amount);
 
-        trade(saleId, bi.length - 1);
+        trade(saleId, bi.length - 1, amount);
     }
 
     /**
@@ -848,34 +871,37 @@ contract CorsacNFTFactory is
         uint256 startingPrice = csns.copy * csns.basePrice;
         uint256 bidPrice = csns.copy * price;
         uint256 serviceFee = bidPrice * csns.feeRatio / 10000;
+        uint256 royaltyFee = bidPrice * csns.royaltyRatio / 10000;
+        uint256 totalPrice = bidPrice + serviceFee + royaltyFee;
         
         BookInfo[] storage bi = bookInfo[saleId];
-        require((bi.length == 0 && startingPrice < bidPrice) || bi[0].totalPrice < bidPrice, "bid price is not larger than the last bid's");
+        require((bi.length == 0 && startingPrice < bidPrice) || bi[0].salePrice < bidPrice, "bid price is not larger than the last bid's");
 
         if (csns.payment == 0) {
             if (bi.length > 0) {
                 address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice);
+                uint256 totalPriceLast = bi[0].salePrice + bi[0].salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000;
+                pyLast.transfer(totalPriceLast);
             }
-            if (msg.value > bidPrice) {
+            if (msg.value > totalPrice) {
                 address payable py = payable(msg.sender);
-                py.transfer(msg.value - bidPrice);
+                py.transfer(msg.value - totalPrice);
             }
         } else {
             IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
             if (bi.length > 0) {
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
+                uint256 totalPriceLast = bi[0].salePrice + bi[0].salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000;
+                tokenInst.transfer(bi[0].user, totalPriceLast);
             }
-            tokenInst.transferFrom(msg.sender, address(this), bidPrice);
+            tokenInst.transferFrom(msg.sender, address(this), totalPrice);
         }
 
         if (bi.length == 0)  {
-            BookInfo memory newBI = BookInfo(msg.sender, bidPrice, serviceFee);
+            BookInfo memory newBI = BookInfo(msg.sender, bidPrice);
             bi.push(newBI);
         } else {
             bi[0].user = msg.sender;
-            bi[0].totalPrice = bidPrice;
-            bi[0].serviceFee = serviceFee;
+            bi[0].salePrice = bidPrice;
         }
 
         emit PlaceBid(
@@ -904,25 +930,24 @@ contract CorsacNFTFactory is
         // winning to the highest bid
         if (bi.length > 0) {
             uint256 loop;
-            uint256 maxPrice = bi[0].totalPrice;
+            uint256 maxPrice = bi[0].salePrice;
             uint256 bookId = 0;
 
             for (loop = 0; loop < bi.length; loop++) {
                 BookInfo memory biItem = bi[loop];
-                if (maxPrice < biItem.totalPrice) {
-                    maxPrice = biItem.totalPrice;
+                if (maxPrice < biItem.salePrice) {
+                    maxPrice = biItem.salePrice;
                     bookId = loop;
                 }
             }
 
             emit AuctionResult(
                 bi[bookId].user,
-                bi[bookId].totalPrice,
-                bi[bookId].serviceFee,
+                bi[bookId].salePrice,
                 saleId,
                 csns
             );
-            trade(saleId, bookId);
+            trade(saleId, bookId, csns.copy);
         } else {
             _removeSale(saleId);
         }
@@ -952,7 +977,7 @@ contract CorsacNFTFactory is
                 saleId,
                 csns
             );
-            trade(saleId, 0);
+            trade(saleId, 0, csns.copy);
         }
     }
 
@@ -960,30 +985,32 @@ contract CorsacNFTFactory is
      * @dev this function transfers NFTs from the seller to the buyer
      * @param saleId - index of the sale to be treated
      * @param bookId - index of the booked winner on a sale
+     * @param amount - amount to be traded
      */
-    function trade(uint256 saleId, uint256 bookId) internal {
+    function trade(uint256 saleId, uint256 bookId, uint256 amount) internal {
         require(isSaleValid(saleId), "sale is not valid");
 
         CorsacNFTSale storage csns = saleList[saleId];
 
-        BookInfo[] storage bi = bookInfo[saleId];
+        require(csns.balance >= amount, "exceeded amount than balance of sale");
 
+        BookInfo[] storage bi = bookInfo[saleId];
+        
         uint256 loop;
         for (loop = 0; loop < bi.length; loop++) {
             BookInfo memory biItem = bi[loop];
-
+            
             if (loop == bookId) {
                 // winning bid
                 //fee policy
-                uint256 fee = biItem.serviceFee;
-                uint256 royalty = (csns.royaltyRatio * biItem.totalPrice) /
-                    10000;
+                uint256 fee = biItem.salePrice * csns.feeRatio / 10000;
+                uint256 royalty = biItem.salePrice * csns.royaltyRatio / 10000;
                 uint256 devFee = 0;
                 if (devAddress != address(0)) {
-                    devFee = (biItem.totalPrice * 30) / 10000;
+                    devFee = (biItem.salePrice * 30) / 10000;
                 }
 
-                uint256 pySeller = biItem.totalPrice - royalty - devFee -fee;
+                uint256 pySeller = biItem.salePrice - devFee;
 
                 if (csns.payment == 0) {
                     address payable py = payable(csns.seller);
@@ -1032,13 +1059,15 @@ contract CorsacNFTFactory is
                 uint256[] memory ids = new uint256[](1);
                 ids[0] = csns.tokenId;
                 uint256[] memory amounts = new uint256[](1);
-                amounts[0] = csns.copy;
+                amounts[0] = amount;
+                csns.balance -= amount;
 
                 transferNFT(csns.sc, csns.seller, biItem.user, ids, amounts);
 
                 emit Trade(
                     saleId,
                     csns,
+                    amount,
                     block.timestamp,
                     pySeller,
                     owner(),
@@ -1052,18 +1081,24 @@ contract CorsacNFTFactory is
                 // failed bid, refund
                 if (csns.payment == 0) {
                     address payable py = payable(biItem.user);
-                    py.transfer(biItem.totalPrice + biItem.serviceFee);
+                    py.transfer(biItem.salePrice + biItem.salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000);
                 } else {
                     IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
                     tokenInst.transfer(
                         biItem.user,
-                        biItem.totalPrice + biItem.serviceFee
+                        biItem.salePrice + biItem.salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000
                     );
                 }
             }
         }
 
-        _removeSale(saleId);
+        if (csns.balance == 0) {
+            // purchased all nfts on the sale
+            _removeSale(saleId);
+        } else {
+            // purchased some nfts on the sale
+            bookInfo[saleId].pop();
+        }
     }
 
     /**
@@ -1109,9 +1144,11 @@ contract CorsacNFTFactory is
      */
     function isSaleValid(uint256 saleId) internal view returns (bool) {
         if (saleId >= saleCount) return false;
+        
         CorsacNFTSale storage csns = saleList[saleId];
         
-        if (csns.seller == address(0)) return false;
+        if (csns.seller == address(0) || csns.balance == 0) return false;
+        
         return true;
     }
 
@@ -1148,12 +1185,12 @@ contract CorsacNFTFactory is
         if (csns.payment == 0) {
             if (bi.length > 0) {
                 address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice);
+                pyLast.transfer(bi[0].salePrice + bi[0].salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000);
             }
         } else {
             IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
             if (bi.length > 0) {
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
+                tokenInst.transfer(bi[0].user, bi[0].salePrice + bi[0].salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000);
             }
         }
 
@@ -1187,7 +1224,7 @@ contract CorsacNFTFactory is
             if (bi.length > 0) {
                 require(msg.sender == bi[0].user, "Your bid rejected or canceled already");
                 address payable pyLast = payable(bi[0].user);
-                pyLast.transfer(bi[0].totalPrice);
+                pyLast.transfer(bi[0].salePrice + bi[0].salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000);
 
                 bi.pop();
             }
@@ -1195,7 +1232,7 @@ contract CorsacNFTFactory is
             IERC20 tokenInst = IERC20(paymentTokens[csns.payment]);
             if (bi.length > 0) {
                 require(msg.sender == bi[0].user, "Your bid rejected or canceled already");
-                tokenInst.transfer(bi[0].user, bi[0].totalPrice);
+                tokenInst.transfer(bi[0].user, bi[0].salePrice + bi[0].salePrice * (csns.feeRatio + csns.royaltyRatio) / 10000);
 
                 bi.pop();
             }

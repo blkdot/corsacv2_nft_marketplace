@@ -96,6 +96,11 @@
             "internalType": "uint256",
             "name": "royaltyRatio",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
+            "type": "uint256"
           }
         ],
         "indexed": false,
@@ -119,13 +124,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "totalPrice",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "serviceFee",
+        "name": "salePrice",
         "type": "uint256"
       },
       {
@@ -199,6 +198,11 @@
           {
             "internalType": "uint256",
             "name": "royaltyRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
             "type": "uint256"
           }
         ],
@@ -292,12 +296,23 @@
             "internalType": "uint256",
             "name": "royaltyRatio",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
+            "type": "uint256"
           }
         ],
         "indexed": false,
         "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
         "name": "saleInfo",
         "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "name": "Buy",
@@ -383,6 +398,11 @@
           {
             "internalType": "uint256",
             "name": "royaltyRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
             "type": "uint256"
           }
         ],
@@ -637,6 +657,11 @@
             "internalType": "uint256",
             "name": "royaltyRatio",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
+            "type": "uint256"
           }
         ],
         "indexed": false,
@@ -666,8 +691,26 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "uri",
+        "name": "_uri",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_quantity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       }
     ],
     "name": "MintTo",
@@ -817,6 +860,11 @@
             "internalType": "uint256",
             "name": "royaltyRatio",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
+            "type": "uint256"
           }
         ],
         "indexed": false,
@@ -902,6 +950,11 @@
           {
             "internalType": "uint256",
             "name": "royaltyRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
             "type": "uint256"
           }
         ],
@@ -1046,12 +1099,23 @@
             "internalType": "uint256",
             "name": "royaltyRatio",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
+            "type": "uint256"
           }
         ],
         "indexed": false,
         "internalType": "struct CorsacNFTFactory.CorsacNFTSale",
         "name": "sale",
         "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -1205,6 +1269,11 @@
       {
         "internalType": "uint256",
         "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -1415,12 +1484,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "totalPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "serviceFee",
+            "name": "salePrice",
             "type": "uint256"
           }
         ],
@@ -1459,6 +1523,30 @@
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collectionAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getNFTCreator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1571,6 +1659,11 @@
             "internalType": "uint256",
             "name": "royaltyRatio",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balance",
+            "type": "uint256"
           }
         ],
         "internalType": "struct CorsacNFTFactory.CorsacNFTSale[]",
@@ -1657,8 +1750,13 @@
       },
       {
         "internalType": "string",
-        "name": "uri",
+        "name": "_uri",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_quantity",
+        "type": "uint256"
       }
     ],
     "name": "mintTo",

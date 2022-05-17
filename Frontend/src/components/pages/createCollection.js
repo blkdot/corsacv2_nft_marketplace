@@ -299,7 +299,7 @@ const CreateCollection = () => {
             collectionAddr = result.logs[0].address.toLowerCase();
             break;
         }
-        console.log("new collection address:", collectionAddr);
+        // console.log("new collection address:", collectionAddr);
         setLoading(false);
 
         // save collection into db
@@ -375,9 +375,9 @@ const CreateCollection = () => {
     setModalMessage('');
   }
 
-  useEffect(async () => {
+  useEffect(() => {
     if (!isAuthenticated || !account) {
-      navigate('/');
+      navigate('/wallet');
     }
 
     setLoadingTitle("Creating your collection...");
@@ -418,9 +418,9 @@ const CreateCollection = () => {
             <div className="field-set">
               <h5>Collection Type <span className="text-muted">(Required)</span></h5>
               <ul className="de_nav" style={{textAlign: 'left'}}>
-                  <li id='btn1' className="active" onClick={() => handleCollectionType(0)}><span><i className="fa fa-tag"></i> Single</span>
+                  <li id='btn1' className="active" onClick={() => handleCollectionType(0)}><span><i className="fa fa-user"></i> BEP-721</span>
                   </li>
-                  <li id='btn2' onClick={() => handleCollectionType(1)}><span><i className="fa fa-users"></i> Multiple</span>
+                  <li id='btn2' onClick={() => handleCollectionType(1)}><span><i className="fa fa-users"></i> BEP-1155</span>
                   </li>
               </ul>
 

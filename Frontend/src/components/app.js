@@ -117,6 +117,7 @@ const App = ({ isServerInfo }) => {
           <CreateItem path="/createItem" />
                     
           <Collection path="/collection/:address" />
+          <Item path="/collection/:collectionAddr/:tokenId/:ownerAddr" />
           <Item path="/collection/:collectionAddr/:tokenId" />
           
           <Author path="/author/:walletAddr" />

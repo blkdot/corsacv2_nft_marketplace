@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { navigate } from '@reach/router';
 
-const CustomSlide = ({ index, avatar, banner, username, uniqueId, collectionId }) => {
+const CustomSlide = ({ index, type, avatar, banner, username, uniqueId, collectionId }) => {
   return (
     <div className='itm' index={index}>
       <div className="nft_coll">
@@ -14,7 +14,7 @@ const CustomSlide = ({ index, avatar, banner, username, uniqueId, collectionId }
           </div>
           <div className="nft_coll_info">
               <span onClick={()=> navigate("/collection/" + collectionId)}><h4>{ username }</h4></span>
-              <span>{ uniqueId }</span>
+              <span>{ type === 0 ? 'BEP-721' : type === 1 ? 'BEP-1155' : 'Unknown'}</span>
           </div>
       </div>
     </div>

@@ -33,6 +33,7 @@ exports.createItem = (req, res) => {
           description: req.body.description,
           image: req.body.image,
           royalty: req.body.royalty,
+          amount: req.body.amount,
           timeStamp: req.body.timeStamp,
           creator: req.body.creator
         });
@@ -53,7 +54,7 @@ exports.createItem = (req, res) => {
           const activity = new Activity({
             actor: req.body.walletAddr,
             actionType: 2,
-            description: (user ? user.name : 'Unknown') + ": " + "created new item - " + req.body.title,
+            description: `${user ? user.name : req.body.walletAddr} : created new items(amount: ${req.body.amount}) - ${req.body.title}`,
             from: '',
             timeStamp: Math.floor(new Date().getTime() / 1000),
             collectionAddr: collection.collectionAddr,

@@ -69,7 +69,7 @@ const NewItems = () => {
 
   const handleItemClick = (nft) => {
     dispatch(actions.setBuyNFT(nft));
-    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
+    navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr : ''}`);
   };
 
   useEffect(async () => {
@@ -99,11 +99,20 @@ const NewItems = () => {
             token_id: saleInfo[4],
           };
 
-          const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
-          let nft = result;
-          
+          // const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
+          // let nft = result;
+          let nft = null;
+          const result = await Moralis.Web3API.token.getNFTOwners(options);
+          let temps = result.result?.filter((item, index) => {
+            return item.owner_of.toLowerCase() === saleInfo[2].toLowerCase();
+          });
+          nft = temps[0];
+                              
           nft.saleId = parseInt(saleInfo[0]);
           nft.method = parseInt(saleInfo[8]);
+          
+          nft.saleAmount = parseInt(saleInfo[5]);
+          nft.saleBalance = parseInt(saleInfo[13]);
 
           //get seller info
           nft.author = await getUserInfo(saleInfo[2].toLowerCase());
@@ -185,13 +194,13 @@ const NewItems = () => {
         }
       }
 
-      // console.log("new items:", promises);
+      console.log("new items:", promises);
 
       setNfts(promises);
     }
 
     setLoading(false);
-  }, [saleNFTs, payments]);
+  }, [saleNFTs]);
 
   return (
     <div className='row'>

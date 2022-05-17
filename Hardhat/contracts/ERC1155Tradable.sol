@@ -159,7 +159,7 @@ contract ERC1155Tradable is
         uint256 _initialSupply,
         string memory _uri,
         bytes memory _data
-    ) public onlyOwner returns (uint256) {
+    ) public returns (uint256) {
         uint256 _id = _nextTokenId.current();
         _nextTokenId.increment();
 
@@ -221,7 +221,7 @@ contract ERC1155Tradable is
      * @param _to   Address of the new creator
      * @param _ids  Array of Token IDs to change creator
      */
-    function setCreator(address _to, uint256[] memory _ids) public onlyOwner {
+    function setCreator(address _to, uint256[] memory _ids) public {
         require(_to != address(0));
 
         for (uint256 i = 0; i < _ids.length; i++) {

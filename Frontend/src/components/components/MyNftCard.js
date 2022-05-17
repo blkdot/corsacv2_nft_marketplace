@@ -92,7 +92,7 @@ const MyNftCard = ({
 
     const handleBuyClick = (nft) => {
       dispatch(actions.setBuyNFT(nft));
-      navigateTo(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`);
+      navigateTo(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`);
     };
 
     const handleCancelSaleClick = async (nft) => {
@@ -136,9 +136,11 @@ const MyNftCard = ({
           for (let sale of result) {
             const tokenId = new BigNumber(sale.tokenId._hex).toNumber();
             const tokenAddress = sale.sc.toLowerCase();
+            const seller= sale.seller.toLowerCase();
 
             if (parseInt(nft.token_id) === tokenId && 
-                nft.token_address.toLowerCase() === tokenAddress) {
+                nft.token_address.toLowerCase() === tokenAddress && 
+                nft.author.walletAddr.toLowerCase() === seller) {
               saleId = new BigNumber(sale.saleId._hex).toNumber();
               break;
             }
@@ -189,6 +191,8 @@ const MyNftCard = ({
                 nft.price = null;
                 nft.payment = null;
                 nft.endTime = null;
+                nft.saleAmount = null;
+                nft.saleBalance = null;
               }
             }
           }
@@ -355,9 +359,16 @@ const MyNftCard = ({
                 
                 { (nft.onSale || nft.onAuction || nft.onOffer) && 
                 <div className="nft__item_price">
-                  {nft.price} {nft.payment && nft.payment.symbol ? nft.payment.symbol : 'Unknown'}
+                  {nft.price} {nft.payment && nft.payment.symbol ? nft.payment.symbol : 'Unknown'} 
+                  <span>{nft.saleBalance} of {nft.saleAmount}</span>
                 </div>
                 }
+                { nft.amount && 
+                <div className="nft__item_price">
+                  Amount:<span>{nft.amount}</span>
+                </div>
+                }
+
                 <div className="nft__item_action">
                   { page && page === 'explore' ? (
                   <>
@@ -377,13 +388,13 @@ const MyNftCard = ({
                       <span onClick={() => handleCancelSaleClick(nft)}>
                         Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
                       </span><br/>
-                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`)}>View Item</span>
+                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`)}>View Item</span>
                       </>
                     )
                     : (
                       <>
                       <span onClick={() => handleSellClick(nft)}>Create Sale</span><br/>
-                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}`)}>View Item</span>
+                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`)}>View Item</span>
                       </>
                     )
                   )}

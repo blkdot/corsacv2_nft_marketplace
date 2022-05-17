@@ -76,6 +76,26 @@ async function main() {
   console.log("CorsacNFTFactory deployed to: ", nftFactory.address);
   console.log('\n--------------------------------------------------------------------------');
 
+  console.log("\nsetting nft factory address to factory of 721 and 1155 contract-----------");
+  let setFactoryContractTx = await tradable721.setFactoryContract(nftFactory.address);
+  setFactoryContractTx = await tradable1155.setFactoryContract(nftFactory.address);
+
+  console.log('\nstarting set payment tokens------------------------------------------------');
+  // 0: Default BNB
+  // 1: Wrapped BNB (WBNB)
+  let setPaymentTokenTx = await nftFactory.setPaymentToken(
+    1, 
+    '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
+  );
+  await setPaymentTokenTx.wait();
+
+  // 2: Test Token like corsac v2 token
+  setPaymentTokenTx = await nftFactory.setPaymentToken(
+    2, 
+    uba.address
+  );
+  await setPaymentTokenTx.wait();
+
   console.log('\nDone!!!');
 }
 

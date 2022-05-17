@@ -134,11 +134,18 @@ const NftCard = ({ nft, className = 'd-item col-lg-3 col-md-6 col-sm-6 col-xs-12
               { (nft.onSale || nft.onOffer || nft.onAuction) && 
                   <div className="nft__item_price">
                     {nft.price} {nft.payment ? nft.payment.symbol : 'Unknown'}
+                    <span>{nft.saleBalance} of {nft.saleAmount}</span>
                     {/* { nft.onAuction && 
                         <span>{nft.bid}/{nft.max_bid}</span>
                     } */}
                   </div>
               }
+              { nft.amount && 
+                <div className="nft__item_price">
+                  Amount:<span>{nft.amount}</span>
+                </div>
+              }
+
               <div className="nft__item_action">
                 {nft.isOwner && (nft.onSale || nft.onAuction || nft.onOffer) && (
                   <span onClick={() => handleItemClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</span>

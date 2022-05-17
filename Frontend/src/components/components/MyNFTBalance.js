@@ -78,6 +78,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const [visible2, setVisibility2] = useState(false);
     const [nftToSend, setNftToSend] = useState(null);
     const [price, setPrice] = useState(0);
+    const [amount, setAmount] = useState(1);
     const [loading, setLoading] = useState(false);
     const [isPageLoading, setIsPageLoading] = useState(true);
 
@@ -120,6 +121,14 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         }
       }
 
+      if (amount < 1) {
+        setLoading(false);
+        setErrorTitle('Error');
+        setErrorMsg('Please enter amount!');
+        setOpenErrorModal(true);
+        return;
+      }
+
       const method = parseInt(tabKey) - 1;
       let payment = null;
       if (method == 0) {
@@ -140,13 +149,13 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           sc: nft.token_address,
           tokenId: parseInt(nft.token_id),
           payment: payment,
-          copy: 1,
+          copy: Math.floor(amount),
           method: method,
           duration: duration,
           basePrice: String(p),
           feeRatio: 0,
           royaltyRatio: parseInt(nft.royaltyRatio),
-          isOther: 1
+          isOther: 0
         },
       };
       
@@ -164,7 +173,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           //save activity
           try {
             const itemName = (nft.metadata && nft.metadata.name) ? nft.metadata.name : nft.name;
-            const description = currentUserState.data.name + ": created " + ((method === 0) ? "sale" : (method === 1) ? "auction" : (method === 2) ? "offer" : "unknown") + " - " + itemName;
+            const description = `${currentUserState.data.name}: created ${method === 0 ? 'sale' : method === 1 ? 'timed auction' : method === 2 ? 'offer' : 'sale'} - ${itemName}(amount: ${amount})`;
             
             const res = await axios.post(
               `${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
@@ -195,15 +204,21 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.onSale = true;
             nft.onAuction = false;
             nft.onOffer = false;
+            nft.saleAmount = ops.params.copy;
+            nft.saleBalance = ops.params.copy;
           } else if (parseInt(ops.params.method) === 1) {
             nft.onAuction = true;
             nft.onSale = false;
             nft.onOffer = false;
+            nft.saleAmount = ops.params.copy;
+            nft.saleBalance = ops.params.copy;
             nft.endTime = Math.floor(new Date().getTime() / 1000 + duration);
           } else {
             nft.onOffer = true;
             nft.onSale = false;
             nft.onAuction = false;
+            nft.saleAmount = ops.params.copy;
+            nft.saleBalance = ops.params.copy;
           }
         },
         onError: (error) => {
@@ -301,6 +316,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     function closeCreateSaleModal() {
       setVisibility2(false);
       setLoading(false);
+      setTabKey("1");
     }
 
     useEffect(async () => {
@@ -392,6 +408,9 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
           //get royalty fee
           nft.royaltyRatio = nft.metadata && nft.metadata.royalty ? nft.metadata.royalty : 0;
 
+          //get amount
+          nft.amount = nft.amount ? parseInt(nft.amount) : 0;
+
           myNFTs.push(nft);
         }
         setNfts(myNFTs);
@@ -453,6 +472,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             
             nft.serviceFee = sale.feeRatio;
             nft.royaltyRatio = sale.royaltyRatio;
+            nft.saleAmount = parseInt(sale.copy);
+            nft.saleBalance = parseInt(sale.balance);
             
             const method = new BigNumber(sale.method._hex).toNumber();
             if (method === 0x00) {
@@ -546,7 +567,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
         {!isPageLoading && myNfts && myNfts.map( (nft, index) => (
           <MyNftCard 
             nft={nft} 
-            key={`${nft.token_address}_${nft.token_id}`}
+            key={index}
             onImgLoad={onImgLoad} 
             height={height} 
             setNftToSend={setNftToSend}
@@ -613,11 +634,19 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                   }
                 </Select>
                 <Input
+                  style={ nftToSend && nftToSend.contract_type === 'ERC1155' ? { marginBottom: "10px" } : {}}
                   autoFocus
-                  placeholder="Amount"
+                  placeholder="Price"
                   onChange={(e) => setPrice(e.target.value)}
                 />
+                { nftToSend && nftToSend.contract_type === 'ERC1155' &&
+                <Input
+                  placeholder={`Amount: max.${nftToSend ? nftToSend.amount : 1}`}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+                }
               </TabPane>
+              { nftToSend && nftToSend.contract_type === 'ERC721' &&
               <TabPane tab="Timed Auction" key="2">
                 <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
                   { payments && payments.map((payment, index) => (
@@ -627,13 +656,14 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
                 </Select>
                 <Input
                   autoFocus
-                  placeholder="Amount"
+                  placeholder="Price"
                   onChange={(e) => setPrice(e.target.value)}
                   style={{marginBottom: "16px"
                 }}
                 />
                 <DatePicker showTime onChange={onChangeDueDate} value={dueDate}/>
               </TabPane>
+              }
             </Tabs>
           </StyledSpin>
         </CreateSaleModal>

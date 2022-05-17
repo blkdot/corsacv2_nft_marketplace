@@ -205,6 +205,11 @@ const MyCollections = props => {
                           By {collection.walletAddr}
                         </div>
                       } */}
+                      { collection.collectionType != null && 
+                        <div className="nft__item_price">
+                          Type: {collection.collectionType === 0 ? 'BEP-721' : collection.collectionType === 1 ? 'BEP-1155' : 'Unknown'}
+                        </div>
+                      }
                       { collection.category && 
                         <div className="nft__item_price">
                           Category: {collection.category}
