@@ -136,7 +136,7 @@ const Header = function({ className }) {
         clearInterval(myTimer);
         const tId = setInterval(async function() {
           setNotifications(await getNotifications(walletAddr, 1, -1));
-        }, 6000);
+        }, 60000);
 
         setMyTimer(tId);
       }
