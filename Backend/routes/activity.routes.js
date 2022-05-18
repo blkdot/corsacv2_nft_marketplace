@@ -23,4 +23,8 @@ module.exports = function(app) {
   app.get("/api/activity/bestseller", controller.getBestSellers);
 
   app.get("/api/activity/history", controller.getHistory);
+
+  app.get("/api/notification", controller.getNotifications);
+
+  app.post("/api/notification/markupRead", controller.markupRead);
 };

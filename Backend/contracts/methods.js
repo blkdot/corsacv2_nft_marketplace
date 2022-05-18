@@ -117,17 +117,20 @@ const poll_method = async () => {
           
           //save activity
           let actor = lastBid && lastBid.walletAddr ? lastBid.walletAddr : user.walletAddr;
+          let actionType = 0;
           let description = '';
 
           if (lastBid && lastBid.bidders && lastBid.bidders[0]) {
             let actorName = lastBid.bidders[0].name ? lastBid.bidders[0].name : formatAddress(lastBid.bidders[0].walletAddr, 'wallet');
+            actionType = 8;
             description = actorName + ": wins from timed auction - " + formatAddress(sales[i].sc, 'collection') + "#" + sales[i].tokenId;
           } else {
+            actionType = 17;
             description = "Ended without bids - " + formatAddress(sales[i].sc.toLowerCase(), 'collection') + "#" + sales[i].tokenId;
           }
           const activity = new Activity({
             actor: actor,
-            actionType: 8,
+            actionType: actionType,
             description: description,
             from: seller.toLowerCase(),
             timeStamp: Math.floor(new Date().getTime() / 1000),

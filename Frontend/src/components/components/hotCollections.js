@@ -17,6 +17,7 @@ const StyledSpin = styled(Spin)`
     color: #FF343F;
   }
 `
+
 const HotCollections = () => {
   const MAX_COUNT = 5;
   const [hotCollections, setHotCollections] = useState([]);

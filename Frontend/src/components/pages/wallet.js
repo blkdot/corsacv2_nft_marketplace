@@ -6,7 +6,7 @@ import Footer from '../components/footer';
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
 //SWITCH VARIABLE FOR PAGE STYLE
-const theme = 'GREYLOGIN'; //LIGHT, GREY, RETRO
+const theme = 'GREY'; //LIGHT, GREY, RETRO
 
 const wallet= () => (
 <div className="greyscheme">

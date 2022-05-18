@@ -4,7 +4,6 @@ import * as selectors from '../../store/selectors';
 import Footer from '../components/footer';
 
 import axios from "axios";
-import api from "../../core/api";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
@@ -13,6 +12,7 @@ import styled from 'styled-components';
 
 import moment from "moment";
 import { formatAddress } from "../../utils";
+import { defaultAvatar } from "../components/constants";
 
 //SWITCH VARIABLE FOR PAGE STYLE
 const theme = 'GREY'; //LIGHT, GREY, RETRO
@@ -30,14 +30,7 @@ const StyledModal = styled(Modal)`
     background-color: transparent;
   }
 `
-const Outer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  align-items: center;
-  overflow: hidden;
-  border-radius: 8px;
-`
+
 const Activity = () => {
   const currentUserState = useSelector(selectors.currentUserState);
 
@@ -50,8 +43,6 @@ const Activity = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [openModal, setOpenModal] = useState(false);
 
-  const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
-    
   const closeModal = () => {
     setOpenModal(false);
     setModalTitle('');
@@ -74,7 +65,7 @@ const Activity = () => {
       let acts = [];
       for (let a of res.data.activities) {
         let className = '';
-        if ([3, 4, 6, 7, 8, 9, 10].includes(parseInt(a.actionType))) {
+        if ([3, 4, 6, 7, 8, 9, 10, 17].includes(parseInt(a.actionType))) {
           className = 'act_sale';
         } else if ([5, 11].includes(parseInt(a.actionType))) {
           className = 'act_offer';
@@ -112,7 +103,7 @@ const Activity = () => {
     let types = [];
     switch (type) {
       case "sale":
-        types = [3, 4, 6, 7, 8, 9, 10];
+        types = [3, 4, 6, 7, 8, 9, 10, 17];
         document.getElementById("follow").classList.remove("active");
         document.getElementById("sale").classList.add("active");
         document.getElementById("offer").classList.remove("active");
@@ -153,7 +144,7 @@ const Activity = () => {
       let acts = [];
       for (let a of res.data.activities) {
         let className = '';
-        if ([3, 4, 6, 7, 8, 9, 10].includes(parseInt(a.actionType))) {
+        if ([3, 4, 6, 7, 8, 9, 10, 17].includes(parseInt(a.actionType))) {
           className = 'act_sale';
         } else if ([5, 11].includes(parseInt(a.actionType))) {
           className = 'act_offer';

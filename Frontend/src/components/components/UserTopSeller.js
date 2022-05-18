@@ -16,7 +16,7 @@ const UserTopSeller = ({ user }) => {
         <span onClick={()=> navigate(`/author/${user.walletAddr}`)}>
           {user.name ? formatUserName(user.name) : formatAddress(user.walletAddr, 'wallet')}
         </span>
-        <span className="bot">{user.sales} Sales</span>
+        <span className="bot">{user.sales} sales</span>
       </div>   
     </>     
   );

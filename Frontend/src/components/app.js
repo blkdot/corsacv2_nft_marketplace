@@ -24,6 +24,7 @@ import Faq from "./pages/faq";
 import Item from "./pages/Item";
 
 import { createGlobalStyle } from 'styled-components';
+import Notification from "./pages/Notification";
 
 const history = createHistory(window);
 
@@ -129,6 +130,7 @@ const App = ({ isServerInfo }) => {
           <Wallet path="/wallet" />
 
           <Activity path="/activity" />
+          <Notification path="/notification" />
           
           <About path="/about" />
           <Faq path="/faq" />

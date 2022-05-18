@@ -18,6 +18,7 @@ const mongoose = require("mongoose");
 //14: Cancel bid
 //15: Unlike
 //16: Unfollow
+//17: Ended timed auction without bids
 //99: Other
 const Activity = mongoose.model(
   "Activity",
@@ -49,6 +50,10 @@ const Activity = mongoose.model(
     tokenId: {
       type: Number,
       default: 0
+    },
+    read: {
+      type: Boolean,
+      default: false
     }
   })
 );

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const db = require("../models");
 const Activity = db.activity;
 const actionTypes = [
@@ -18,6 +19,7 @@ const actionTypes = [
   { value: 14, label: 'Cancel bid'},
   { value: 15, label: 'Unlike'},
   { value: 16, label: 'Unfollow'},
+  { value: 17, label: 'Ended timed auction without any bids'},
   { value: 99, label: 'Other'},
 ];
 
@@ -237,7 +239,7 @@ exports.getHistory = (req, res) => {
     {
       $match: {
         $and: [
-          {actionType: {$in: [2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16]}},
+          {actionType: {$in: [2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]}},
           {collectionAddr: {$eq: req.query.collectionAddr}},
           {tokenId: parseInt(req.query.tokenId)}
         ]
@@ -273,4 +275,76 @@ exports.getHistory = (req, res) => {
       history: history
     })
   });
+}
+
+exports.getNotifications = (req, res) => {
+  Activity.aggregate([
+    {
+      $match: {
+        $and: (req.query.type == 1) ?
+          [
+            // {actionType: {$in: []}},
+            {from: {$eq: req.query.walletAddr}},
+            {read: {$eq: false}}
+          ]
+          :
+          [
+            // {actionType: {$in: []}},
+            {from: {$eq: req.query.walletAddr}},
+          ]
+      }
+    }, 
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "actor", 
+        foreignField: "walletAddr", 
+        as: "actorUsers"
+      }
+    },
+    {
+      $lookup: {
+        from: "users", 
+        localField: "from", 
+        foreignField: "walletAddr", 
+        as: "fromUsers"
+      }
+    }
+  ], (err, notifications) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      notifications: notifications
+    })
+  });
+}
+
+exports.markupRead = (req, res) => {
+  Activity.updateMany(
+    {from: {$eq: req.body.walletAddr}}, 
+    { read: true }, 
+    function (err, activities) {
+      if (err) {
+        console.log(err);
+        res.send({
+          type: 'error',
+          message: err,
+        });
+        return;
+      } else {
+        res.send({
+          type: 'success',
+          message: "Activities was updated successfully!",
+        });
+        return;
+      }
+    }
+  );
 }

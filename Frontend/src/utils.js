@@ -366,3 +366,67 @@ export async function removeLike(walletAddr, collectionAddr, tokenId) {
     }
   );
 }
+
+export async function getNotifications(walletAddr, type = 0, count = -1) {
+  let notifications = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/notification`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        walletAddr: walletAddr.toLowerCase(),
+        type: type //0: all, 1: unread
+      }
+    }).then(async res => {
+      let index = 0;
+      for (let n of res.data.notifications) {
+        index++;
+        if (count !== -1 && index > count) {
+          break;
+        }
+        notifications.push({
+          actor: (n.actorUsers && n.actorUsers[0]) ? (n.actorUsers[0].name ? n.actorUsers[0].name : formatAddress(n.actorUsers[0].walletAddr, 'wallet')) : n.actor,
+          actorAvatar: n.actorUsers && n.actorUsers[0] ? n.actorUsers[0].avatar : defaultAvatar,
+          from: (n.fromUsers && n.fromUsers[0]) ? (n.fromUsers[0].name ? n.fromUsers[0].name : formatAddress(n.fromUsers[0].walletAddr, 'wallet')) : n.from,
+          actionType: n.actionType,
+          description: n.description,
+          timeStamp: n.timeStamp * 1000,
+          duration: formatTimeDiff(new Date().getTime() / 1000 - n.timeStamp),
+          read: n.read
+        });
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    console.log('error in fetching notifications by user');
+  }
+
+  return notifications;
+}
+
+export function formatTimeDiff(seconds) {
+  if (seconds < 60) {
+    return Math.floor(seconds).toString() + " secs";
+  } else if (seconds >= 60 && seconds < 3600) {
+    return Math.floor(seconds / 60).toString() + " mins";
+  } else if (seconds >= 60 && seconds < 86400) {
+    return Math.floor(seconds / 3600).toString() + " hours";
+  } else {
+    return Math.floor(seconds / 86400).toString() + " days";
+  }
+}
+
+export async function markupRead(walletAddr) {
+  const res = await axios.post(
+    `${process.env.REACT_APP_SERVER_URL}/api/notification/markupRead`, 
+    {
+      'walletAddr': walletAddr.toLowerCase()
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+}

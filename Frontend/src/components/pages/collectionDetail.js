@@ -165,7 +165,7 @@ const Collection = () => {
       const NFTs = await Web3Api.token.getAllTokenIds(options);
       const itemsCount = NFTs.result.length;
       c.itemsCount = itemsCount;
-      console.log("nfts:", NFTs);
+      // console.log("nfts:", NFTs);
       setCollection(c);
 
       //get all saleItems from marketplace
@@ -330,7 +330,7 @@ const Collection = () => {
     });
   }
 
-  useEffect(async () => {
+  useEffect(() => {
     getFetchItems();
     setLoading(true);
   }, [account]);

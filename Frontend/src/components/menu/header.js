@@ -10,6 +10,7 @@ import useOnclickOutside from "react-cool-onclickoutside";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 import BalanceTokens from '../components/BalanceTokens';
+import { formatUserName, getNotifications } from "../../utils";
 
 setDefaultBreakpoints([
   { xs: 0 },
@@ -31,6 +32,7 @@ const NavLink = props => (
 );
 
 const Header = function({ className }) {
+    const { isAuthenticated, account, logout } = useMoralis();
     const currentUserState = useSelector(selectors.currentUserState);
     const [currentUser, setCurrentUser] = useState(null);
     const dispatch = useDispatch();
@@ -95,6 +97,8 @@ const Header = function({ className }) {
     });
 
     const [copied, setCopied] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [myTimer, setMyTimer] = useState(null);
 
     useEffect(() => {
       if (currentUserState.data) {
@@ -126,8 +130,21 @@ const Header = function({ className }) {
       };
     }, []);
 
-    const { isAuthenticated, account, logout } = useMoralis();
-    
+    useEffect(() => {
+      async function getNotificationsForUser(walletAddr) {
+        setNotifications(await getNotifications(walletAddr, 1, -1));
+        clearInterval(myTimer);
+        const tId = setInterval(async function() {
+          setNotifications(await getNotifications(walletAddr, 1, -1));
+        }, 6000);
+
+        setMyTimer(tId);
+      }
+      if (account) {
+        getNotificationsForUser(account.toLowerCase());
+      }
+    }, [account]);
+
     const disconnect = async () => {
       dispatch(actions.setCurrentUser(null));
       await logout();
@@ -291,63 +308,43 @@ const Header = function({ className }) {
               <div className="logout">
                 {/* <NavLink to="/createItem">Create</NavLink> */}
                 <div id="de-click-menu-notification" className="de-menu-notification" onClick={() => btn_icon_not(!shownot)} ref={refpopnot}>
-                    <div className="d-count">8</div>
-                    <i className="fa fa-bell"></i>
-                    {shownot && 
-                      <div className="popshow">
-                        <div className="de-flex">
-                            <h4>Notifications</h4>
-                            <span className="viewaall">Show all</span>
-                        </div>
-                        <ul>
-                          <li>
-                              <div className="mainnot">
-                                  <img className="lazy" src="../../img/author/author-2.jpg" alt=""/>
-                                  <div className="d-desc">
-                                      <span className="d-name"><b>Mamie Barnett</b> started following you</span>
-                                      <span className="d-time">1 hour ago</span>
-                                  </div>
-                              </div>  
-                          </li>
-                          <li>
-                              <div className="mainnot">
-                                  <img className="lazy" src="../../img/author/author-3.jpg" alt=""/>
-                                  <div className="d-desc">
-                                      <span className="d-name"><b>Nicholas Daniels</b> liked your item</span>
-                                      <span className="d-time">2 hours ago</span>
-                                  </div>
-                              </div>
-                          </li>
-                          <li>
-                              <div className="mainnot">
-                                  <img className="lazy" src="../../img/author/author-4.jpg" alt=""/>
-                                  <div className="d-desc">
-                                      <span className="d-name"><b>Lori Hart</b> started following you</span>
-                                      <span className="d-time">18 hours ago</span>
-                                  </div>
-                              </div>    
-                          </li>
-                          <li>
-                              <div className="mainnot">
-                                  <img className="lazy" src="../../img/author/author-5.jpg" alt=""/>
-                                  <div className="d-desc">
-                                      <span className="d-name"><b>Jimmy Wright</b> liked your item</span>
-                                      <span className="d-time">1 day ago</span>
-                                  </div>
-                              </div>
-                          </li>
-                          <li>
-                              <div className="mainnot">
-                                  <img className="lazy" src="../../img/author/author-6.jpg" alt=""/>
-                                  <div className="d-desc">
-                                      <span className="d-name"><b>Karla Sharp</b> started following you</span>
-                                      <span className="d-time">3 days ago</span>
-                                  </div>
-                              </div>    
-                          </li>
-                      </ul>
+                  {notifications.length > 0 &&
+                    <div className="d-count">{notifications.length}</div>
+                  }
+                  <i className="fa fa-bell"></i>
+                  {shownot && 
+                    <div className="popshow">
+                      <div className="de-flex">
+                        <h4>Notifications</h4>
+                        <span className="viewaall" onClick={() => navigate(`/notification`)} style={{cursor: "pointer"}}>Show all</span>
                       </div>
-                      }
+                      <ul>
+                        {notifications && notifications.map((n, index) => (
+                          (index < 3 &&
+                            <li key={index}>
+                              <div className="mainnot">
+                                <img className="lazy" src={n.actorAvatar} alt=""/>
+                                <div className="d-desc">
+                                  <span className="d-name" style={{wordBreak: "break-all"}}>
+                                    <b>{n.actor}</b> <br/>{n.description}</span>
+                                  <span className="d-time">{n.duration} ago</span>
+                                </div>
+                              </div>
+                            </li>
+                          )
+                        ))}
+                        {notifications.length == 0 &&
+                          <li>
+                            <div className="mainnot">
+                              <div style={{textAlign: "center"}}>
+                                <span className="d-name">No new notifications</span>
+                              </div>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
                 </div>
                 <div id="de-click-menu-profile" className="de-menu-profile" onClick={() => btn_icon_pop(!showpop)} ref={refpop}>                           
                     <img src={ currentUser && currentUser.avatar ? currentUser.avatar : "../../img/author/author-4.jpg"} alt=""/>
@@ -355,7 +352,9 @@ const Header = function({ className }) {
                       <div className="popshow">
                         <div className="d-name">
                             <h4>Your name</h4>
-                            <span className="name" onClick={()=> navigate(`/profile/${account.toLowerCase()}`)}>{ currentUser && currentUser.name ? currentUser.name : 'Set your name'}</span>
+                            <span className="name" onClick={()=> navigate(`/profile/${account.toLowerCase()}`)}>
+                              { currentUser && currentUser.name ? formatUserName(currentUser.name) : 'Set your name'}
+                            </span>
                         </div>
                         <BalanceTokens />
                         <div className="d-wallet">

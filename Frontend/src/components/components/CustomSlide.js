@@ -6,7 +6,9 @@ const CustomSlide = ({ index, type, avatar, banner, username, uniqueId, collecti
     <div className='itm' index={index}>
       <div className="nft_coll">
           <div className="nft_wrap" style={{display: "flex", justifyContent: "center"}}>
-              <span><img src={banner} className="lazy img-fluid" alt=""/></span>
+              <span>
+                <img src={banner} className="lazy img-fluid" alt="" style={{width: "250px", height: "250px"}}/>
+              </span>
           </div>
           <div className="nft_coll_pp">
               <span onClick={()=> navigate("/collection/" + collectionId)}><img className="lazy" src={avatar} alt=""/></span>

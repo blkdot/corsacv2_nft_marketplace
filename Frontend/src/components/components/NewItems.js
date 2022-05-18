@@ -194,7 +194,7 @@ const NewItems = () => {
         }
       }
 
-      console.log("new items:", promises);
+      // console.log("new items:", promises);
 
       setNfts(promises);
     }
