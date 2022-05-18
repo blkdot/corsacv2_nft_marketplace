@@ -1,4 +1,4 @@
-# Corsac V2 Marketplace Hardhat Project
+# Corsac V2 NFT Marketplace Hardhat Project
 
 This project demonstrates a Hardhat use case. It comes with several contracts, a test for those contracts, a test script that deploys those contracts, and an example of a task implementation, which simply lists the available accounts.
 
