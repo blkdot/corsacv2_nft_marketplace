@@ -38,6 +38,10 @@ const User = mongoose.model(
     created_at: {
       type: Number,
       default: 0
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false
     }
   })
 );

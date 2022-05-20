@@ -42,7 +42,8 @@ export const setCurrentUser = (walletAddr) => async (dispatch) => {
           twitter: null,
           youtube: null,
           instagram: null,
-          created_at: null
+          created_at: null,
+          isAdmin: false
         }));
       }
     });

@@ -98,7 +98,7 @@ const Collection = () => {
     //get all payments
     let payments = [];
     try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payment/all`, {
         headers: {
           'Content-Type': 'application/json',
         },

@@ -10,7 +10,7 @@ import useOnclickOutside from "react-cool-onclickoutside";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 import BalanceTokens from '../components/BalanceTokens';
-import { formatUserName, getNotifications } from "../../utils";
+import { formatUserName, getAdminUsers, getNotifications } from "../../utils";
 
 setDefaultBreakpoints([
   { xs: 0 },
@@ -99,6 +99,7 @@ const Header = function({ className }) {
     const [copied, setCopied] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [myTimer, setMyTimer] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
       if (currentUserState.data) {
@@ -140,8 +141,22 @@ const Header = function({ className }) {
 
         setMyTimer(tId);
       }
+      async function checkIsAdmin(walletAddr) {
+        let users = await getAdminUsers();
+        const admins = users.filter((user, index) => {
+          return user.walletAddr.toLowerCase() === walletAddr.toLowerCase();
+        });
+
+        if (admins.length === 1) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      }
+
       if (account) {
         getNotificationsForUser(account.toLowerCase());
+        checkIsAdmin(account.toLowerCase());
       }
     }, [account]);
 
@@ -210,7 +225,7 @@ const Header = function({ className }) {
                           <NavLink to="/explore" onClick={() => btn_icon(!showmenu)}>Items On Sale</NavLink>
                           <NavLink to="/auctions" onClick={() => btn_icon(!showmenu)}>Live Auction</NavLink>
                           <NavLink to="/collections" onClick={() => btn_icon(!showmenu)}>Collections</NavLink>
-                          <NavLink to="/ranking" onClick={() => btn_icon(!showmenu)}>Ranking</NavLink>
+                          {/* <NavLink to="/ranking" onClick={() => btn_icon(!showmenu)}>Ranking</NavLink> */}
                         </div>
                       </div>
                     )}
@@ -263,7 +278,7 @@ const Header = function({ className }) {
                             <NavLink to="/explore">Items On Sale</NavLink>
                             <NavLink to="/auctions">Live Auctions</NavLink>
                             <NavLink to="/collections">Collections</NavLink>
-                            <NavLink to="/rankingGrey">Ranking Grey</NavLink>
+                            {/* <NavLink to="/ranking">Ranking</NavLink> */}
                           </div>
                         </div>
                       )}
@@ -289,6 +304,24 @@ const Header = function({ className }) {
                       </div>
                     </div>
                 </div>
+                {isAdmin && 
+                <div className='navbar-item'>
+                  <div ref={ref3}>
+                      <div className="dropdown-custom dropdown-toggle btn" 
+                          onMouseEnter={handleBtnClick3} onMouseLeave={closeMenu3}>
+                        Admin
+                        <span className='lines'></span>
+                        {openMenu3 && (
+                        <div className='item-dropdown'>
+                          <div className="dropdown" onClick={closeMenu3}>
+                            <NavLink to="/admin/payments">Payments</NavLink>
+                          </div>
+                        </div>
+                      )}
+                      </div>
+                    </div>
+                </div>
+                }
                 <div className='navbar-item'>
                   <NavLink to="/activity">
                     Activity

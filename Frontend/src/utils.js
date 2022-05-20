@@ -235,7 +235,7 @@ export async function getUserInfo(walletAddr) {
 export async function getPayments() {
   let payments = [];
   try {
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payment/all`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -429,4 +429,58 @@ export async function markupRead(walletAddr) {
       }
     }
   );
+}
+
+export async function getAdminUsers() {
+  let users = [];
+  await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user/admin`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: {}
+  }).then(res => {
+    users = res.data.users;
+  }).catch((e) => {
+    console.log(e);
+  });
+
+  return users;
+}
+
+export async function addPayment(payment) {
+  const res = await axios.post(
+    `${process.env.REACT_APP_SERVER_URL}/api/payment/add`, 
+    {
+      'id': parseInt(payment.id),
+      'type': payment.type === 'Native' ? 0 : 1,
+      'addr': payment.addr.toLowerCase(),
+      'title': payment.name,
+      'symbol': payment.symbol,
+      'decimals': parseInt(payment.decimals),
+      'allowed': 1
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+
+  return res.data;
+}
+
+export async function removePayment(addr) {
+  const res = await axios.post(
+    `${process.env.REACT_APP_SERVER_URL}/api/payment/remove`, 
+    {
+      'addr': addr.toLowerCase()
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+
+  return res.data;
 }

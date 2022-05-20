@@ -22,9 +22,10 @@ import LiveAuction from "./pages/LiveAuction";
 import About from "./pages/About";
 import Faq from "./pages/faq";
 import Item from "./pages/Item";
+import Notification from "./pages/Notification";
+import PaymentSetting from "./pages/Admin/Payment";
 
 import { createGlobalStyle } from 'styled-components';
-import Notification from "./pages/Notification";
 
 const history = createHistory(window);
 
@@ -135,6 +136,8 @@ const App = ({ isServerInfo }) => {
           <About path="/about" />
           <Faq path="/faq" />
           <Contact path="/contact" />
+
+          <PaymentSetting path="/admin/payments" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

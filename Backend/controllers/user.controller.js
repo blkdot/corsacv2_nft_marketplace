@@ -132,3 +132,14 @@ exports.getUser = (req, res) => {
     })
   })
 };
+
+exports.getAdminUser = (req, res) => {
+  User.find({
+    isAdmin: true
+  }).then((users) => {
+    res.status(200).send({
+      users: users
+    });
+    return;
+  })
+};

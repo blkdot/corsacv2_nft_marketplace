@@ -43,4 +43,6 @@ module.exports = function(app) {
   app.get("/api/user/all", controller.getAllUsers);
 
   app.get("/api/user", controller.getUser);
+
+  app.get("/api/user/admin", controller.getAdminUser);
 };

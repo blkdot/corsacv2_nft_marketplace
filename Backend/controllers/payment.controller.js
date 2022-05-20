@@ -2,7 +2,7 @@ const db = require("../models");
 const Payment = db.payment;
 // const { createCollection: createCollectionToken } = require('../contracts/methods');
 
-exports.createPayment = (req, res) => {
+exports.addPayment = (req, res) => {
   const addr = req.body.addr;
     
   //check if payment exists
@@ -25,9 +25,9 @@ exports.createPayment = (req, res) => {
       return;
     }
 
-    //create payment
+    //add payment
     const payment = new Payment({
-      id: Payment.find({}).count() + 1,
+      id: req.body.id,
       type: req.body.type,
       addr: req.body.addr,
       title: req.body.title,
@@ -42,9 +42,9 @@ exports.createPayment = (req, res) => {
       }
 
       res.send({
-        type: 'success',
-        message: "Payment was created successfully!",
+        added: true
       });
+      return;
     });
     
   });
@@ -85,4 +85,15 @@ exports.updatePayment = (req, res) => {
       });
     });
   });
+}
+
+exports.removePayment = (req, res) => {
+  Payment.deleteMany({
+    addr: req.body.addr
+  }).then(() => {
+    res.send({
+      removed: true
+    });
+    return;
+  }).catch((e) => res.status(500).send({ message: e }));
 }

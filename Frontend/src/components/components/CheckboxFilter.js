@@ -50,7 +50,7 @@ const CheckboxFilter = ({
 
   async function getPayments() {
     try {
-      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payments`, {
+      await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payment/all`, {
         headers: {
           'Content-Type': 'application/json',
         },

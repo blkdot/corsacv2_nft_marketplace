@@ -10,17 +10,17 @@ module.exports = function(app) {
   });
 
   app.post(
-    "/api/payment/create",
-    controller.createPayment
+    "/api/payment/add",
+    controller.addPayment
   );
 
   app.post(
-    "/api/payment/update",
-    controller.updatePayment
+    "/api/payment/remove",
+    controller.removePayment
   );
 
   app.get(
-    "/api/payments", 
+    "/api/payment/all", 
     controller.getPayments
   );
   
