@@ -281,17 +281,24 @@ exports.getNotifications = (req, res) => {
   Activity.aggregate([
     {
       $match: {
-        $and: (req.query.type == 1) ?
-          [
-            // {actionType: {$in: []}},
-            {from: {$eq: req.query.walletAddr}},
-            {read: {$eq: false}}
-          ]
-          :
-          [
-            // {actionType: {$in: []}},
-            {from: {$eq: req.query.walletAddr}},
-          ]
+        $or: [
+          {
+            actionType: 0
+          },
+          {
+            $and: (req.query.type == 1) ?
+              [
+                // {actionType: {$in: []}},
+                {from: {$eq: req.query.walletAddr}},
+                {read: {$eq: false}}
+              ]
+              :
+              [
+                // {actionType: {$in: []}},
+                {from: {$eq: req.query.walletAddr}},
+              ]
+          }
+        ]
       }
     }, 
     {

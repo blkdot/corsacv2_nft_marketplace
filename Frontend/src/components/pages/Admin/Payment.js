@@ -14,7 +14,7 @@ import { StyledHeader } from '../../Styles';
 import { Spin, Modal, Table, Space, Tag } from "antd";
 import styled from 'styled-components';
 import { categories } from "../../components/constants/cateogries";
-import { addPayment, getPayments, removePayment } from "../../../utils";
+import { addActivity, addPayment, getPayments, updatePayment } from "../../../utils";
 import PaymentDetail from "../../components/Admin/PaymentDetail";
 
 const StyledSpin = styled(Spin)`
@@ -39,6 +39,12 @@ const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
 const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
 
 const PaymentSetting = () => {
+  const contractProcessor = useWeb3ExecuteFunction();
+  const { marketAddress, contractABI } = useMoralisDapp();
+  const { account, Moralis, isAuthenticated } = useMoralis();
+  
+  const currentUserState = useSelector(selectors.currentUserState);
+
   const defaultValue = {
     value: null,
     label: 'Select Filter'
@@ -69,9 +75,6 @@ const PaymentSetting = () => {
     })
   };
 
-  const currentUserState = useSelector(selectors.currentUserState);
-  const { account } = useMoralis();
-
   const columns = [
     {title: 'ID', dataIndex: 'id', key: 'id', responsive: ['md'],},
     {title: 'Type', dataIndex: 'type', key: 'type', responsive: ['md'],},
@@ -98,7 +101,7 @@ const PaymentSetting = () => {
       render: (text, record) => (
         ( record && ![0, 1, 2].includes(record.id) &&
         <Space size="middle">
-          <a onClick={() => handleDelete(record)} style={{color: "#FF343F"}}>Delete</a>
+          <a onClick={() => handleUpdatePayment(record)} style={{color: "#FF343F"}}>{record.allowed === 1 ? 'Disable' : 'Allow'}</a>
         </Space>
         )
       ),
@@ -120,20 +123,34 @@ const PaymentSetting = () => {
     setModalMessage('');
   }
 
-  const handleDelete = async (record) => {
-    const res = await removePayment(record.addr.toLowerCase());
+  const handleUpdatePayment = async (record) => {
+    const allowed = record.allowed === 1 ? 0 : 1;
+    const res = await updatePayment(record.addr.toLowerCase(), allowed);
 
-    if (res.removed) {
+    if (res.updated) {
       setOpenModal(true);
       setModalTitle('Success');
-      setModalMessage(`Token "${record.name}" was removed successfully!`);
+      setModalMessage(`Token "${record.name}" was ${allowed === 1 ? 'allowed' : 'disabled'}!`);
 
       let payments = JSON.parse(JSON.stringify(dataSource));
-      payments = payments.filter((p, index) => {
-        return p.addr.toLowerCase() !== record.addr.toLowerCase();
-      });
-
+      for (let payment of payments) {
+        if (payment.addr.toLowerCase() === record.addr.toLowerCase()) {
+          payment.allowed = allowed;
+          break;
+        }
+      }
+      
       setDataSource(payments);
+
+      //save activity
+      const aRes = await addActivity({
+        actor: account.toLowerCase(),
+        actionType: 0,
+        description: `Administrator ${allowed === 1 ? 'allowed' : 'disabled'} token - "${record.name}" from payments.`,
+        from: '',
+        collectionAddr: '',
+        tokenId: ''
+      });
     } else {
       setOpenModal(true);
       setModalTitle('Error');
@@ -153,7 +170,8 @@ const PaymentSetting = () => {
           name: p.title,
           symbol: p.symbol,
           decimals: p.decimals,
-          addr: p.addr
+          addr: p.addr,
+          allowed: p.allowed
         });
       }
 
@@ -169,11 +187,15 @@ const PaymentSetting = () => {
 
   useEffect(() => {
     async function addTokenToPayments(payment) {
+      setLoading(true);
+
       const ps = dataSource.filter((p, index) => {
         return p.addr.toLowerCase() === payment.addr.toLowerCase();
       });
   
       if (ps.length > 0) {
+        setLoading(false);
+
         setOpenModal(true);
         setModalTitle('Error');
         setModalMessage(`Token "${payment.name}" added already!`);
@@ -186,19 +208,62 @@ const PaymentSetting = () => {
       p.key = id;
       p.id = id;
 
-      const res = await addPayment(p);
-      if (res.added) {
-        payments.push(p);
-        setDataSource(payments);
+      //run contract function - setPaymentToken
+      let ops = {
+        contractAddress: marketAddress,
+        functionName: "setPaymentToken",
+        abi: contractABI,
+        params: {
+          tId: id,
+          tokenAddr: p.addr
+        }
+      };
+      await contractProcessor.fetch({
+        params: ops,
+        onSuccess: async (result) => {
+          await result.wait();
 
-        setOpenModal(true);
-        setModalTitle('Success');
-        setModalMessage(`Token "${p.name}" was added successfully!`);
-      } else {
-        setOpenModal(true);
-        setModalTitle('Error');
-        setModalMessage(res.message);
-      }
+          //save into db
+          const res = await addPayment(p);
+          if (res.added) {
+            payments.push(p);
+            setDataSource(payments);
+
+            //save activity
+            const aRes = await addActivity({
+              actor: account.toLowerCase(),
+              actionType: 0,
+              description: `Administrator added new token - "${p.name}" as payment.`,
+              from: '',
+              collectionAddr: '',
+              tokenId: ''
+            });
+
+            setLoading(false);
+
+            setOpenModal(true);
+            setModalTitle('Success');
+            setModalMessage(`Token "${p.name}" was added successfully!`);
+          } else {
+            setOpenModal(true);
+            setModalTitle('Error');
+            setModalMessage(res.message);
+          }
+        },
+        onError: (error) => {
+          console.log("failed:setPaymentToken", error);
+          setLoading(false);
+
+          setModalTitle('Error');
+          if (error.message) {
+            setModalMessage(error.message);
+          } else {
+            setModalMessage(error);
+          }
+          setOpenModal(true);
+          return;
+        },
+      });
     }
 
     if (payment) {

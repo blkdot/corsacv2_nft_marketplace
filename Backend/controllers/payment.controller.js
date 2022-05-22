@@ -2,6 +2,34 @@ const db = require("../models");
 const Payment = db.payment;
 // const { createCollection: createCollectionToken } = require('../contracts/methods');
 
+exports.getPayments = (req, res) => {
+  Payment.find({},
+  (err, payments) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      payments: payments
+    })
+  }).sort({id: 1});
+}
+
+exports.getAllowedPayments = (req, res) => {
+  Payment.find({
+    allowed: 1
+  },
+  (err, payments) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      payments: payments
+    })
+  }).sort({id: 1});
+}
+
 exports.addPayment = (req, res) => {
   const addr = req.body.addr;
     
@@ -50,40 +78,20 @@ exports.addPayment = (req, res) => {
   });
 }
 
-exports.getPayments = (req, res) => {
-  Payment.find({
-    allowed: req.query.allowed 
-  },
-  (err, payments) => {
-    if (err) {
-      res.status(500).send({ message: err });
-      return;
-    }
-    res.status(200).send({
-      payments: payments
-    })
-  }).sort({id: 1});
-}
-
 exports.updatePayment = (req, res) => {
-  Payment.findOne({
-    id: req.body.id
-  }).then((payment) => {
-    payment.type = (req.body.type != null) ? req.body.type : payment.type;
-    payment.addr = (req.body.addr != null) ? req.body.addr : payment.addr;
-    payment.title = (req.body.title != null) ? req.body.title : payment.title;
-    payment.symbol = (req.body.symbol != null) ? req.body.symbol : payment.symbol;
-    payment.decimals = (req.body.decimals != null) ? req.body.decimals : payment.decimals;
-    payment.allowed = (req.body.allowed != null) ? req.body.allowed : payment.allowed;
-    payment.save((err) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
-      }
-      res.send({
-        message: "Payment was updated successfully",
-      });
+  Payment.updateOne({
+    addr: req.body.addr
+  }, 
+  {$set: {
+    allowed: req.body.allowed
+  }}).then(() => {
+    res.send({
+      updated: true,
     });
+    return;
+  }).catch((e) => {
+    res.status(500).send({ message: err });
+    return;
   });
 }
 

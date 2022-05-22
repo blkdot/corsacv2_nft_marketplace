@@ -72,29 +72,21 @@ const PaymentDetail = ({setPayment}) => {
 
     setLoading(true);
     // Get metadata for one token. Ex: USDT token on ETH
-    // const options = {
-    //   chain: process.env.REACT_APP_CHAIN_ID,
-    //   addresses: address,
-    // };
-    // const tokenMetadata = await Web3Api.token.getTokenMetadata(options);
-    // console.log(tokenMetadata);
-    await axios.get(`https://deep-index.moralis.io/api/v2/erc20/metadata`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': 'fnuHcmNLPkOdwGsMV24bR6e2JOqEAoWqSFKPG8eujPah3KciyIIX7aavoJnOGtHg'
-      },
-      params: {
-        chain: process.env.REACT_APP_CHAIN_ID,
-        addresses: address,
-      }
-    }).then((res) => {
-      const tokenMetadata = res.data[0] ? res.data[0] : null;
+    const options = {
+      chain: process.env.REACT_APP_CHAIN_ID,
+      addresses: address,
+    };
+
+    try {
+      const res = await Web3Api.token.getTokenMetadata(options);
+      const tokenMetadata = res[0] ? res[0] : null;
+      
       setTokenName(tokenMetadata ? tokenMetadata.name : '');
       setTokenSymbol(tokenMetadata ? tokenMetadata.symbol : '');
       setTokenDecimals(tokenMetadata ? tokenMetadata.decimals : 18);
 
       setLoading(false);
-    }).catch((e) => {
+    } catch (e) {
       console.log(e);
 
       setTokenName('');
@@ -102,7 +94,32 @@ const PaymentDetail = ({setPayment}) => {
       setTokenDecimals(18);
             
       setLoading(false);
-    });
+    }
+    // await axios.get(`https://deep-index.moralis.io/api/v2/erc20/metadata`, {
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'X-API-Key': 'fnuHcmNLPkOdwGsMV24bR6e2JOqEAoWqSFKPG8eujPah3KciyIIX7aavoJnOGtHg'
+    //   },
+    //   params: {
+    //     chain: process.env.REACT_APP_CHAIN_ID,
+    //     addresses: address,
+    //   }
+    // }).then((res) => {
+    //   const tokenMetadata = res.data[0] ? res.data[0] : null;
+    //   setTokenName(tokenMetadata ? tokenMetadata.name : '');
+    //   setTokenSymbol(tokenMetadata ? tokenMetadata.symbol : '');
+    //   setTokenDecimals(tokenMetadata ? tokenMetadata.decimals : 18);
+
+    //   setLoading(false);
+    // }).catch((e) => {
+    //   console.log(e);
+
+    //   setTokenName('');
+    //   setTokenSymbol('');
+    //   setTokenDecimals(18);
+            
+    //   setLoading(false);
+    // });
   };
 
   const handleTokenType = (type) => {

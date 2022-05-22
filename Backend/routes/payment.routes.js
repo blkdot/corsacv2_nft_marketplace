@@ -19,9 +19,19 @@ module.exports = function(app) {
     controller.removePayment
   );
 
+  app.post(
+    "/api/payment/update",
+    controller.updatePayment
+  );
+
   app.get(
     "/api/payment/all", 
     controller.getPayments
+  );
+
+  app.get(
+    "/api/payment/allowed", 
+    controller.getAllowedPayments
   );
   
 };

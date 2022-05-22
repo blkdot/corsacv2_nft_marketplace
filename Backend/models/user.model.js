@@ -40,8 +40,8 @@ const User = mongoose.model(
       default: 0
     },
     isAdmin: {
-      type: Boolean,
-      default: false
+      type: Number,
+      default: 0
     }
   })
 );

@@ -232,36 +232,6 @@ export async function getUserInfo(walletAddr) {
   return user;
 };
 
-export async function getPayments() {
-  let payments = [];
-  try {
-    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payment/all`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: {
-        allowed: 1
-      }
-    }).then(res => {
-      for (let p of res.data.payments) {
-        payments.push({
-          value: p.id, 
-          label: p.title + " (" + p.symbol + ")", 
-          addr: p.addr, 
-          title: p.title, 
-          type: p.type,
-          symbol: p.symbol,
-          decimals: p.decimals
-        });
-      }
-    });
-  } catch {
-    console.log('error in fetching payments');
-  }
-
-  return payments;
-}
-
 export async function getHistory(collectionAddr, tokenId) {
   let hs = [];
   try {
@@ -447,6 +417,66 @@ export async function getAdminUsers() {
   return users;
 }
 
+export async function getPayments() {
+  let payments = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payment/all`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {}
+    }).then(res => {
+      for (let p of res.data.payments) {
+        payments.push({
+          value: p.id, 
+          label: p.title + " (" + p.symbol + ")", 
+          addr: p.addr, 
+          title: p.title, 
+          type: p.type,
+          symbol: p.symbol,
+          decimals: p.decimals,
+          allowed: p.allowed
+        });
+      }
+    });
+  } catch {
+    console.log('error in fetching payments');
+  }
+
+  return payments;
+}
+
+export async function getAllowedPayments() {
+  let payments = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/payment/allowed`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        allowed: 1
+      }
+    }).then(res => {
+      for (let p of res.data.payments) {
+        payments.push({
+          value: p.id, 
+          label: p.title + " (" + p.symbol + ")", 
+          addr: p.addr, 
+          title: p.title, 
+          type: p.type,
+          symbol: p.symbol,
+          decimals: p.decimals,
+          allowed: p.allowed
+        });
+      }
+    });
+  } catch {
+    console.log('error in fetching payments');
+  }
+
+  return payments;
+}
+
 export async function addPayment(payment) {
   const res = await axios.post(
     `${process.env.REACT_APP_SERVER_URL}/api/payment/add`, 
@@ -483,4 +513,44 @@ export async function removePayment(addr) {
   );
 
   return res.data;
+}
+
+export async function updatePayment(addr, allowed) {
+  const res = await axios.post(
+    `${process.env.REACT_APP_SERVER_URL}/api/payment/update`, 
+    {
+      'addr': addr.toLowerCase(),
+      'allowed': parseInt(allowed)
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+
+  return res.data;
+}
+
+export async function addActivity(data) {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_SERVER_URL}/api/activity/save`, 
+      {
+        'actor': data.actor,
+        'actionType': data.actionType,
+        'description': data.description,
+        'from': data.from,
+        'collectionAddr': data.collectionAddr,
+        'tokenId': data.tokenId
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+  } catch(ex) {
+    console.log(ex);
+  }
 }

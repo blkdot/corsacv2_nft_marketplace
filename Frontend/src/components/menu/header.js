@@ -249,6 +249,24 @@ const Header = function({ className }) {
                     )}
                   </div>
                 </div>
+                {isAdmin && 
+                <div className='navbar-item'>
+                  <div ref={ref3}>
+                    <div className="dropdown-custom dropdown-toggle btn" 
+                      onClick={handleBtnClick3}
+                      >
+                      Admin
+                    </div>
+                    {openMenu3 && (
+                      <div className='item-dropdown'>
+                        <div className="dropdown" onClick={closeMenu3}>
+                          <NavLink to="/admin/payments" onClick={() => btn_icon(!showmenu)}>Payments</NavLink>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                }
                 <div className='navbar-item'>
                   <NavLink to="/activity" onClick={() => btn_icon(!showmenu)}>
                     Activity

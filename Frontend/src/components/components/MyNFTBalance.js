@@ -11,7 +11,7 @@ import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 import * as selectors from '../../store/selectors';
 import { navigate } from '@reach/router';
-import { getFileTypeFromURL, getUserInfo, getPayments, getFavoriteCount } from '../../utils';
+import { getFileTypeFromURL, getUserInfo, getPayments, getAllowedPayments, getFavoriteCount } from '../../utils';
 import { defaultAvatar, fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
@@ -94,6 +94,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
 
     const [saleNFTs, setSaleNFTs] = useState([]);
     const [payments, setPayments] = useState([]);
+    const [allowedPayments, setAllowedPayments] = useState([]);
     const [salePayment, setSalePayment] = useState(0);
     const [auctionPayment, setAuctionPayment] = useState(0);
        
@@ -326,6 +327,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       }
       
       setPayments(await getPayments());
+      setAllowedPayments(await getAllowedPayments());
     }, []);
 
     useEffect(() => {
@@ -628,7 +630,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             <Tabs defaultActiveKey={tabKey} onChange={tabCallback}>
               <TabPane tab="Fixed Price" key="1">
                 <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleSalePaymentChange}>
-                  { payments && payments.map((payment, index) => (
+                  { allowedPayments && allowedPayments.map((payment, index) => (
                       <Option value={payment.value} key={index}>{payment.label}</Option>
                     ))
                   }
@@ -649,7 +651,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
               { nftToSend && nftToSend.contract_type === 'ERC721' &&
               <TabPane tab="Timed Auction" key="2">
                 <Select defaultValue={0} style={{ width: "100%", marginBottom: "10px" }} onChange={handleAuctionPaymentChange}>
-                  { payments && payments.map((payment, index) => (
+                  { allowedPayments && allowedPayments.map((payment, index) => (
                       <Option value={payment.value} key={index}>{payment.label}</Option>
                     ))
                   }

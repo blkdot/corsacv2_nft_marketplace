@@ -43,7 +43,7 @@ export const setCurrentUser = (walletAddr) => async (dispatch) => {
           youtube: null,
           instagram: null,
           created_at: null,
-          isAdmin: false
+          isAdmin: 0
         }));
       }
     });
