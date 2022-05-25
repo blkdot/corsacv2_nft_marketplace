@@ -31,6 +31,10 @@ const NFTItem = mongoose.model(
       type: String,
       default: ''
     },
+    metadata: {
+      type: String,
+      default: ''
+    },
     royalty: {
       type: Number,
       default: 0
@@ -48,6 +52,10 @@ const NFTItem = mongoose.model(
       default: ''
     },
     stars: {
+      type: Number,
+      default: 0
+    },
+    blocked: {
       type: Number,
       default: 0
     }

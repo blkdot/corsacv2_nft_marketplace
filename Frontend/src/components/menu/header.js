@@ -261,6 +261,7 @@ const Header = function({ className }) {
                       <div className='item-dropdown'>
                         <div className="dropdown" onClick={closeMenu3}>
                           <NavLink to="/admin/payments" onClick={() => btn_icon(!showmenu)}>Payments</NavLink>
+                          <NavLink to="/admin/blacklist" onClick={() => btn_icon(!showmenu)}>Blacklist</NavLink>
                         </div>
                       </div>
                     )}
@@ -333,6 +334,7 @@ const Header = function({ className }) {
                         <div className='item-dropdown'>
                           <div className="dropdown" onClick={closeMenu3}>
                             <NavLink to="/admin/payments">Payments</NavLink>
+                            <NavLink to="/admin/blacklist">Blacklist</NavLink>
                           </div>
                         </div>
                       )}

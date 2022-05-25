@@ -32,10 +32,12 @@ exports.createItem = (req, res) => {
           title: req.body.title,
           description: req.body.description,
           image: req.body.image,
+          metadata: req.body.metadata,
           royalty: req.body.royalty,
           amount: req.body.amount,
           timeStamp: req.body.timeStamp,
-          creator: req.body.creator
+          creator: req.body.creator,
+          blocked: 0
         });
         
         item.save(async (err1) => {
@@ -154,3 +156,72 @@ exports.getItemsByCollection = (req, res) => {
     res.send(items);
   }).catch((e) => res.status(500).send({ message: e }));
 };
+
+exports.getAllItems = (req, res) => {
+  NFTItem.aggregate([
+    {
+      $sort: {
+        timeStamp: -1
+      }
+    },
+    {
+      $lookup: {
+        from: "collections", 
+        localField: "collectionId", 
+        foreignField: "_id", 
+        as: "collections"
+      }
+    }
+  ], (err, items) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      items: items
+    })
+  });
+}
+
+exports.updateBlacklist = (req, res) => {
+  NFTItem.updateOne({
+    _id: new mongoose.Types.ObjectId(req.body.id)
+  }, 
+  {$set: {
+    blocked: parseInt(req.body.blocked)
+  }}).then(() => {
+    res.send({
+      updated: true,
+    });
+    return;
+  }).catch((e) => {
+    res.status(500).send({ message: err });
+    return;
+  });
+}
+
+exports.getBlacklist = (req, res) => {
+  NFTItem.aggregate([
+    {
+      $match: {
+        blocked: 1
+      }
+    },
+    {
+      $lookup: {
+        from: "collections", 
+        localField: "collectionId", 
+        foreignField: "_id", 
+        as: "collections"
+      }
+    }
+  ], (err, items) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+    res.status(200).send({
+      items: items
+    })
+  });
+}

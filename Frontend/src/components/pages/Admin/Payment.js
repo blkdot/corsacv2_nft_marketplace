@@ -45,36 +45,6 @@ const PaymentSetting = () => {
   
   const currentUserState = useSelector(selectors.currentUserState);
 
-  const defaultValue = {
-    value: null,
-    label: 'Select Filter'
-  };
-
-  const customStyles = {
-    option: (base, state) => ({
-      ...base,
-      background: "#fff",
-      color: "#333",
-      borderRadius: state.isFocused ? "0" : 0,
-      "&:hover": {
-          background: "#eee",
-      }
-    }),
-    menu: base => ({
-      ...base,
-      borderRadius: 0,
-      marginTop: 0
-    }),
-    menuList: base => ({
-      ...base,
-      padding: 0
-    }),
-    control: (base, state) => ({
-      ...base,
-      padding: 2
-    })
-  };
-
   const columns = [
     {title: 'ID', dataIndex: 'id', key: 'id', responsive: ['md'],},
     {title: 'Type', dataIndex: 'type', key: 'type', responsive: ['md'],},

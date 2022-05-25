@@ -2,7 +2,6 @@ import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import styled from "styled-components";
-// import Clock from "./Clock";
 import { navigate } from '@reach/router';
 
 import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
@@ -10,7 +9,6 @@ import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappP
 import Countdown from 'react-countdown';
 import { Modal, Spin } from "antd";
 import BigNumber from 'bignumber.js';
-import api from "../../core/api";
 import axios from 'axios';
 import * as selectors from '../../store/selectors';
 import { defaultAvatar, fallbackImg } from '../components/constants';
@@ -368,41 +366,60 @@ const MyNftCard = ({
                   Amount:<span>{nft.amount}</span>
                 </div>
                 }
+                { nft.blocked === 1 && 
+                <div className="nft__item_price">
+                  Status:<span>Blocked</span>
+                </div>
+                }
 
-                <div className="nft__item_action">
-                  { page && page === 'explore' ? (
+                { nft.blocked !== 1 ? (
                   <>
-                    {nft.isOwner && (
-                      <span onClick={() => handleBuyClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</span>
+                    <div className="nft__item_action">
+                    { page && page === 'explore' ? (
+                    <>
+                      {nft.isOwner && (
+                        <span onClick={() => handleBuyClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</span>
+                      )}
+                      {!nft.isOwner && (nft.onSale || nft.onOffer) && (
+                        <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
+                      )}
+                      {!nft.isOwner && (nft.onAuction) && (
+                        <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
+                      )}
+                    </>
+                    ) : (
+                      (nft.onSale || nft.onOffer || nft.onAuction) ? (
+                        <>
+                        <span onClick={() => handleCancelSaleClick(nft)}>
+                          Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
+                        </span><br/>
+                        <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`)}>View Item</span>
+                        </>
+                      )
+                      : (
+                        <>
+                        <span onClick={() => handleSellClick(nft)}>Create Sale</span><br/>
+                        <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`)}>View Item</span>
+                        </>
+                      )
                     )}
-                    {!nft.isOwner && (nft.onSale || nft.onOffer) && (
-                      <span onClick={() => handleBuyClick(nft)}>Buy Now</span>
-                    )}
-                    {!nft.isOwner && (nft.onAuction) && (
-                      <span onClick={() => handleBuyClick(nft)}>Place a bid</span>
-                    )}
+                  </div>
+                  <div className="nft__item_like" onClick={() => handleFavorite(nft)}>
+                    <i className="fa fa-heart" style={liked ? {color: '#FF3F34'} : {}} title={liked ? 'UnFavorate' : 'Favorite'}></i>
+                    <span>{likes ? likes : 0}</span>
+                  </div>
                   </>
-                  ) : (
-                    (nft.onSale || nft.onOffer || nft.onAuction) ? (
-                      <>
-                      <span onClick={() => handleCancelSaleClick(nft)}>
-                        Cancel {nft.onSale ? 'Sale' : (nft.onOffer ? 'Offer' : 'Auction')}
-                      </span><br/>
+                ) : (
+                  <>
+                    <div className="nft__item_action">
                       <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`)}>View Item</span>
-                      </>
-                    )
-                    : (
-                      <>
-                      <span onClick={() => handleSellClick(nft)}>Create Sale</span><br/>
-                      <span onClick={() => navigate(`/collection/${nft.token_address}/${nft.token_id ? nft.token_id : nft.tokenId}/${nft.author ? nft.author.walletAddr.toLowerCase() : ''}`)}>View Item</span>
-                      </>
-                    )
-                  )}
-                </div>
-                <div className="nft__item_like" onClick={() => handleFavorite(nft)}>
-                  <i className="fa fa-heart" style={liked ? {color: '#FF3F34'} : {}} title={liked ? 'UnFavorate' : 'Favorite'}></i>
-                  <span>{likes ? likes : 0}</span>
-                </div>
+                    </div>
+                    <div className="nft__item_like">
+                      <i className="fa fa-heart" style={liked ? {color: '#FF3F34'} : {}} title={liked ? 'UnFavorate' : 'Favorite'}></i>
+                      <span>{likes ? likes : 0}</span>
+                    </div>
+                  </>
+                )}
               </div> 
           </div>
           }

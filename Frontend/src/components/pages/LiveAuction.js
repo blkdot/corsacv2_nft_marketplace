@@ -16,7 +16,7 @@ import styled from 'styled-components';
 
 import BigNumber from "bignumber.js";
 import { createGlobalStyle } from 'styled-components';
-import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount } from "../../utils";
+import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount, getBlacklist } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 import NftCard from "../components/NftCard";
@@ -86,7 +86,7 @@ const LiveAuction = () => {
   const [loading, setLoading] = useState(true);
   const [loadingTitle, setLoadingTitle] = useState("Loading...");
 
-  const [height, setHeight] = useState(210);
+  const [blacklist, setBlacklist] = useState([]);
 
   async function getSalesInfo() {
     if (window.web3 === undefined && window.ethereum === undefined)
@@ -118,6 +118,7 @@ const LiveAuction = () => {
   useEffect(() => {
     async function getBaseData() {
       setPayments(await getPayments());
+      setBlacklist(await getBlacklist());
       await getSalesInfo();
     }
 
@@ -235,6 +236,17 @@ const LiveAuction = () => {
               console.log(e);
               temp[0].likes = 0;
               temp[0].liked = false;
+            }
+
+            //isBlocked
+            const bl = blacklist.filter(item =>  {
+              return item.collectionAddr.toLowerCase() === temp[0].token_address.toLowerCase() && 
+                parseInt(item.tokenId) === parseInt(temp[0].token_id);
+            });
+            if (bl.length > 0) {
+              temp[0].blocked = 1;
+            } else {
+              temp[0].blocked = 0;
             }
 
             nfts.push(temp[0]);

@@ -9,7 +9,7 @@ import { navigate } from '@reach/router';
 import { useDispatch } from 'react-redux';
 import * as actions from '../../store/actions/thunks';
 import { defaultAvatar, fallbackImg } from './constants';
-import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount } from '../../utils';
+import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount, sleep, getBlacklist } from '../../utils';
 import NftCard from './NftCard';
 
 const StyledSpin = styled(Spin)`
@@ -83,8 +83,10 @@ const NewItems = () => {
   useEffect(async () => {
     if (saleNFTs && saleNFTs.length > 0) {
       setLoading(true);
+
+      const blacklist = await getBlacklist();
       const promises = [];
-      
+            
       for (let saleInfo of saleNFTs) {
         //check if sale is new
         const currentTime = Math.floor(new Date().getTime() / 1000);
@@ -101,12 +103,22 @@ const NewItems = () => {
 
           // const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
           // let nft = result;
+          await sleep(600);
           let nft = null;
-          const result = await Moralis.Web3API.token.getNFTOwners(options);
+          const result = await Moralis.Web3API.token.getTokenIdOwners(options);
           let temps = result.result?.filter((item, index) => {
             return item.owner_of.toLowerCase() === saleInfo[2].toLowerCase();
           });
           nft = temps[0];
+          
+          //check if nft was blocked
+          const bl = blacklist.filter(item => {
+            return item.collectionAddr.toLowerCase() === nft.token_address.toLowerCase() && 
+              parseInt(item.tokenId) === parseInt(nft.token_id);
+          });
+          if (bl.length > 0) {
+            continue;
+          }
                               
           nft.saleId = parseInt(saleInfo[0]);
           nft.method = parseInt(saleInfo[8]);

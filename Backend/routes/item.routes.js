@@ -30,11 +30,11 @@ module.exports = function(app) {
   );
   
   // app.post("/api/item/buy", controller.buyItem);
-  // app.get("/api/items/all", controller.getAllItems);
+  app.get("/api/item/all", controller.getAllItems);
   app.get("/api/item/recent", controller.getRecentItems);
   app.get("/api/item/wallet", controller.getItemsByWallet);
   app.get("/api/item/collection", controller.getItemsByCollection);
-  // app.get("/api/item", controller.getItem);
-  // app.post("/api/item/star/increase", controller.increaseItemStar);
-  // app.post("/api/item/star/decrease", controller.decreaseItemStar);
+  app.get("/api/item/blacklist", controller.getBlacklist);
+  
+  app.post("/api/item/updateBlacklist", controller.updateBlacklist);
 };

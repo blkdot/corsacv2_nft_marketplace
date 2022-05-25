@@ -1,19 +1,18 @@
 import React, { memo, useEffect, useState } from "react";
-import {useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction} from "react-moralis";
+import { useMoralis, useMoralisWeb3Api } from "react-moralis";
 import Footer from '../components/footer';
-import { defaultAvatar, defaultBanner, fallbackImg } from "../components/constants"; 
+import { defaultAvatar, defaultBanner } from "../components/constants"; 
 
-import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import {CopyToClipboard} from 'react-copy-to-clipboard';
+import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../Styles';
 import { navigate, useParams } from "@reach/router";
-import { getFileTypeFromURL, formatAddress, formatUserName, getAllCollection, getPayments, getUserInfo, getFavoriteCount } from "../../utils";
+import { getFileTypeFromURL, formatAddress, formatUserName, getAllCollection, getPayments, getUserInfo, getFavoriteCount, getBlacklist } from "../../utils";
 import BigNumber from "bignumber.js";
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
-import Countdown from 'react-countdown';
 import NftCard from "../components/NftCard";
 
 //SWITCH VARIABLE FOR PAGE STYLE
@@ -70,7 +69,6 @@ const Author = () => {
   const { Moralis, isInitialized, isAuthenticated } = useMoralis();
   const Web3Api = useMoralisWeb3Api();
 
-  const [height, setHeight] = useState(210);
   const [clockTop, setClockTop] = useState(true);
 
   const handleItemClick = (nft) => {
@@ -94,6 +92,9 @@ const Author = () => {
 			}
 
       setIsLoading(true);
+
+      //get blacklist
+      const blacklist = await getBlacklist();
 
       //get sales
       let saleItems = [];
@@ -230,6 +231,17 @@ const Author = () => {
           console.log(e);
           item.likes = 0;
           item.liked = false;
+        }
+
+        //isBlocked
+        const bl = blacklist.filter(nft =>  {
+          return nft.collectionAddr.toLowerCase() === item.token_address.toLowerCase() && 
+            parseInt(nft.tokenId) === parseInt(item.token_id);
+        });
+        if (bl.length > 0) {
+          item.blocked = 1;
+        } else {
+          item.blocked = 0;
         }
 
         nfts.push(item);

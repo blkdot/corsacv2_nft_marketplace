@@ -3,6 +3,8 @@ import { useDispatch } from 'react-redux';
 import { useMoralis } from "react-moralis";
 import * as actions from '../store/actions/thunks';
 import { Router, Location, Redirect, navigate, createHistory } from '@reach/router';
+import { createGlobalStyle } from 'styled-components';
+
 import ScrollToTopBtn from './menu/ScrollToTop';
 import Header from './menu/header';
 import Home from './pages/home';
@@ -24,8 +26,7 @@ import Faq from "./pages/faq";
 import Item from "./pages/Item";
 import Notification from "./pages/Notification";
 import PaymentSetting from "./pages/Admin/Payment";
-
-import { createGlobalStyle } from 'styled-components';
+import Blacklist from "./pages/Admin/Blacklist";
 
 const history = createHistory(window);
 
@@ -138,6 +139,7 @@ const App = ({ isServerInfo }) => {
           <Contact path="/contact" />
 
           <PaymentSetting path="/admin/payments" />
+          <Blacklist path="/admin/blacklist" />
         </ScrollTop>
       </PosedRouter>
       <ScrollToTopBtn />

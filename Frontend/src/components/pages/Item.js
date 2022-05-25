@@ -20,7 +20,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button, InputNumber } from "antd";
 import styled from 'styled-components';
-import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike } from "../../utils";
+import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike, getBlacklist, sleep } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 const StyledSpin = styled(Spin)`
@@ -140,7 +140,7 @@ const Item = () => {
 
 		const [copy, setCopy] = useState(1);
 
-		const renderer = props => {
+    const renderer = props => {
 			if (props.completed) {
 				setIsBidEnded(true);
 				// Render a completed state
@@ -715,6 +715,19 @@ const Item = () => {
 			//get payments data
 			const payments = await getPayments();
 
+      //get blacklist
+      const blacklist = await getBlacklist();
+
+      if (!isInitialized || !Moralis.Web3API) {
+				const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+				const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+
+				Moralis.start({
+					serverUrl: SERVER_URL,
+					appId: APP_ID
+				});
+			}
+
 			//get sales data
 			const ops = {
 				chain: process.env.REACT_APP_CHAIN_ID,
@@ -729,16 +742,6 @@ const Item = () => {
 	
 			const sales = await Moralis.Web3API.native.runContractFunction(ops);
 			
-			if (!isInitialized || !Moralis.Web3API) {
-				const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
-				const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
-
-				Moralis.start({
-					serverUrl: SERVER_URL,
-					appId: APP_ID
-				});
-			}
-
 			let nft = null;
 
 			const options = {
@@ -750,6 +753,7 @@ const Item = () => {
 			try {
 				// const result = await Moralis.Web3API.token.getTokenIdMetadata(options);
 				// nft = result;
+				await sleep(1000);
 				const result = await Moralis.Web3API.token.getTokenIdOwners(options);
 				let temps = [];
 				if (params.ownerAddr) {
@@ -764,13 +768,13 @@ const Item = () => {
 			} catch (err) {
 				console.log(err);
 				setIsPageLoading(false);
-				setFoundNFT(false);
-				return;
+				// setFoundNFT(false);
+				// return;
 			}
 
 			if (!nft) {
 				setIsPageLoading(false);
-				setFoundNFT(false);
+				// setFoundNFT(false);
 				return;
 			}
 			
@@ -956,6 +960,17 @@ const Item = () => {
 				nft.liked = false;
 			}
 
+      //isBlocked
+      const bl = blacklist.filter(item =>  {
+        return item.collectionAddr.toLowerCase() === nft.token_address.toLowerCase() && 
+          parseInt(item.tokenId) === parseInt(nft.token_id);
+      });
+      if (bl.length > 0) {
+        nft.blocked = 1;
+      } else {
+        nft.blocked = 0;
+      }
+
 			setNFT(nft);
 			setIsPageLoading(false);
 		}
@@ -1055,6 +1070,10 @@ const Item = () => {
 											</div>
 										</>
 									}
+
+                  {nft.blocked === 1 &&
+                    <h3 style={{color: "#FF3F34"}}>Blocked</h3>
+                  }
 									
 									<h2>{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h2>
 									<div className="item_info_counts">
@@ -1138,26 +1157,6 @@ const Item = () => {
 
 													<div className="row mt-5">
 														<div className="col-lg-12 col-md-12 col-sm-12">
-															{ nft.price != 0 && nft.price != null && 
-															<div className="nft_attr">
-																<h3>
-																	Price: {nft.price ? nft.price.toString() + ' ' + nft.payment.symbol : ''}
-																</h3>
-																<h3>
-																	Royalty: {nft.metadata && nft.metadata.royalty ? (parseInt(nft.metadata.royalty) / 100).toFixed(2) + ' %' : ''}
-																</h3>
-																{ (nft.onSale || nft.onAuction || nft.onOffer) &&
-																<>
-																	<h3>
-																		Amount: {nft.amount ? nft.amount : 0}
-																	</h3>
-																	<h3 className="mb-0">
-																		Amount on sale: {nft.saleBalance ? nft.saleBalance : 0} of {nft.saleAmount ? nft.saleAmount : 0}
-																	</h3>
-																</>
-																}
-															</div>
-															}
 															<div className="nft_attr" style={{textAlign: "left"}}>
 																<h4 className="mb-4">Description:</h4>
 																<span dangerouslySetInnerHTML={{__html: nft.metadata && nft.metadata.description ? nft.metadata.description.replaceAll('\n', "<br/>") : ''}} />
@@ -1222,21 +1221,64 @@ const Item = () => {
 											</div>
 											}
 
-											{/* button for checkout */}
-											<div className="d-flex flex-row mt-5">
-												{nft.isOwner && (nft.onSale || nft.onAuction || nft.onOffer) &&
-													<button className='btn-main lead mb-5 mr15' onClick={() => handleCancelClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</button>
-												}
-												{!nft.isOwner && (nft.onSale || nft.onOffer) && 
-													<button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
-												}
-												{!nft.isOwner && (!isBidEnded && nft.onAuction && !isBidded) && 
-													<button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
-												}
-												{!nft.isOwner && (!isBidEnded && isBidded) && 
-													<button className='btn-main btn2 lead mb-5' onClick={() => handleCancelClick(nft)}>Cancel Bid</button>
-												}
-											</div>
+                      {nft.price != 0 && nft.price != null &&
+                      <>
+                        <div className="row">
+                          <div className="col-md-6 col-sm-12 mb-4">
+                            <h4>Price</h4>
+                            <div className="nft-item-price">
+                              <img src="/img/misc/bnb.png" alt="" style={{width: "24px", height: "24px", marginTop: "-5px", marginRight: "5px"}}/>
+                              <span style={{color: "#FFFFFF"}}>{nft.price} {symbol}</span>
+                            </div>
+                          </div>
+                          <div className="col-md-6 col-sm-12 mb-4">
+                            <h4>Royalty</h4>
+                            <div className="nft-item-price">
+                              <span style={{color: "#FFFFFF"}}>{nft.metadata && nft.metadata.royalty ? (parseInt(nft.metadata.royalty) / 100).toFixed(2) + ' %' : ''}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        { (nft.onSale || nft.onAuction || nft.onOffer) &&
+                        <div className="row">
+                          <div className="col-md-6 col-sm-12 mb-4">
+                            <h4>Amount</h4>
+                            <div className="nft-item-price">
+                              <span style={{color: "#FFFFFF"}}>{nft.amount ? nft.amount : 0}</span>
+                            </div>
+                          </div>
+
+                          <div className="col-md-6 col-sm-12 mb-4">
+                            <h4>Amount on sale</h4>
+                            <div className="nft-item-price">
+                              <span style={{color: "#FFFFFF"}}>{nft.saleBalance ? nft.saleBalance : 0} of {nft.saleAmount ? nft.saleAmount : 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                        }
+                      </>
+                      }
+                      
+                      {nft.blocked !== 1 &&
+                      <>
+                        {/* button for checkout */}
+                        <div className="d-flex flex-row mt-5">
+                          {nft.isOwner && (nft.onSale || nft.onAuction || nft.onOffer) &&
+                            <button className='btn-main lead mb-5 mr15' onClick={() => handleCancelClick(nft)}>Cancel {nft.onSale ? 'Sale' : nft.onAuction ? 'Auction' : nft.onOffer ? 'Offer' : 'Sale'}</button>
+                          }
+                          {!nft.isOwner && (nft.onSale || nft.onOffer) && 
+                            <button className='btn-main lead mb-5 mr15' onClick={() => handleBuyClick()}>Buy Now</button>
+                          }
+                          {!nft.isOwner && (!isBidEnded && nft.onAuction && !isBidded) && 
+                            <button className='btn-main btn2 lead mb-5' onClick={() => handlePlacebidClick()}>Place A Bid</button>
+                          }
+                          {!nft.isOwner && (!isBidEnded && isBidded) && 
+                            <button className='btn-main btn2 lead mb-5' onClick={() => handleCancelClick(nft)}>Cancel Bid</button>
+                          }
+                        </div>
+                      </>
+                      }
+											
 										</div>     
 									</div>          
 								</div>

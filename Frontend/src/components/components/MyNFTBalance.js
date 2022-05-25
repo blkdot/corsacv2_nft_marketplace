@@ -1,18 +1,16 @@
 import React, { memo, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import * as actions from '../../store/actions/thunks';
-import { clearNfts, clearFilter } from '../../store/actions';
+import { useSelector } from 'react-redux';
 import MyNftCard from './MyNftCard';
-import { Modal, Input, Select, Option, Spin, Button, Tabs, DatePicker } from "antd";
+import { Modal, Input, Select, Spin, Button, Tabs, DatePicker } from "antd";
 import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useChain, useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
+import { useChain, useMoralis, useWeb3ExecuteFunction, useNFTBalances } from "react-moralis";
 import axios from "axios";
 import BigNumber from "bignumber.js";
 import styled from 'styled-components';
 import * as selectors from '../../store/selectors';
 import { navigate } from '@reach/router';
-import { getFileTypeFromURL, getUserInfo, getPayments, getAllowedPayments, getFavoriteCount } from '../../utils';
-import { defaultAvatar, fallbackImg } from './constants';
+import { getFileTypeFromURL, getUserInfo, getPayments, getAllowedPayments, getFavoriteCount, getBlacklist } from '../../utils';
+import { fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -55,7 +53,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const { Option } = Select;
 
     const currentUserState = useSelector(selectors.currentUserState);
-    const {getNFTBalances, data: NFTBalances, isLoading} = useNFTBalances();
+    const { data: NFTBalances, isLoading } = useNFTBalances();
     const [nfts, setNfts] = useState([]);
     const [myNfts, setMyNfts] = useState([]);
 
@@ -71,7 +69,6 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const contractProcessor = useWeb3ExecuteFunction();
     const { account, Moralis } = useMoralis();
     const { chainId } = useChain();
-    const Web3Api = useMoralisWeb3Api();
     const { marketAddress, contractABI } = useMoralisDapp();
 
     const [visible1, setVisibility1] = useState(false);
@@ -97,6 +94,8 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
     const [allowedPayments, setAllowedPayments] = useState([]);
     const [salePayment, setSalePayment] = useState(0);
     const [auctionPayment, setAuctionPayment] = useState(0);
+
+    const [blacklist, setBlacklist] = useState([]);
        
     function onChangeDueDate(date, dateString) {
       setDueDate(date);
@@ -328,6 +327,7 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
       
       setPayments(await getPayments());
       setAllowedPayments(await getAllowedPayments());
+      setBlacklist(await getBlacklist());
     }, []);
 
     useEffect(() => {
@@ -518,6 +518,17 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             console.log(e);
             nft.likes = 0;
             nft.liked = false;
+          }
+
+          //isBlocked
+          const bl = blacklist.filter(item =>  {
+            return item.collectionAddr.toLowerCase() === nft.token_address.toLowerCase() && 
+              parseInt(item.tokenId) === parseInt(nft.token_id);
+          });
+          if (bl.length > 0) {
+            nft.blocked = 1;
+          } else {
+            nft.blocked = 0;
           }
         }
         setIsPageLoading(false);

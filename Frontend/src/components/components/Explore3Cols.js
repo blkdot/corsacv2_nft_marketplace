@@ -5,7 +5,7 @@ import { useMoralis, useMoralisWeb3Api, useWeb3ExecuteFunction, useMoralisQuery 
 import { Spin } from "antd";
 import styled from 'styled-components';
 import BigNumber from 'bignumber.js';
-import { getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount } from '../../utils';
+import { getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount, getBlacklist } from '../../utils';
 import { fallbackImg } from './constants';
 
 const StyledSpin = styled(Spin)`
@@ -21,6 +21,8 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
   const [payments, setPayments] = useState([]);
   const [nfts, setNFTs] = useState([]);
   const [saleNFTs, setSaleNFTs] = useState([]);
+
+  const [blacklist, setBlacklist] = useState([]);
 
   const [isExplorerLoading, setIsExplorerLoading] = useState(true);
 
@@ -215,6 +217,17 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
           nft.liked = false;
         }
 
+        //isBlocked
+        const bl = blacklist.filter(item =>  {
+          return item.collectionAddr.toLowerCase() === nft.token_address.toLowerCase() && 
+            parseInt(item.tokenId) === parseInt(nft.token_id);
+        });
+        if (bl.length > 0) {
+          nft.blocked = 1;
+        } else {
+          nft.blocked = 0;
+        }
+
         //apply filters
         const cat = nft.metadata && nft.metadata.collection ? nft.metadata.collection.category : null;
         const saleType = nft.onSale ? 0 : nft.onAuction ? 1 : nft.onOffer ? 2 : null;
@@ -277,6 +290,7 @@ const Explore3Cols = ({filterCategories, filterSaleTypes, filterPayments, filter
   useEffect(() => {
     async function getBaseData() {
       setPayments(await getPayments());
+      setBlacklist(await getBlacklist());
       await getSalesInfo();
     }
 

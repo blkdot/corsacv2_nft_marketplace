@@ -23,3 +23,5 @@ npx hardhat run scripts/deploy-script.js --network testnet
 ```shell format (will be formated as constructor)
 npx hardhat verify --network testnet {deployed marketplace address} "singleCollectionDeployer(CorsacERC721 address)" "multipleCollectionDeployer(CorsacERC1155 address)"
 npx hardhat verify --network testnet 0xFE3CCA7Ce5E2E93cDf39478Ef2F5aaB44f9ca855 "0x00D41D72be2ABa3Bf1a5F9a90d86f21a13A31A95" "0xF6a715dFE984683D0eA3DF3DC3980F221f87c949"
+
+NOTE: Pay your attention for set payment token addresses on deploy script.

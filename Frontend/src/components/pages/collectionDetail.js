@@ -20,7 +20,7 @@ import Countdown from 'react-countdown';
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import { defaultAvatar, fallbackImg } from "../components/constants";
-import { getFileTypeFromURL, getUserInfo, formatUserName, formatAddress, getFavoriteCount } from "../../utils";
+import { getFileTypeFromURL, getUserInfo, formatUserName, formatAddress, getFavoriteCount, sleep, getBlacklist } from "../../utils";
 import NftCard from "../components/NftCard";
 
 //SWITCH VARIABLE FOR PAGE STYLE
@@ -69,7 +69,6 @@ const Collection = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [openModal, setOpenModal] = useState(false);
 
-  const [height, setHeight] = useState(210);
   const [clockTop, setClockTop] = useState(true);
 
   const closeModal = () => {
@@ -130,6 +129,9 @@ const Collection = () => {
       setOpenModal(true);
       return;
     }
+
+    //get blacklist
+    const blacklist = await getBlacklist();
 
     const collectionAddr = params.address;
 
@@ -194,6 +196,7 @@ const Collection = () => {
           chain: process.env.REACT_APP_CHAIN_ID
         };
         // const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
+        await sleep(700);
         const result = await Moralis.Web3API.token.getTokenIdOwners(options);
 
         for (let tokenIdMetadata of result.result) {
@@ -313,11 +316,23 @@ const Collection = () => {
           tempNFT.amount = nft.amount;
           tempNFT.saleAmount = nft.saleAmount;
           tempNFT.saleBalance = nft.saleBalance;
+          
+          //isBlocked
+          const bl = blacklist.filter(item =>  {
+            return item.collectionAddr.toLowerCase() === nft.token_address.toLowerCase() && 
+              parseInt(item.tokenId) === parseInt(nft.token_id);
+          });
+          if (bl.length > 0) {
+            tempNFT.blocked = 1;
+          } else {
+            tempNFT.blocked = 0;
+          }
 
           newNFTs.push(tempNFT);
         }
       }
       // console.log("newNFTs:", newNFTs);
+      // console.log(blacklist);
       
       setItems(newNFTs);
       setLoading(false);
@@ -331,8 +346,8 @@ const Collection = () => {
   }
 
   useEffect(() => {
-    getFetchItems();
     setLoading(true);
+    getFetchItems();
   }, [account]);
 
   useEffect(() => {

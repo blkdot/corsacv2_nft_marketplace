@@ -14,7 +14,7 @@ import { StyledHeader } from '../Styles';
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
 import BigNumber from "bignumber.js";
-import { audioTypes, getFileTypeFromURL, videoTypes } from "../../utils";
+import { addItem, audioTypes, getFileTypeFromURL, videoTypes } from "../../utils";
 import moment from "moment";
 
 const StyledSpin = styled(Spin)`
@@ -271,27 +271,19 @@ const CreateItem = () => {
         const token_id = parseInt(event[0].args.tokenId);
         //save item into db
         try {
-          const res = await axios.post(
-            `${process.env.REACT_APP_SERVER_URL}/api/item/create`, 
-            {
-              'walletAddr': account.toLowerCase(),
-              'collectionId': collection.value,
-              'tokenId': token_id,
-              'title': itemName,
-              'description': description,
-              'image': GATEWAY_URL + imageFileIpfs.hash(),
-              'royalty': royalty,
-              'amount': copy,
-              'timeStamp': Math.floor(new Date().getTime() / 1000),
-              'creator': account.toLowerCase()
-            },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-              }
-            }
-          );
-
+          const res = await addItem({
+            walletAddr: account.toLowerCase(),
+            collectionId: collection.value,
+            tokenId: token_id,
+            title: itemName,
+            description: description,
+            image: GATEWAY_URL + imageFileIpfs.hash(),
+            metadata: metadataUrl,
+            royalty: royalty,
+            amount: copy,
+            creator: account.toLowerCase()
+          });
+          
           const options = {
             address: collection.addr,
             token_id: token_id,
@@ -311,7 +303,6 @@ const CreateItem = () => {
               setModalTitle('Success');
               setModalMessage(res.data.message);
               setOpenModal(true);
-
 
               setTimeout(async () => {
                 

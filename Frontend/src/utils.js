@@ -1,7 +1,5 @@
 import axios from "axios";
 import moment from "moment";
-// import mm from "music-metadata";
-import { makeTokenizer } from "@tokenizer/http";
 import { defaultAvatar } from "./components/components/constants";
 
 export function debounce(func, wait, immediate) {
@@ -198,18 +196,25 @@ export const videoTypes = [
 export const audioTypes = ['mp3', 'wav', 'ogg', 'audio/mp3', 'audio/wav', 'audio/ogg']
 
 export async function getFileTypeFromURL(url) {
-  const httpTokenizer = await makeTokenizer(url);
-  const mimeType = httpTokenizer.fileInfo.mimeType;
-  let fileType = null;
-  if (videoTypes.includes(httpTokenizer.fileInfo.mimeType)) {
-    fileType = 'video';
-  } else if (audioTypes.includes(httpTokenizer.fileInfo.mimeType)) {
-    fileType = 'audio';
-  } else {
-    fileType = 'image';
-  }
+  try {
+    const req = await fetch(url);
+    let fileType = null;
+    const mimeType = await req.headers.get("content-type");
 
-  return {mimeType: mimeType, fileType: fileType};
+    if (videoTypes.includes(mimeType)) {
+      fileType = 'video';
+    } else if (audioTypes.includes(mimeType)) {
+      fileType = 'audio';
+    } else {
+      fileType = 'image';
+    }
+
+    return {mimeType: mimeType, fileType: fileType};
+  } catch (e) {
+    console.log(e);
+
+    return {mimeType: "image/png", fileType: "image"};
+  }
 }
 
 export async function getUserInfo(walletAddr) {
@@ -553,4 +558,117 @@ export async function addActivity(data) {
   } catch(ex) {
     console.log(ex);
   }
+}
+
+export async function addItem(data) {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_SERVER_URL}/api/item/create`, 
+      {
+        'walletAddr': data.walletAddr.toLowerCase(),
+        'collectionId': data.collectionId,
+        'tokenId': parseInt(data.tokenId),
+        'title': data.title,
+        'description': data.description,
+        'image': data.image,
+        'metadata': data.metadata,
+        'royalty': data.royalty,
+        'amount': data.amount,
+        'timeStamp': Math.floor(new Date().getTime() / 1000),
+        'creator': data.creator.toLowerCase()
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    return res;
+  } catch(e) {
+    console.log(e);
+
+    return false;
+  }
+}
+
+export async function getAllItems() {
+  let items = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/all`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {}
+    }).then(res => {
+      for (let item of res.data.items) {
+        items.push({
+          key: item._id,
+          id: item._id,
+          type: item.collections && item.collections[0] ? (item.collections[0].collectionType === 0 ? 'BEP-721' : 'BEP-1155') : '',
+          name: item.title,
+          collection: item.collections && item.collections[0] ? item.collections[0].title : '',
+          collectionAddr: item.collections && item.collections[0] ? item.collections[0].collectionAddr : '',
+          tokenId: item.tokenId,
+          blocked: item.blocked
+        });
+      }
+    });
+  } catch {
+    console.log('error in fetching items');
+  }
+
+  return items;
+}
+
+export async function updateBlacklist(id, blocked) {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_SERVER_URL}/api/item/updateBlacklist`, 
+      {
+        'id': id,
+        'blocked': parseInt(blocked)
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    return res;
+  } catch(e) {
+    console.log(e);
+
+    return false;
+  }
+}
+
+export async function getBlacklist() {
+  let items = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/blacklist`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {}
+    }).then(res => {
+      for (let item of res.data.items) {
+        items.push({
+          name: item.title,
+          collectionAddr: item.collections && item.collections[0] ? item.collections[0].collectionAddr : '',
+          tokenId: item.tokenId,
+          blocked: item.blocked
+        });
+      }
+    });
+  } catch {
+    console.log('error in fetching items');
+  }
+
+  return items;
+}
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
