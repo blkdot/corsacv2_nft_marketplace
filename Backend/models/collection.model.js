@@ -50,6 +50,14 @@ const Collection = mongoose.model(
     created: {
       type: Number,
       default: 0
+    },
+    metadata: {
+      type: String,
+      default: ''
+    },
+    traits: {
+      type: Array,
+      default: []
     }
   })
 );

@@ -15,6 +15,11 @@ import { Spin, Modal } from "antd";
 import styled from 'styled-components';
 import { categories } from "../components/constants/cateogries";
 
+import Popover from "react-bootstrap/Popover";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
+
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
     background-color: #FF343F;
@@ -87,6 +92,8 @@ const CreateCollection = () => {
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
   const [openModal, setOpenModal] = useState(false);
+
+  const [traitList, setTraitList] = useState([]);
 
   const handleFileChange = (e) => {
     try {
@@ -189,6 +196,18 @@ const CreateCollection = () => {
       return;
     }
 
+    //check traits/properties
+    const ts = traitList.filter((trait, index) => {
+      const vs = trait.values.filter(value => value.replace(/\s/g, "") === "");
+      return trait.trait_type.replace(/\s/g, "") === "" || vs.length > 0;
+    });
+    if (ts.length > 0) {
+      setModalTitle('Error');
+      setModalMessage("Enter trait types or values");
+      setOpenModal(true);
+      return;
+    }
+
     //check if collection name exists
     if (isExistCollection() === true) {
       setModalTitle('Error');
@@ -196,7 +215,7 @@ const CreateCollection = () => {
       setOpenModal(true);
       return;
     }
-
+    
     setLoading(true);
 
     //save image and metadata to ipfs using moralis
@@ -237,7 +256,8 @@ const CreateCollection = () => {
       category: category,
       image: GATEWAY_URL + imageFileIpfs.hash(),
       symbol: symbol,
-      url: url
+      url: url,
+      traits: traitList
     };
     let metadataFileIpfs = null;
     await saveFile(
@@ -281,7 +301,7 @@ const CreateCollection = () => {
         collectionType: collectionType,
         _name: title,
         _symbol: symbol,
-        _uri: metadataUrl
+        _uri: `${process.env.REACT_APP_SERVER_URL}/api/tokenURI/`
       }
     };
     await contractProcessor.fetch({
@@ -316,6 +336,8 @@ const CreateCollection = () => {
               'category': category.value,
               'description': description,
               'image': GATEWAY_URL + imageFileIpfs.hash(),
+              'metadata': metadataUrl,
+              'traits': traitList,
               'timeStamp': Math.floor(new Date().getTime() / 1000)
             },
             {
@@ -373,6 +395,40 @@ const CreateCollection = () => {
     setOpenModal(false);
     setModalTitle('');
     setModalMessage('');
+  }
+
+  const handleAddTrait = () => {
+    setTraitList([...traitList, { trait_type: "", values: [""] }]);
+  }
+
+  const handleRemoveTrait = (index) => {
+    const list = [...traitList];
+    list.splice(index, 1);
+    setTraitList(list);
+  }
+
+  const handleAddValue = (t_index) => {
+    const list = [...traitList];
+    list[t_index].values = [...list[t_index].values, ""];
+    setTraitList(list);
+  }
+
+  const handleRemoveValue = (t_index, v_index) => {
+    const list = [...traitList];
+    list[t_index].values.splice(v_index, 1);
+    setTraitList(list);
+  }
+
+  const handleTraitInputChange = (e, index) => {
+    const list = [...traitList];
+    list[index].trait_type = e.target.value;
+    setTraitList(list);
+  }
+
+  const handleValueInputChange = (e, t_index, v_index) => {
+    const list = [...traitList];
+    list[t_index].values[v_index] = e.target.value;
+    setTraitList(list);
   }
 
   useEffect(() => {
@@ -478,6 +534,63 @@ const CreateCollection = () => {
 
               <div className="spacer-10"></div>
 
+              <h5>Traits/Properties <span className="text-muted">(Optional)</span></h5>
+              <p>Please add available all trait types and values. So they will be shown in create item page.</p>
+              {traitList && traitList.map((trait, index) => (
+                <Card key={index} border="primary" className="mb-4">
+                  <Card.Header>
+                    <div className="row">
+                      <div className="col-md-8">
+                        <input type="text" 
+                          className="form-control" 
+                          placeholder="Enter trait type" 
+                          value={trait.trait_type} 
+                          onChange={(e) => handleTraitInputChange(e, index)}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <input type="button" className="mt-1 btn-main" value="Remove Trait" onClick={(e) => handleRemoveTrait(index)} />
+                      </div>
+                    </div>
+                  </Card.Header>
+                  <Card.Body>
+                    {trait.values && trait.values.map((value, v_index) => (
+                      <div className="row" key={v_index}>
+                        <div className="col-md-4">
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Enter value" 
+                            value={trait.values[v_index]} 
+                            onChange={(e) => handleValueInputChange(e, index, v_index)}
+                          />
+                        </div>
+                        <div className="col-md-8">
+                          <div className="row">
+                            {trait.values.length !== 1 &&
+                            <div className="col-md-6">
+                              <input type="button" className="mt-1 btn-main" value="Remove Value" onClick={(e) => handleRemoveValue(index, v_index)} />
+                            </div>
+                            }
+                            {trait.values.length - 1 === v_index &&
+                            <div className="col-md-6">
+                              <input type="button" className="mt-1 btn-main" value="Add Value" onClick={(e) => handleAddValue(index)} />
+                            </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </Card.Body>
+                </Card>
+              ))}
+
+              <div className="spacer-10"></div>
+
+              <input type="button" className="btn-main" value="Add Trait" onClick={(e) => handleAddTrait()}/>
+
+              <div className="spacer-single"></div>
+              
               <h5>Short url <span className="text-muted">(Required)</span></h5>
               <input type="text" 
                     name="short_url" 
@@ -489,8 +602,8 @@ const CreateCollection = () => {
                     required
               />
               
-              <div className="spacer-10"></div>
-
+              <div className="spacer-single"></div>
+              
               <input type="button" id="submit" className="btn-main" value="Create Collection" onClick={handleCreateCollection}/>
             </div>
           </div>

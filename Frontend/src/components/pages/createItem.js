@@ -38,11 +38,6 @@ const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
 const GATEWAY_URL = process.env.REACT_APP_MORALIS_GATEWAY_URL;
 
 const CreateItem = () => {
-  const defaultValue = {
-    value: null,
-    label: 'Select Filter'
-  };
-
   const customStyles = {
     option: (base, state) => ({
       ...base,
@@ -72,7 +67,6 @@ const CreateItem = () => {
 
   const contractProcessor = useWeb3ExecuteFunction();
   const { marketAddress, contractABI } = useMoralisDapp();
-  const Web3Api = useMoralisWeb3Api();
   const { account, Moralis, isAuthenticated } = useMoralis();
   const { saveFile } = useMoralisFile();
   const { chainId } = useChain();
@@ -81,6 +75,8 @@ const CreateItem = () => {
   const [image, setImage] = useState({ preview: '', data: '', type: '' });
   const [collections, setCollections] = useState([]);
   const [collection, setCollection] = useState(null);
+  const [traits, setTraits] = useState([]);
+  const [attributes, setAttributes] = useState([]);
   const [itemName, setItemName] = useState('');
   const [description, setDescription] = useState('');
   const [royalty, setRoyalty] = useState(0);
@@ -135,9 +131,38 @@ const CreateItem = () => {
   }
 
   const handleCollectionChange = (selectedOption) => {
+    const ts = [];
+    const as = [];
+    for (const trait of selectedOption.traits) {
+      const vs = [];
+      for (const v of trait.values) {
+        vs.push({
+          type: trait.trait_type,
+          value: v,
+          label: v
+        });
+      }
+      ts.push({
+        type: trait.trait_type,
+        values: vs
+      });
+      as.push({
+        trait_type: trait.trait_type,
+        value: null
+      })
+    }
+        
     setCollection(selectedOption);
+    setTraits(ts);
+    setAttributes(as);
     setCopy(1);
-  };
+  }
+
+  const handleTraitChange = (selectedOption, index) => {
+    const list = [...attributes];
+    list[index].value = selectedOption.value;
+    setAttributes(list);
+  }
 
   const handleCreateItem = async (e) => {
     //check form data
@@ -221,7 +246,8 @@ const CreateItem = () => {
       image: GATEWAY_URL + imageFileIpfs.hash(),
       // payment: payment,
       royalty: royalty * 100,
-      creator: account.toLowerCase()
+      creator: account.toLowerCase(),
+      attributes: attributes
     };
     let metadataFileIpfs = null;
     await saveFile(
@@ -281,7 +307,8 @@ const CreateItem = () => {
             metadata: metadataUrl,
             royalty: royalty,
             amount: copy,
-            creator: account.toLowerCase()
+            creator: account.toLowerCase(),
+            attributes: attributes
           });
           
           const options = {
@@ -369,7 +396,8 @@ const CreateItem = () => {
             symbol: c.symbol,
             category: c.category,
             image: c.image,
-            timeStamp: c.timeStamp
+            timeStamp: c.timeStamp,
+            traits: c.traits
           });
         }
         setCollections(myCollections);
@@ -443,7 +471,7 @@ const CreateItem = () => {
               </h5>
               <Select 
                   styles={customStyles}
-                  options={[defaultValue, ...collections]}
+                  options={[{value: null, label: "Select Filter", traits: []}, ...collections]}
                   onChange={handleCollectionChange}
               />
               
@@ -491,6 +519,25 @@ const CreateItem = () => {
 
               <div className="spacer-10"></div>
 
+              <h5>Attributes</h5>
+              {traits && traits.map((trait, index) => (
+                <div style={{marginLeft: "30px"}} key={index}>
+                  <h6>{trait.type} <span className="text-muted">(Optional)</span></h6>
+                  <Select 
+                      styles={customStyles}
+                      options={[{type: trait.type, value: null, label: "Select Filter"}, ...trait.values]}
+                      onChange={(e) => handleTraitChange(e, index)}
+                  />
+                  <div className="spacer-30"></div>
+                </div>
+              ))}
+              {!traits || traits.length === 0 &&
+                <>
+                  <span className="text-muted">This collection has no traits.</span>
+                  <div className="spacer-30"></div>
+                </>
+              }
+              
               <h5>Royalty <span className="text-muted">(Required, Max. 40%)</span></h5>
               <input type="number" 
                     name="royalty" 

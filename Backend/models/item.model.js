@@ -58,6 +58,10 @@ const NFTItem = mongoose.model(
     blocked: {
       type: Number,
       default: 0
+    },
+    attributes: {
+      type: Array,
+      default: []
     }
   })
 );

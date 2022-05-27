@@ -1083,6 +1083,7 @@ const Item = () => {
 											<i className="fa fa-heart" style={liked ? {color: '#FF3F34'} : {}} title={liked ? 'UnFavorate' : 'Favorite'}></i>{nft.likes}
 										</div>
 									</div>
+									<p dangerouslySetInnerHTML={{__html: nft.metadata && nft.metadata.description ? nft.metadata.description.replaceAll('\n', "<br/>") : ''}} />
 									
 									<div className="d-flex flex-row">
 										<div className="mr40">
@@ -1156,12 +1157,15 @@ const Item = () => {
 													</div>
 
 													<div className="row mt-5">
-														<div className="col-lg-12 col-md-12 col-sm-12">
-															<div className="nft_attr" style={{textAlign: "left"}}>
-																<h4 className="mb-4">Description:</h4>
-																<span dangerouslySetInnerHTML={{__html: nft.metadata && nft.metadata.description ? nft.metadata.description.replaceAll('\n', "<br/>") : ''}} />
+														{nft.metadata && nft.metadata.attributes && nft.metadata.attributes.map((attr, index) => (
+														<div className="col-lg-4 col-md-6 col-sm-6">
+															<div className="nft_attr">
+																<h5>{attr.trait_type}</h5>
+																<h4>{attr.value}</h4>
+																<span>85% have this trait</span>
 															</div>
 														</div>
+														))}
 													</div>
 												</div>
 											</div>

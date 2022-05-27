@@ -575,7 +575,8 @@ export async function addItem(data) {
         'royalty': data.royalty,
         'amount': data.amount,
         'timeStamp': Math.floor(new Date().getTime() / 1000),
-        'creator': data.creator.toLowerCase()
+        'creator': data.creator.toLowerCase(),
+        'attributes': data.attributes
       },
       {
         headers: {

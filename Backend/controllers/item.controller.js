@@ -37,7 +37,8 @@ exports.createItem = (req, res) => {
           amount: req.body.amount,
           timeStamp: req.body.timeStamp,
           creator: req.body.creator,
-          blocked: 0
+          blocked: 0,
+          attributes: req.body.attributes
         });
         
         item.save(async (err1) => {

@@ -40,7 +40,9 @@ exports.createCollection = (req, res) => {
       image: req.body.image,
       description: req.body.description,
       timeStamp: req.body.timeStamp,
-      created: 1
+      created: 1,
+      metadata: req.body.metadata,
+      traits: req.body.traits
     });
 
     collection.save(async (err) => {
