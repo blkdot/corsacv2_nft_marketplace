@@ -4,7 +4,7 @@ This project will contain Hardhat project for nft marketplace contracts, front-e
 
 Corsac V2 NFT Marketplace has 3 main features: **Sale**, **Timed Auction**, **Offer**.
 
-This marketplace supports not only ***BEP-721*** but also ***BEP-1155*** on BSC network, and **BNB**, **WBNB**, and **Corsac V2 token(BEP-20)** as default payments.
+This marketplace supports not only ***BEP-721*** but also ***BEP-1155*** on BSC network, and **BNB**, **WBNB**, and **Corsac V2** token(BEP-20) as default payments.
 Surely you can add other BEP-20 tokens as payments.
 
 ## Launch Process
@@ -14,7 +14,7 @@ Surely you can add other BEP-20 tokens as payments.
 * Creates **Moralis Server** and configurates ***"Sync and Watch Contract Events"*** on moralis server admin
 * Configurates front-end server(*netlify* or others) and ***.env*** on front-end from moralis server info and others(**homepage** setting in ***package.json*** file)
 * Configurates back-end server(*nginx*, *pm2*, *mongodb*) and .env on back-end
-* Launch back-end server [set **admin account**(It should be an onwer of marketplace contract.)]
+* Launch back-end server (Set ***admin account*** and it should be an ***onwer of marketplace contract***.)
 * Launch front-end server
 
 Thank you!
