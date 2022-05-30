@@ -37,4 +37,5 @@ module.exports = function(app) {
   app.get("/api/item/blacklist", controller.getBlacklist);
   
   app.post("/api/item/updateBlacklist", controller.updateBlacklist);
+  app.post("/api/item/views", controller.increaseItemViews);
 };

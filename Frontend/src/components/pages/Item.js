@@ -17,7 +17,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button, InputNumber } from "antd";
 import styled from 'styled-components';
-import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike, getBlacklist, sleep, getRarityRanking } from "../../utils";
+import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike, getBlacklist, sleep, getRarityRanking, increaseItemViews } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 const StyledSpin = styled(Spin)`
@@ -968,6 +968,9 @@ const Item = () => {
         nft.blocked = 0;
       }
 
+      //get views
+      nft.views = await increaseItemViews(nft.token_address.toLowerCase(), parseInt(nft.token_id));
+
 			//get rarity and ranking
 			const rarityRanking = await getRarityRanking(params.collectionAddr);
 			// console.log(rarityRanking);
@@ -1452,82 +1455,82 @@ const Item = () => {
 				}
 				
 				{ !isPageLoading && nft &&
-				<PlaceBidModal 
-          title={`Place a Bid`}
-          visible={openCheckoutbid && !notAvailableBalance} 
-          centered
-          maskClosable={false}
-          onOk={() => handleCheckoutbidClick()} 
-          onCancel={() => closeCheckoutbid()}
-          footer={[
-            <Button key="cancel-button" onClick={() => closeCheckoutbid()}>Cancel</Button>,
-            <Button key="bid-button" type="primary" danger onClick={() => handleCheckoutbidClick()}>Place a bid</Button>
-          ]}
-        >
-					{placeBidError &&
-						<div className="alert alert-danger" role="alert">
-							{placeBidErrorMsg}
-						</div>
-					}
-					<p>
-						You are about to purchase a <span className="bold">{nft.name} #{nft.token_id}</span> 
-						<span className="bold"> from {nft.seller}</span>
-					</p>
-					<div className='detailcheckout mt-4'>
-						<div className='listcheckout'>
-							<h6>Your bid ({symbol})</h6>
-							<input 
-								type="number" 
-								className="form-control" 
-								style={inputColorStyle} 
-								value={bidAmount}
-								// onChange={(event) => {setBidAmount(event.target.value)}} 
-								onChange={changeBidAmount}
-								min={basePrice} 
-								step="0.00001"
-							/>
-							<span className="text-danger">Last Bid Amount: {lastBidAmount} {symbol}</span>
-						</div>
-					</div>
-					{/* <div className='detailcheckout mt-3'>
-						<div className='listcheckout'>
-							<h6>
-								Enter quantity. <span className="color">10 available</span>
-							</h6>
-							<input type="text" name="buy_now_qty" id="buy_now_qty" className="form-control" style={inputColorStyle} />
-						</div>
-					</div> */}
-					<div className='price-detail-row mt-3'>
-						<p>Your balance</p>
-						<div className='subtotal'>
-							{yourBalance} {symbol}
-						</div>
-					</div>
-					<div className='price-detail-row'>
-						<p>Item Price</p>
-						<div className='subtotal'>
-							{basePrice} {symbol}
-						</div>
-					</div>
-					<div className='price-detail-row'>
-						<p>Service fee {serviceFeePercent}%</p>
-						<div className='subtotal'>
-							{bidAmount * serviceFeePercent / 100} {symbol}
-						</div>
-					</div>
-					<div className='price-detail-row'>
-						<p>Royalty fee {royaltyFeePercent}%</p>
-						<div className='subtotal'>
-							{bidAmount * royaltyFeePercent / 100} {symbol}
-						</div>
-					</div>
-					<div className='price-detail-row'>
-						<p>You will pay</p>
-						<div className='subtotal'>
-							{(bidAmount * (100 + serviceFeePercent + royaltyFeePercent) / 100).toFixed(5)} {symbol}
-						</div>
-					</div>
-				</PlaceBidModal>
+          <PlaceBidModal 
+            title={`Place a Bid`}
+            visible={openCheckoutbid && !notAvailableBalance} 
+            centered
+            maskClosable={false}
+            onOk={() => handleCheckoutbidClick()} 
+            onCancel={() => closeCheckoutbid()}
+            footer={[
+              <Button key="cancel-button" onClick={() => closeCheckoutbid()}>Cancel</Button>,
+              <Button key="bid-button" type="primary" danger onClick={() => handleCheckoutbidClick()}>Place a bid</Button>
+            ]}
+          >
+            {placeBidError &&
+              <div className="alert alert-danger" role="alert">
+                {placeBidErrorMsg}
+              </div>
+            }
+            <p>
+              You are about to purchase a <span className="bold">{nft.name} #{nft.token_id}</span> 
+              <span className="bold"> from {nft.seller}</span>
+            </p>
+            <div className='detailcheckout mt-4'>
+              <div className='listcheckout'>
+                <h6>Your bid ({symbol})</h6>
+                <input 
+                  type="number" 
+                  className="form-control" 
+                  style={inputColorStyle} 
+                  value={bidAmount}
+                  // onChange={(event) => {setBidAmount(event.target.value)}} 
+                  onChange={changeBidAmount}
+                  min={basePrice} 
+                  step="0.00001"
+                />
+                <span className="text-danger">Last Bid Amount: {lastBidAmount} {symbol}</span>
+              </div>
+            </div>
+            {/* <div className='detailcheckout mt-3'>
+              <div className='listcheckout'>
+                <h6>
+                  Enter quantity. <span className="color">10 available</span>
+                </h6>
+                <input type="text" name="buy_now_qty" id="buy_now_qty" className="form-control" style={inputColorStyle} />
+              </div>
+            </div> */}
+            <div className='price-detail-row mt-3'>
+              <p>Your balance</p>
+              <div className='subtotal'>
+                {yourBalance} {symbol}
+              </div>
+            </div>
+            <div className='price-detail-row'>
+              <p>Item Price</p>
+              <div className='subtotal'>
+                {basePrice} {symbol}
+              </div>
+            </div>
+            <div className='price-detail-row'>
+              <p>Service fee {serviceFeePercent}%</p>
+              <div className='subtotal'>
+                {bidAmount * serviceFeePercent / 100} {symbol}
+              </div>
+            </div>
+            <div className='price-detail-row'>
+              <p>Royalty fee {royaltyFeePercent}%</p>
+              <div className='subtotal'>
+                {bidAmount * royaltyFeePercent / 100} {symbol}
+              </div>
+            </div>
+            <div className='price-detail-row'>
+              <p>You will pay</p>
+              <div className='subtotal'>
+                {(bidAmount * (100 + serviceFeePercent + royaltyFeePercent) / 100).toFixed(5)} {symbol}
+              </div>
+            </div>
+          </PlaceBidModal>
 				}
 				{ openCheckoutbid && notAvailableBalance &&
 					<div className='checkout'>

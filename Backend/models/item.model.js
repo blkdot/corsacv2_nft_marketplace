@@ -51,7 +51,7 @@ const NFTItem = mongoose.model(
       type: String,
       default: ''
     },
-    stars: {
+    views: {
       type: Number,
       default: 0
     },

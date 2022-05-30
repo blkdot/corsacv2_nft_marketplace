@@ -262,3 +262,58 @@ exports.getBlacklist = (req, res) => {
     })
   });
 }
+
+exports.increaseItemViews = (req, res) => {
+  if (req.body.collectionAddr) {
+    Collection.findOne({
+      collectionAddr: req.body.collectionAddr
+    },
+    (err, collection) => {
+      if (err) {
+        res.status(500).send({
+          type: 'error',
+          message: "Internal database server error!",
+          views: 0
+        });
+        return;
+      }
+
+      if (collection) {
+        NFTItem.updateOne({
+          collectionId: collection._id,
+          tokenId: parseInt(req.body.tokenId)
+        }, 
+        {$inc: {
+          views: 1
+        }}).then(() => {
+          NFTItem.findOne({
+            collectionId: collection._id,
+            tokenId: parseInt(req.body.tokenId)
+          }, (err, item) => {
+            res.send({
+              views: item.views,
+            });
+            return;
+          });
+        }).catch((e) => {
+          res.status(500).send({ message: err });
+          return;
+        });
+      } else {
+        res.status(500).send({
+          type: 'error',
+          message: "Cannot find collection!",
+          views: 0
+        });
+        return;
+      }
+    });
+  } else {
+    res.status(500).send({
+      type: 'error',
+      message: "Cannot find collection!",
+      views: 0
+    });
+    return;
+  }
+};

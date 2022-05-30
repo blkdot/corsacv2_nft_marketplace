@@ -780,3 +780,26 @@ export async function getRarityRanking(collectionAddr) {
     items: items
   }
 }
+
+export async function increaseItemViews(collectionAddr, tokenId) {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_SERVER_URL}/api/item/views`, 
+      {
+        'collectionAddr': collectionAddr,
+        'tokenId': parseInt(tokenId)
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    return res.data.views;
+  } catch(e) {
+    console.log(e);
+
+    return 0;
+  }
+}
