@@ -761,19 +761,23 @@ export async function getRarityRanking(collectionAddr) {
   }
 
   //calculates ranking
-  for (const item of items) {
-    item.rarity_score = 0;
-    for (const a of item.attributes) {
-      const rs = rarities.filter((r, index) => {
-        return r.trait_type === a.trait_type && r.value === a.value;
-      });
-      if (rs.length === 1) {
-        item.rarity_score += rs[0].rarity_score;
+  if (rarities.length === 0) {
+    items = [];
+  } else {
+    for (const item of items) {
+      item.rarity_score = 0;
+      for (const a of item.attributes) {
+        const rs = rarities.filter((r, index) => {
+          return r.trait_type === a.trait_type && r.value === a.value;
+        });
+        if (rs.length === 1) {
+          item.rarity_score += rs[0].rarity_score;
+        }
       }
     }
+    items.sort((a, b) => b.rarity_score - a.rarity_score);
   }
-  items.sort((a, b) => b.rarity_score - a.rarity_score);
-  
+
   return {
     totalNum: totalNum,
     rarities: rarities,

@@ -14,7 +14,7 @@ Surely you can add other BEP-20 tokens as payments.
 * Creates **Moralis Server** and configurates ***"Sync and Watch Contract Events"*** on moralis server admin
 * Configurates front-end server(*netlify* or others) and ***.env*** on front-end from moralis server info and others(**homepage** setting in ***package.json*** file)
 * Configurates back-end server(*nginx*, *pm2*, *mongodb*) and .env on back-end
-* Launch back-end server
+* Launch back-end server [set **admin account**(It should be an onwer of marketplace contract.)]
 * Launch front-end server
 
 Thank you!
