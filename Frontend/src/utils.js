@@ -673,3 +673,110 @@ export async function getBlacklist() {
 export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export async function getCollection(collectionAddr) {
+  let collection = null;
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/address`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        collectionAddr: collectionAddr
+      }
+    }).then(res => {
+      collection = res.data.collection;
+    });
+  } catch {
+    console.log('error in fetching items');
+  }
+
+  return collection;
+}
+
+export async function getRarityRanking(collectionAddr) {
+  //get collection
+  const collection = await getCollection(collectionAddr);
+
+  //get all items in collection
+  let items = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/collection`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        collectionAddr: collectionAddr
+      }
+    }).then(res => {
+      items = res.data.items;
+    });
+  } catch {
+    console.log('error in fetching items');
+  }
+
+  //calculates number of total items
+  const totalNum = items.length;
+
+  //initializes rarity
+  let rarities = [];
+  for (const trait of collection.traits) {
+    rarities.push({
+      trait_type: trait.trait_type,
+      value: null,
+      count: 0,
+      rarity_percentage: 0,
+      rarity_score: 0
+    });
+
+    for (const value of trait.values) {
+      rarities.push({
+        trait_type: trait.trait_type,
+        value: value,
+        count: 0,
+        rarity_percentage: 0,
+        rarity_score: 0
+      });
+    }
+  }
+
+  //get number of items with trait value
+  for (const item of items) {
+    for (const a of item.attributes) {
+      const rs = rarities.filter((r, index) => {
+        return r.trait_type === a.trait_type && r.value === a.value;
+      });
+      if (rs.length === 1) {
+        rs[0].count++;
+      }
+    }
+  }
+
+  //calculates rarity
+  for (const rarity of rarities) {
+    rarity.rarity_percentage = rarity.count / totalNum;
+    if (rarity.rarity_percentage !== 0) {
+      rarity.rarity_score = 1 / rarity.rarity_percentage;
+    }
+  }
+
+  //calculates ranking
+  for (const item of items) {
+    item.rarity_score = 0;
+    for (const a of item.attributes) {
+      const rs = rarities.filter((r, index) => {
+        return r.trait_type === a.trait_type && r.value === a.value;
+      });
+      if (rs.length === 1) {
+        item.rarity_score += rs[0].rarity_score;
+      }
+    }
+  }
+  items.sort((a, b) => b.rarity_score - a.rarity_score);
+  
+  return {
+    totalNum: totalNum,
+    rarities: rarities,
+    items: items
+  }
+}

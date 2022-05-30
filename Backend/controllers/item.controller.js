@@ -151,11 +151,47 @@ exports.getItemsByWallet = (req, res) => {
 };
 
 exports.getItemsByCollection = (req, res) => {
-  NFTItem.find({
-    collectionId: { $in: new mongoose.Types.ObjectId(req.query.collectionId) }
-  }).then((items) => {
-    res.send(items);
-  }).catch((e) => res.status(500).send({ message: e }));
+  NFTItem.aggregate([
+    {
+      $lookup: {
+        from: "collections", 
+        localField: "collectionId", 
+        foreignField: "_id", 
+        as: "collections"
+      }
+    },
+    {
+      $match: {
+        "collections.collectionAddr": req.query.collectionAddr
+      }
+    },
+    {
+      $project : { 
+        "collections.collectionAddr": 1,
+        "tokenId": 1,
+        "collections.traits": 1,
+        "attributes": 1
+      }
+    }
+  ], (err, items) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+
+    const newItems = [];
+    for (let item of items) {
+      newItems.push({
+        collectionAddr: item.collections ? item.collections[0].collectionAddr : '',
+        tokenId: item.tokenId,
+        attributes: item.attributes
+      });
+    }
+    
+    res.status(200).send({
+      items: newItems
+    })
+  });
 };
 
 exports.getAllItems = (req, res) => {

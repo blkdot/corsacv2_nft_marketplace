@@ -525,7 +525,7 @@ const CreateItem = () => {
                   <h6>{trait.type} <span className="text-muted">(Optional)</span></h6>
                   <Select 
                       styles={customStyles}
-                      options={[{type: trait.type, value: null, label: "Select Filter"}, ...trait.values]}
+                      options={[{type: trait.type, value: null, label: `No ${trait.type}`}, ...trait.values]}
                       onChange={(e) => handleTraitChange(e, index)}
                   />
                   <div className="spacer-30"></div>

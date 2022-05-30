@@ -1,10 +1,7 @@
 import React, { memo, useEffect, useState } from "react";
 import { useSelector } from 'react-redux';
 import Footer from '../components/footer';
-//import { createGlobalStyle } from 'styled-components';
 import * as selectors from '../../store/selectors';
-
-/*import Checkout from "../components/Checkout";*/
 
 import axios from "axios";
 import moment from "moment";
@@ -20,7 +17,7 @@ import { StyledHeader } from '../Styles';
 
 import { Spin, Modal, Button, InputNumber } from "antd";
 import styled from 'styled-components';
-import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike, getBlacklist, sleep } from "../../utils";
+import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike, getBlacklist, sleep, getRarityRanking } from "../../utils";
 import { defaultAvatar, fallbackImg } from "../components/constants";
 
 const StyledSpin = styled(Spin)`
@@ -83,7 +80,7 @@ const theme = 'GREY'; //LIGHT, GREY, RETRO
 const Item = () => {
 		const params = useParams();
 		const currentUserState = useSelector(selectors.currentUserState);
-
+		
     const inputColorStyle = {
     	color: '#111'
     };
@@ -971,6 +968,31 @@ const Item = () => {
         nft.blocked = 0;
       }
 
+			//get rarity and ranking
+			const rarityRanking = await getRarityRanking(params.collectionAddr);
+			// console.log(rarityRanking);
+			if (rarityRanking && nft.metadata && nft.metadata.attributes) {
+				for (let a of nft.metadata.attributes) {
+					const rs = rarityRanking.rarities.filter((r, index) => {
+						return r.trait_type === a.trait_type && r.value === a.value;
+					});
+					if (rs.length === 1) {
+						a.rarity_percentage = rs[0].rarity_percentage * 100;
+					} else {
+						a.rarity_percentage = 0;
+					}
+				}
+
+				nft.rank = 0;
+				for (const item of rarityRanking.items) {
+					nft.rank++;
+					if (nft.token_address.toLowerCase() === item.collectionAddr.toLowerCase() &&
+							parseInt(nft.token_id) === parseInt(item.tokenId)) {
+						break;
+					}
+				}
+			}
+
 			setNFT(nft);
 			setIsPageLoading(false);
 		}
@@ -999,7 +1021,7 @@ const Item = () => {
 				setLikes(nft.likes);
 				setLiked(nft.liked);
 			}
-		}, [nft])
+		}, [nft]);
 
 		return (
 			<div className="greyscheme">
@@ -1076,6 +1098,9 @@ const Item = () => {
                   }
 									
 									<h2>{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h2>
+									{nft.rank > 0 &&
+										<p className="mb-3">Rank: {nft.rank}</p>
+									}
 									<div className="item_info_counts">
 										<div className="item_info_type"><i className="fa fa-image"></i>{nft.metadata && nft.metadata.collection.category ? nft.metadata.collection.category : nft.category}</div>
 										<div className="item_info_views"><i className="fa fa-eye"></i>{nft.views}</div>
@@ -1158,13 +1183,13 @@ const Item = () => {
 
 													<div className="row mt-5">
 														{nft.metadata && nft.metadata.attributes && nft.metadata.attributes.map((attr, index) => (
-														<div className="col-lg-4 col-md-6 col-sm-6">
-															<div className="nft_attr">
-																<h5>{attr.trait_type}</h5>
-																<h4>{attr.value}</h4>
-																<span>85% have this trait</span>
+															<div className="col-lg-4 col-md-6 col-sm-6" key={index}>
+																<div className="nft_attr">
+																	<h5>{attr.trait_type}</h5>
+																	<h4>{attr.value ? attr.value : `No ${attr.trait_type}`}</h4>
+																	<span>{`${attr.rarity_percentage}% have this trait`}</span>
+																</div>
 															</div>
-														</div>
 														))}
 													</div>
 												</div>
