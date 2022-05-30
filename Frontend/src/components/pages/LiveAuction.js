@@ -37,7 +37,6 @@ const GlobalStyles = createGlobalStyle`
     right: 0;
   }
 `
-
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
     background-color: #FF343F;
@@ -51,26 +50,6 @@ const StyledModal = styled(Modal)`
     background-color: transparent;
   }
 `
-const Outer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  align-items: center;
-  overflow: hidden;
-  border-radius: 8px;
-`
-
-const renderer = props => {
-  // console.log(props);
-  if (props.completed) {
-    // Render a completed state
-    return <span>Ended</span>;
-  } else {
-    // Render a countdown
-    return <span>{props.formatted.days}d {props.formatted.hours}h {props.formatted.minutes}m {props.formatted.seconds}s</span>;
-  }
-};
-
 const LiveAuction = () => {
   const dispatch = useDispatch();
 
@@ -117,6 +96,8 @@ const LiveAuction = () => {
 
   useEffect(() => {
     async function getBaseData() {
+      setLoading(true);
+
       setPayments(await getPayments());
       setBlacklist(await getBlacklist());
       await getSalesInfo();
@@ -127,8 +108,6 @@ const LiveAuction = () => {
 
   useEffect(() => {
     async function getLiveAuctions() {
-      setLoading(true);
-
       let nfts = [];
       for (let sale of saleNFTs) {
         try {
@@ -259,11 +238,8 @@ const LiveAuction = () => {
       setAuctions(nfts);
       setLoading(false);
     }
-    if (saleNFTs.length > 0) {
-      getLiveAuctions();
-    } else {
-      setLoading(false);
-    }
+    
+    getLiveAuctions();
   }, [saleNFTs]);
 
   return (
@@ -298,6 +274,11 @@ const LiveAuction = () => {
 
       <section className='container'>
         <div className="row">
+          {!loading && (!auctions || auctions.length == 0) &&
+            <div className="alert alert-danger" role="alert">
+              No live auctions
+            </div>
+          }
           { auctions && auctions.map( (nft, index) => (
             <NftCard
               nft={nft}
