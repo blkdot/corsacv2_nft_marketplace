@@ -42,6 +42,7 @@ const SearchItems = () => {
             <div className='row m-10-hor'>
               <div className='col-12'>
                 <h1 className='text-center'>Searched Items</h1>
+                <h4 className='text-center text-muted mt-1 mb-0'>Search: {params.search ? params.search : 'No search string'}</h4>
               </div>
             </div>
           </div>

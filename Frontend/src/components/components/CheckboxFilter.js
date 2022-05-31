@@ -21,11 +21,6 @@ const CheckboxFilter = ({
     { value: 2, label: 'On Offer'}
   ];
 
-  let fc = [];
-  let fs = [];
-  let fp = [];
-  let fcc = [];
-
   async function getCollections() {
     try {
       await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/collection/all`, {
@@ -73,6 +68,8 @@ const CheckboxFilter = ({
   }
 
   const handleCategories = (e) => {
+    let fc = [...filterCategories];
+
     if (e.target.checked === true) {
       let c = categories.filter((c, index) => {
         return c.value === e.target.value;
@@ -89,11 +86,13 @@ const CheckboxFilter = ({
         }
       }
     }
-
+    
     setFilterCategories(fc);
   };
 
   const handleSaleTypes = (e) => {
+    let fs = [...filterSaleTypes];
+
     if (e.target.checked === true) {
       let t = saleTypes.filter((t, index) => {
         return parseInt(t.value) === parseInt(e.target.value);
@@ -111,11 +110,12 @@ const CheckboxFilter = ({
       }
     }
 
-    // console.log("filterSaleTypes:", fs);
     setFilterSaleTypes(fs);
   };
 
   const handlePayments = (e) => {
+    let fp = [...filterPayments];
+
     if (e.target.checked === true) {
       let p = payments.filter((p, index) => {
         return parseInt(p.value) === parseInt(e.target.value);
@@ -133,11 +133,12 @@ const CheckboxFilter = ({
       }
     }
 
-    // console.log("filterPayments:", fp);
     setFilterPayments(fp);
   };
 
   const handleCollections = (e) => {
+    let fcc = [...filterCollections];
+
     if (e.target.checked === true) {
       let c = collections.filter((c, index) => {
         return c.value === e.target.value;
@@ -155,7 +156,6 @@ const CheckboxFilter = ({
       }
     }
 
-    // console.log("filterCollections:", fcc);
     setFilterCollections(fcc);
   };
 

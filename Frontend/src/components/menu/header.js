@@ -170,10 +170,11 @@ const Header = function({ className }) {
 
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
-      console.log("You pressed enter key!");
-      console.log("search:", search);
-
-      navigate(`/search/${search}`);
+      if (!search) {
+        navigate('/search');
+      } else {
+        navigate(`/search/${search}`);
+      }
     }
   }
 

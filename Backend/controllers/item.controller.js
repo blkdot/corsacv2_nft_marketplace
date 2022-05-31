@@ -325,14 +325,20 @@ exports.searchItemsByName= (req, res) => {
     matches.push({
       title: {$regex: search, $options: 'i'}
     });
+    matches.push({
+      "collections.title": {$regex: search, $options: 'i'}
+    });
+  }
+  for (const search of searchs) {
+    matches.push({
+      description: {$regex: search, $options: 'i'}
+    });
+    matches.push({
+      "collections.description": {$regex: search, $options: 'i'}
+    });
   }
 
   NFTItem.aggregate([
-    {
-      $match: {
-        $or: matches
-      }
-    },
     {
       $lookup: {
         from: "collections", 
@@ -340,18 +346,27 @@ exports.searchItemsByName= (req, res) => {
         foreignField: "_id", 
         as: "collections"
       }
-    }
+    },
+    {
+      $match: {
+        $or: matches
+      }
+    },
   ], (err, items) => {
     if (err) {
       res.status(500).send({ message: err });
       return;
     }
-
+    
     const newItems = [];
     for (let item of items) {
+      if (!item.collections || item.collections.length === 0) {
+        continue;
+      }
+
       newItems.push({
-        token_address = item.collections && item.collections[0] ? item.collections[0].collectionAddr : '',
-        token_id = item.tokenId,
+        token_address: item.collections[0].collectionAddr,
+        token_id: item.tokenId,
       });
     }
     
