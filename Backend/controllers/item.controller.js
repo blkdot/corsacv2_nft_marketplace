@@ -317,3 +317,46 @@ exports.increaseItemViews = (req, res) => {
     return;
   }
 };
+
+exports.searchItemsByName= (req, res) => {
+  const searchs = req.query.search.split(" ");
+  const matches = [];
+  for (const search of searchs) {
+    matches.push({
+      title: {$regex: search, $options: 'i'}
+    });
+  }
+
+  NFTItem.aggregate([
+    {
+      $match: {
+        $or: matches
+      }
+    },
+    {
+      $lookup: {
+        from: "collections", 
+        localField: "collectionId", 
+        foreignField: "_id", 
+        as: "collections"
+      }
+    }
+  ], (err, items) => {
+    if (err) {
+      res.status(500).send({ message: err });
+      return;
+    }
+
+    const newItems = [];
+    for (let item of items) {
+      newItems.push({
+        token_address = item.collections && item.collections[0] ? item.collections[0].collectionAddr : '',
+        token_id = item.tokenId,
+      });
+    }
+    
+    res.status(200).send({
+      items: newItems
+    })
+  });
+};

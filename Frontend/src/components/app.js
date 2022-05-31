@@ -27,6 +27,7 @@ import Item from "./pages/Item";
 import Notification from "./pages/Notification";
 import PaymentSetting from "./pages/Admin/Payment";
 import Blacklist from "./pages/Admin/Blacklist";
+import SearchItems from "./pages/searchItems";
 
 const history = createHistory(window);
 
@@ -111,6 +112,8 @@ const App = ({ isServerInfo }) => {
           <Home exact path="/">
             <Redirect to="/home" />
           </Home>
+          <SearchItems path="/search" />
+          <SearchItems path="/search/:search" />
           
           <Explore path="/explore" />
           <LiveAuction path="/auctions" />

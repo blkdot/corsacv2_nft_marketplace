@@ -32,143 +32,152 @@ const NavLink = props => (
 );
 
 const Header = function({ className }) {
-    const { isAuthenticated, account, logout } = useMoralis();
-    const currentUserState = useSelector(selectors.currentUserState);
-    const [currentUser, setCurrentUser] = useState(null);
-    const dispatch = useDispatch();
+  const { isAuthenticated, account, logout } = useMoralis();
+  const currentUserState = useSelector(selectors.currentUserState);
+  const [currentUser, setCurrentUser] = useState(null);
+  const dispatch = useDispatch();
 
-    const [openMenu, setOpenMenu] = React.useState(false);
-    const [openMenu1, setOpenMenu1] = React.useState(false);
-    const [openMenu2, setOpenMenu2] = React.useState(false);
-    const [openMenu3, setOpenMenu3] = React.useState(false);
-    const handleBtnClick = () => {
-      setOpenMenu(!openMenu);
-    };
-    const handleBtnClick1 = () => {
-      setOpenMenu1(!openMenu1);
-    };
-    const handleBtnClick2 = () => {
-      setOpenMenu2(!openMenu2);
-    };
-    const handleBtnClick3 = () => {
-      setOpenMenu3(!openMenu3);
-    };
-    const closeMenu = () => {
-      setOpenMenu(false);
-    };
-    const closeMenu1 = () => {
-      setOpenMenu1(false);
-    };
-    const closeMenu2 = () => {
-      setOpenMenu2(false);
-    };
-    const closeMenu3 = () => {
-      setOpenMenu3(false);
-    };
+  const [openMenu, setOpenMenu] = React.useState(false);
+  const [openMenu1, setOpenMenu1] = React.useState(false);
+  const [openMenu2, setOpenMenu2] = React.useState(false);
+  const [openMenu3, setOpenMenu3] = React.useState(false);
+  const handleBtnClick = () => {
+    setOpenMenu(!openMenu);
+  };
+  const handleBtnClick1 = () => {
+    setOpenMenu1(!openMenu1);
+  };
+  const handleBtnClick2 = () => {
+    setOpenMenu2(!openMenu2);
+  };
+  const handleBtnClick3 = () => {
+    setOpenMenu3(!openMenu3);
+  };
+  const closeMenu = () => {
+    setOpenMenu(false);
+  };
+  const closeMenu1 = () => {
+    setOpenMenu1(false);
+  };
+  const closeMenu2 = () => {
+    setOpenMenu2(false);
+  };
+  const closeMenu3 = () => {
+    setOpenMenu3(false);
+  };
 
-    const ref = useOnclickOutside(() => {
-      closeMenu();
-    });
-    const ref1 = useOnclickOutside(() => {
-      closeMenu1();
-    });
-    const ref2 = useOnclickOutside(() => {
-      closeMenu2();
-    });
-    const ref3 = useOnclickOutside(() => {
-      closeMenu3();
-    });
-    
+  const ref = useOnclickOutside(() => {
+    closeMenu();
+  });
+  const ref1 = useOnclickOutside(() => {
+    closeMenu1();
+  });
+  const ref2 = useOnclickOutside(() => {
+    closeMenu2();
+  });
+  const ref3 = useOnclickOutside(() => {
+    closeMenu3();
+  });
+  
+  const [showmenu, btn_icon] = useState(false);
+  const [showpop, btn_icon_pop] = useState(false);
+  const [shownot, btn_icon_not] = useState(false);
+  const closePop = () => {
+    btn_icon_pop(false);
+  };
+  const closeNot = () => {
+    btn_icon_not(false);
+  };
+  const refpop = useOnclickOutside(() => {
+    closePop();
+  });
+  const refpopnot = useOnclickOutside(() => {
+    closeNot();
+  });
 
-    const [showmenu, btn_icon] = useState(false);
-    const [showpop, btn_icon_pop] = useState(false);
-    const [shownot, btn_icon_not] = useState(false);
-    const closePop = () => {
-      btn_icon_pop(false);
-    };
-    const closeNot = () => {
-      btn_icon_not(false);
-    };
-    const refpop = useOnclickOutside(() => {
-      closePop();
-    });
-    const refpopnot = useOnclickOutside(() => {
-      closeNot();
-    });
+  const [copied, setCopied] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [myTimer, setMyTimer] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [search, setSearch] = useState(null);
 
-    const [copied, setCopied] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-    const [myTimer, setMyTimer] = useState(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (currentUserState.data) {
+      setCurrentUser(currentUserState.data);
+    } else {
+      setCurrentUser(null);
+    }
+  }, [currentUserState]);
 
-    useEffect(() => {
-      if (currentUserState.data) {
-        setCurrentUser(currentUserState.data);
+  useEffect(() => {
+    const header = document.getElementById("myHeader");
+    const totop = document.getElementById("scroll-to-top");
+    const sticky = header.offsetTop;
+    const scrollCallBack = window.addEventListener("scroll", () => {
+      btn_icon(false);
+      if (window.pageYOffset > sticky) {
+        header.classList.add("sticky");
+        totop.classList.add("show");
+        
       } else {
-        setCurrentUser(null);
+        header.classList.remove("sticky");
+        totop.classList.remove("show");
+      } if (window.pageYOffset > sticky) {
+        closeMenu();
       }
-    }, [currentUserState]);
+    });
+    return () => {
+      window.removeEventListener("scroll", scrollCallBack);
+    };
+  }, []);
 
-    useEffect(() => {
-      const header = document.getElementById("myHeader");
-      const totop = document.getElementById("scroll-to-top");
-      const sticky = header.offsetTop;
-      const scrollCallBack = window.addEventListener("scroll", () => {
-        btn_icon(false);
-        if (window.pageYOffset > sticky) {
-          header.classList.add("sticky");
-          totop.classList.add("show");
-          
-        } else {
-          header.classList.remove("sticky");
-          totop.classList.remove("show");
-        } if (window.pageYOffset > sticky) {
-          closeMenu();
-        }
-      });
-      return () => {
-        window.removeEventListener("scroll", scrollCallBack);
-      };
-    }, []);
-
-    useEffect(() => {
-      async function getNotificationsForUser(walletAddr) {
+  useEffect(() => {
+    async function getNotificationsForUser(walletAddr) {
+      setNotifications(await getNotifications(walletAddr, 1, -1));
+      clearInterval(myTimer);
+      const tId = setInterval(async function() {
         setNotifications(await getNotifications(walletAddr, 1, -1));
-        clearInterval(myTimer);
-        const tId = setInterval(async function() {
-          setNotifications(await getNotifications(walletAddr, 1, -1));
-        }, 60000);
+      }, 60000);
 
-        setMyTimer(tId);
+      setMyTimer(tId);
+    }
+    async function checkIsAdmin(walletAddr) {
+      let users = await getAdminUsers();
+      const admins = users.filter((user, index) => {
+        return user.walletAddr.toLowerCase() === walletAddr.toLowerCase();
+      });
+
+      if (admins.length === 1) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
       }
-      async function checkIsAdmin(walletAddr) {
-        let users = await getAdminUsers();
-        const admins = users.filter((user, index) => {
-          return user.walletAddr.toLowerCase() === walletAddr.toLowerCase();
-        });
-
-        if (admins.length === 1) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      }
-
-      if (account) {
-        getNotificationsForUser(account.toLowerCase());
-        checkIsAdmin(account.toLowerCase());
-      }
-    }, [account]);
-
-    const disconnect = async () => {
-      dispatch(actions.setCurrentUser(null));
-      await logout();
-      window.localStorage.removeItem("connectorId");
-      
-      navigate('/');
     }
 
-    return (
+    if (account) {
+      getNotificationsForUser(account.toLowerCase());
+      checkIsAdmin(account.toLowerCase());
+    }
+  }, [account]);
+
+  const disconnect = async () => {
+    dispatch(actions.setCurrentUser(null));
+    await logout();
+    window.localStorage.removeItem("connectorId");
+    
+    navigate('/');
+  }
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter') {
+      console.log("You pressed enter key!");
+      console.log("search:", search);
+
+      navigate(`/search/${search}`);
+    }
+  }
+
+  return (
     <header className={`navbar white ${className}`} id="myHeader">
       <div className='container'>
         <div className='row w-100-nav'>
@@ -200,7 +209,14 @@ const Header = function({ className }) {
           </div>
 
           <div className='search'>
-            <input id="quick_search" className="xs-hide" name="quick_search" placeholder="search item here..." type="text" />
+            <input id="quick_search" 
+              className="xs-hide" 
+              name="quick_search" 
+              placeholder="search item here..." 
+              type="text" 
+              onKeyDown={(e) => handleSearch(e)}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
           <BreakpointProvider>
@@ -458,6 +474,7 @@ const Header = function({ className }) {
 
       </div>     
     </header>
-    );
+  );
 }
+
 export default Header;

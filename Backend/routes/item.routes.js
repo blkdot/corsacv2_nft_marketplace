@@ -35,6 +35,7 @@ module.exports = function(app) {
   app.get("/api/item/wallet", controller.getItemsByWallet);
   app.get("/api/item/collection", controller.getItemsByCollection);
   app.get("/api/item/blacklist", controller.getBlacklist);
+  app.get("/api/item/search", controller.searchItemsByName);
   
   app.post("/api/item/updateBlacklist", controller.updateBlacklist);
   app.post("/api/item/views", controller.increaseItemViews);

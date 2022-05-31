@@ -807,3 +807,23 @@ export async function increaseItemViews(collectionAddr, tokenId) {
     return 0;
   }
 }
+
+export async function searchItems(search) {
+  let items = [];
+  try {
+    await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/item/search`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        'search': search.toLowerCase()
+      }
+    }).then(res => {
+      items = res.data.items;
+    });
+  } catch {
+    console.log('error in searching items');
+  }
+
+  return items;
+}
