@@ -7,13 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import "./common/meta-transactions/ContextMixin.sol";
 import "./common/meta-transactions/NativeMetaTransaction.sol";
-
 import "./IERC721Tradable.sol";
-
-import "hardhat/console.sol";
 
 /**
  * @title ERC721Tradable

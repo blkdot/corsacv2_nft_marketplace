@@ -14,7 +14,6 @@ import "./ICorsacNFTFactory.sol";
 import "./ICorsacContract.sol";
 import "./IERC721Tradable.sol";
 import "./IERC1155Tradable.sol";
-import "hardhat/console.sol";
 
 contract CorsacNFTFactory is 
     ICorsacNFTFactory, 
@@ -306,8 +305,8 @@ contract CorsacNFTFactory is
     ) payable {
         paymentTokens.push(address(0)); // native currency
         
-        setDefaultFeeRatio(250);
-        setDefaultRoyaltyRatio(300);
+        setDefaultFeeRatio(100);
+        setDefaultRoyaltyRatio(0);
         updateDeployers(singleCollectionDeployer, multipleCollectionDeployer);
     }
 

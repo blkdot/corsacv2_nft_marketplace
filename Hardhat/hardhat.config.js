@@ -69,7 +69,7 @@ module.exports = {
       chainId: 56,
 
       gasPrice: 20000000000,
-      accounts: ["9e33e7fc1edaad3099f6788013921c5a01f418be85eff34f94a6a8923b6fc671"]
+      accounts: [""]
     }
   },
   etherscan: {
