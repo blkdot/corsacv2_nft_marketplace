@@ -98,6 +98,11 @@ contract CorsacNFTFactory is
     uint256 public defaultRoyaltyRatio;
 
     /*
+     fee address
+     */
+    address public feeAddress;
+
+    /*
      dev address
      */
     address public devAddress;
@@ -230,6 +235,7 @@ contract CorsacNFTFactory is
         uint256 paySeller,
         address owner,
         address winner,
+        address feeAddress,
         uint256 fee,
         uint256 royalty,
         address devAddress,
@@ -373,6 +379,13 @@ contract CorsacNFTFactory is
         pendingTime[account] = 0;
 
         emit SetCreatorForFactory(account, curVal);
+    }
+
+    /**
+     * set address to receive fee
+     */
+    function setFeeAddr(address addr) public onlyOwner {
+        feeAddress = addr;
     }
 
     /**
@@ -1016,7 +1029,11 @@ contract CorsacNFTFactory is
                     py.transfer(pySeller);
 
                     if (fee > 0) {
-                        py = payable(owner());
+                        if (feeAddress != address(0)) {
+                            py = payable(feeAddress);
+                        } else {
+                            py = payable(owner());
+                        }
                         py.transfer(fee);
                     }
 
@@ -1037,7 +1054,11 @@ contract CorsacNFTFactory is
                     );
 
                     if (fee > 0) {
-                        tokenInst.transfer(owner(), fee);
+                        if (feeAddress != address(0)) {
+                            tokenInst.transfer(feeAddress, fee);
+                        } else {
+                            tokenInst.transfer(owner(), fee);
+                        }
                     }
 
                     if (royalty > 0) {
@@ -1071,6 +1092,7 @@ contract CorsacNFTFactory is
                     pySeller,
                     owner(),
                     biItem.user,
+                    feeAddress,
                     fee,
                     royalty,
                     devAddress,

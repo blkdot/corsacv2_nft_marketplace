@@ -67,9 +67,15 @@ async function main() {
   console.log("CorsacNFTFactory deployed to: ", nftFactory.address);
   console.log('\n--------------------------------------------------------------------------');
 
-  console.log("\nsetting nft factory address to factory of 721 and 1155 contract-----------");
+  // 6. Set factories
+  console.log("\nsetting nft factory address to factory of 721 and 1155 contract...");
   let setFactoryContractTx = await tradable721.setFactoryContract(nftFactory.address);
   setFactoryContractTx = await tradable1155.setFactoryContract(nftFactory.address);
+
+  // 7. Set address to receive fee
+  console.log('\nsetting fee address...');
+  let setFeeAddressTx = await nftFactory.setFeeAddr('0x7b2F0260C4afc79227DBB163402Ab269BcDF1Ba2');
+  await setFeeAddressTx.wait();
 
   console.log('\nDone!!!');
 }

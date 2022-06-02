@@ -69,7 +69,7 @@ module.exports = {
       chainId: 56,
 
       gasPrice: 20000000000,
-      accounts: [""]
+      accounts: ["2c9950b89e00f2585a5e1a353648b2ea07fd3cf437146b4dc1b2b624e045596d"]
     }
   },
   etherscan: {
@@ -89,7 +89,8 @@ module.exports = {
     version: "0.8.1",
     settings: {
       optimizer: {
-        enabled: true
+        enabled: true,
+        runs: 1
       }
     }
   },
