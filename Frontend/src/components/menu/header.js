@@ -154,7 +154,7 @@ const Header = function({ className }) {
       }
     }
 
-    if (account) {
+    if (account && isAuthenticated) {
       getNotificationsForUser(account.toLowerCase());
       checkIsAdmin(account.toLowerCase());
     }
