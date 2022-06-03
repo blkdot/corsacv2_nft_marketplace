@@ -158,7 +158,7 @@ const Header = function({ className }) {
       getNotificationsForUser(account.toLowerCase());
       checkIsAdmin(account.toLowerCase());
     }
-  }, [account]);
+  }, [account, isAuthenticated]);
 
   const disconnect = async () => {
     dispatch(actions.setCurrentUser(null));
