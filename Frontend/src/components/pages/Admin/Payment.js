@@ -148,12 +148,12 @@ const PaymentSetting = () => {
       setDataSource(payments);
     }
 
-    if (!account || !currentUserState.data || !currentUserState.data.isAdmin) {
+    if (!account || !isAuthenticated || !currentUserState.data || !currentUserState.data.isAdmin) {
       navigate("/wallet");
     } else {
       getPaymentData(); 
     }
-  }, [account]);
+  }, [account, isAuthenticated, currentUserState.data]);
 
   useEffect(() => {
     async function addTokenToPayments(payment) {

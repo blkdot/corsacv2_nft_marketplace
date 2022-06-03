@@ -2,11 +2,8 @@ import React, { memo, useEffect, useState, useRef } from "react";
 import { useSelector } from 'react-redux';
 import * as selectors from '../../../store/selectors';
 import Footer from '../../components/footer';
-import Select from 'react-select';
-import axios from "axios";
 import { navigate } from '@reach/router';
-import { useMoralisDapp } from "../../../providers/MoralisDappProvider/MoralisDappProvider";
-import { useMoralis, useMoralisFile, useWeb3ExecuteFunction } from "react-moralis";
+import { useMoralis } from "react-moralis";
 
 //IMPORT DYNAMIC STYLED COMPONENT
 import { StyledHeader } from '../../Styles';
@@ -39,7 +36,7 @@ const StyledTable = styled(Table)`
 const theme = 'GREY'; //LIGHT, GREY, RETRO
 
 const Blacklist = () => {
-  const { account, Moralis } = useMoralis();
+  const { account, isAuthenticated, Moralis } = useMoralis();
   
   const currentUserState = useSelector(selectors.currentUserState);
 
@@ -263,14 +260,12 @@ const Blacklist = () => {
       setLoading(false);
     }
 
-    if (account) {
-      getData();
+    if (!account || !isAuthenticated || !currentUserState.data || !currentUserState.data.isAdmin) {
+      navigate("/wallet");
+    } else {
+      getData(); 
     }
-  }, [account]);
-
-  useEffect(() => {
-    
-  }, [])
+  }, [account, isAuthenticated, currentUserState.data]);
   
   return (
     <div className="greyscheme">
