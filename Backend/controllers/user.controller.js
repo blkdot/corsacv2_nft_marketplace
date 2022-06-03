@@ -135,7 +135,7 @@ exports.getUser = (req, res) => {
 
 exports.getAdminUser = (req, res) => {
   User.find({
-    isAdmin: true
+    isAdmin: 1
   }).then((users) => {
     res.status(200).send({
       users: users

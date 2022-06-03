@@ -162,6 +162,7 @@ const Header = function({ className }) {
 
   const disconnect = async () => {
     dispatch(actions.setCurrentUser(null));
+    setIsAdmin(false);
     await logout();
     window.localStorage.removeItem("connectorId");
     
