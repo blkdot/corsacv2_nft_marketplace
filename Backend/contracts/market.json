@@ -1143,6 +1143,12 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "feeAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "fee",
         "type": "uint256"
@@ -1450,6 +1456,19 @@
     "name": "endPendingCreator",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "feeAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1863,6 +1882,19 @@
       }
     ],
     "name": "setDevAddr",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      }
+    ],
+    "name": "setFeeAddr",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
