@@ -31,7 +31,7 @@ async function main() {
   const ERC721Tradable = await hre.ethers.getContractFactory("ERC721Tradable");
   const tradable721 = await ERC721Tradable.deploy("Corsac NFT", "CSCT-NFT", "https://baseuri/", "0x0000000000000000000000000000000000000000");
 
-  // await tradable721.deployed();
+  await tradable721.deployed();
 
   console.log("ERC721Tradable deployed to: ", tradable721.address);
   console.log('\n--------------------------------------------------------------------------');
@@ -41,7 +41,7 @@ async function main() {
   const ERC1155Tradable = await hre.ethers.getContractFactory("ERC1155Tradable");
   const tradable1155 = await ERC1155Tradable.deploy("My ERC1155 NFT Test", "NENT1", "test-uri", "0x0000000000000000000000000000000000000000");
 
-  // await tradable1155.deployed();
+  await tradable1155.deployed();
 
   console.log("ERC1155Tradable deployed to: ", tradable1155.address);
   console.log('\n--------------------------------------------------------------------------');
@@ -51,7 +51,7 @@ async function main() {
   const CorsacERC721 = await hre.ethers.getContractFactory("CorsacERC721");
   const cERC721 = await CorsacERC721.deploy();
 
-  // const cERC721Inst = await cERC721.deployed();
+  await cERC721.deployed();
 
   console.log("CorsacERC721 deployed to: ", cERC721.address);
   console.log('\n--------------------------------------------------------------------------');
@@ -61,7 +61,7 @@ async function main() {
   const CorsacERC1155 = await hre.ethers.getContractFactory("CorsacERC1155");
   const cERC1155 = await CorsacERC1155.deploy();
 
-  // const cERC1155Inst = await cERC1155.deployed();
+  await cERC1155.deployed();
 
   console.log("CorsacERC1155 deployed to: ", cERC1155.address);
   console.log('\n--------------------------------------------------------------------------');
@@ -71,7 +71,7 @@ async function main() {
   const CorsacNFTFactory = await hre.ethers.getContractFactory("CorsacNFTFactory");
   const nftFactory = await CorsacNFTFactory.deploy(cERC721.address, cERC1155.address);
 
-  // const nftFactoryInst = await nftFactory.deployed();
+  await nftFactory.deployed();
 
   console.log("CorsacNFTFactory deployed to: ", nftFactory.address);
   console.log('\n--------------------------------------------------------------------------');
