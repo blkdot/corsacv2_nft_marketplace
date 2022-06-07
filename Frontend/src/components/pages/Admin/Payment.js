@@ -149,7 +149,16 @@ const PaymentSetting = () => {
     }
 
     if (!account || !isAuthenticated || !currentUserState.data || !currentUserState.data.isAdmin) {
-      navigate("/wallet");
+      // navigate("/wallet");
+      alert(account);
+      alert(!account);
+      alert(isAuthenticated);
+      alert(!isAuthenticated);
+      alert(currentUserState.data);
+      alert(!currentUserState.data);
+      alert(currentUserState.data.isAdmin);
+      alert(!currentUserState.data.isAdmin);
+      alert(!account || !isAuthenticated || !currentUserState.data || !currentUserState.data.isAdmin);
     } else {
       getPaymentData(); 
     }

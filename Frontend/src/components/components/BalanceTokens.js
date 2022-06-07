@@ -39,12 +39,20 @@ const BalanceTokens = () => {
         nb.symbol = getSymbolByChainId(chainId);
         nb.balance = new BigNumber(nativeBalance.balance).dividedBy(new BigNumber(10).pow(18)).toNumber()
 
-        balances.map((b) => {
+        // balances.map((b) => {
+        //   ts.push({
+        //     symbol: b.symbol, 
+        //     balance: new BigNumber(b.balance).dividedBy(new BigNumber(10).pow(b.decimals)).toNumber()
+        //   });
+        // });
+
+        for (const b of balances) {
+          const balance = new BigNumber(b.balance).dividedBy(new BigNumber(10).pow(b.decimals)).toNumber();
           ts.push({
             symbol: b.symbol, 
-            balance: new BigNumber(b.balance).dividedBy(new BigNumber(10).pow(b.decimals)).toNumber()
+            balance: balance
           });
-        });
+        }
 
         // setTokens(ts);
         setNative(nb);
