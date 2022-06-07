@@ -48,6 +48,7 @@ const BalanceTokens = () => {
 
         for (const b of balances) {
           const balance = new BigNumber(b.balance).dividedBy(new BigNumber(10).pow(b.decimals)).toNumber();
+
           ts.push({
             symbol: b.symbol, 
             balance: balance
