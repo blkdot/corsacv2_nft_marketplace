@@ -10,7 +10,7 @@ import useOnclickOutside from "react-cool-onclickoutside";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 import BalanceTokens from '../components/BalanceTokens';
-import { formatUserName, getAdminUsers, getNotifications } from "../../utils";
+import { formatAddress, formatUserName, getAdminUsers, getNotifications } from "../../utils";
 
 setDefaultBreakpoints([
   { xs: 0 },
@@ -423,14 +423,14 @@ const Header = function({ className }) {
                       <div className="popshow">
                         <div className="d-name">
                             <h4>Your name</h4>
-                            <span className="name" onClick={()=> navigate(`/profile/${account.toLowerCase()}`)}>
+                            <span className="name" onClick={()=> navigate(`/profile/${account.toLowerCase()}`)} style={{color: "#FF343F"}}>
                               { currentUser && currentUser.name ? formatUserName(currentUser.name) : 'Set your name'}
                             </span>
                         </div>
                         <BalanceTokens />
                         <div className="d-wallet">
-                            <h4>My Wallet</h4>
-                            <span id="wallet" className="d-wallet-address">{account}</span>
+                            <h4>My wallet</h4>
+                            <span id="wallet" className="d-wallet-address">{formatAddress(account, 'wallet')}</span>
                             <CopyToClipboard text={account} onCopy={() => setCopied(true)}>
                               <button id="btn_copy" title="Copy Address">Copy</button>
                             </CopyToClipboard>
@@ -444,7 +444,7 @@ const Header = function({ className }) {
                           </li>
                           <li onClick={() => navigate("/myCollections")}>
                             <span>
-                              <i className="fa fa-table"></i> My Collections
+                              <i className="fa fa-table"></i> My collections
                             </span>
                           </li>
                           <li onClick={() => navigate("/mynft")}>

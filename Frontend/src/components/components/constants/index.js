@@ -305,6 +305,10 @@ export const carouselNew5 = {
   ]
 }
 
+export const mainnetChainID = '0x38';
+
+export const wbnbAddr = '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c';
+
 export const defaultAvatar = api.baseUrl + '/uploads/thumbnail_author_4_623046d09c.jpg';
 
 export const defaultBanner = api.baseUrl + '/uploads/medium_2_770d4f4fa5.jpg';
