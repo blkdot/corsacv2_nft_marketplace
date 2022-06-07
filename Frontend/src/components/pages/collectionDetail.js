@@ -431,7 +431,7 @@ const Collection = () => {
           { !loading && items && items.map((nft, index) => (
             <NftCard
               nft={nft}
-              className={"d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4"}
+              className={"d-flex d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4"}
               handleItemClick={handleItemClick}
               key={index}
               clockTop={clockTop}

@@ -69,7 +69,7 @@ const About = () => {
           </div>
         </div>
         <div className='row de-flex' style={{justifyContent: 'center'}}>
-          <div className="col-xl-4 col-lg-4 col-md-6 mb-3">
+          <div className="col-xl-4 col-lg-4 col-md-6 mb-3 d-flex">
             <div className="feature-box f-boxed style-3">
               <Reveal className='onStep' keyframes={fadeInUp} delay={0} duration={600} triggerOnce>
                 <i className="bg-color-2 i-boxed icon_wallet"></i>
@@ -86,7 +86,7 @@ const About = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-6 mb-3">
+          <div className="col-xl-4 col-lg-4 col-md-6 mb-3 d-flex">
             <div className="feature-box f-boxed style-3">
               <Reveal className='onStep' keyframes={fadeInUp} delay={0} duration={600} triggerOnce>
                 <i className=" bg-color-2 i-boxed icon_currency"></i>

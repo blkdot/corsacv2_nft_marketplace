@@ -50,7 +50,7 @@ const Outer = styled.div`
 //react functional component
 const MyNftCard = ({ 
                   nft, 
-                  className = 'd-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4', 
+                  className = 'd-flex d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4', 
                   clockTop = true, 
                   height, 
                   onImgLoad,
@@ -352,7 +352,8 @@ const MyNftCard = ({
               }
               <div className="nft__item_info">
                 <span onClick={() => handleBuyClick(nft)}>
-                  <h4>{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h4>
+                  <h4>{nft.metadata && nft.metadata.collection ? nft.metadata.collection.title : nft.name} #{nft.token_id}</h4>
+                  <h4 className="text-muted">{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h4>
                 </span>
                 
                 { (nft.onSale || nft.onAuction || nft.onOffer) && 

@@ -163,7 +163,7 @@ const Collections = props => {
           }
           <div className="row">
             { collections && collections.map((collection, index) => (
-              <div className="d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
+              <div className="d-flex d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4" key={index}>
                 <div className="nft__item m-0">
                   { collection.collectionType && collection.collectionType === 1 ? (
                     <div className='icontype'><i className="fa fa-bookmark"></i></div>   

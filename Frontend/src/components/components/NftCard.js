@@ -27,7 +27,7 @@ const renderer = props => {
 };
 
 //react functional component
-const NftCard = ({ nft, className = 'd-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4', clockTop = true, handleItemClick }) => {
+const NftCard = ({ nft, className = 'd-flex d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4', clockTop = true, handleItemClick }) => {
   const { account } = useMoralis();
   const [height, setHeight] = useState(210);
 
@@ -129,7 +129,8 @@ const NftCard = ({ nft, className = 'd-item col-lg-3 col-md-6 col-sm-6 col-xs-12
           }
           <div className="nft__item_info">
             <span onClick={() => handleItemClick(nft)}>
-              <h4>{nft.metadata.name ? nft.metadata.name : nft.name}</h4>
+              <h4>{nft.metadata && nft.metadata.collection ? nft.metadata.collection.title : nft.name} #{nft.token_id}</h4>
+              <h4 className="text-muted">{nft.metadata.name ? nft.metadata.name : nft.name}</h4>
             </span>
               { (nft.onSale || nft.onOffer || nft.onAuction) && 
                   <div className="nft__item_price">

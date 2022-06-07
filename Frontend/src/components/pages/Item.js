@@ -1100,7 +1100,9 @@ const Item = () => {
                     <h3 style={{color: "#FF3F34"}}>Blocked</h3>
                   }
 									
-									<h2>{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h2>
+									<h2>{nft.metadata.collection && nft.metadata.collection.title ? nft.metadata.collection.title : nft.name} #{nft.token_id}</h2>
+									<h3 className="text-muted">{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</h3>
+
 									{nft.rank > 0 &&
 										<p className="mb-3">Rank: {nft.rank}</p>
 									}

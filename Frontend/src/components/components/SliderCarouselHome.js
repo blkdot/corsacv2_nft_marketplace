@@ -72,6 +72,7 @@ const SliderCarouselHome = () => {
     let newItems = [];
     for (let item of items) {
       let newItem = JSON.parse(JSON.stringify(item));
+      newItem.token_id = newItem.tokenId;
       if (item.collections.length > 0 && item.tokenId) {
         const ops = {
           address: item.collections[0].collectionAddr,
@@ -180,6 +181,7 @@ const SliderCarouselHome = () => {
             <div className="nft_pic">
               <span>
                 <span className="nft_pic_info">
+                  <span className="nft_pic_title">{nft.metadata && nft.metadata.collection ? nft.metadata.collection.title : nft.name} #{nft.token_id}</span>
                   <span className="nft_pic_title">{nft.metadata && nft.metadata.name ? nft.metadata.name : nft.name}</span>
                   <span className="nft_pic_by">{nft.author && nft.author.name ? formatUserName(nft.author.name) : formatAddress(nft.author.walletAddr.toLowerCase(), 'wallet')}</span>
                 </span>
