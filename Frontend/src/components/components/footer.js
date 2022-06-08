@@ -10,7 +10,7 @@ const footer= () => (
                     <h5>Marketplace</h5>
                     <ul>
                         <li><Link to="/explore">Items on sale</Link></li>
-                        <li><Link to="/livAuction">Live Auction</Link></li>
+                        <li><Link to="/auctions">Live Auction</Link></li>
                         <li><Link to="/collections">Collections</Link></li>
                     </ul>
                 </div>
