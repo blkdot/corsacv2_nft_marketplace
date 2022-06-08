@@ -15,12 +15,10 @@ import { navigate, useParams } from "@reach/router";
 
 import { Spin, Modal } from "antd";
 import styled from 'styled-components';
-import Countdown from 'react-countdown';
-
 import moment from "moment";
 import BigNumber from "bignumber.js";
-import { defaultAvatar, fallbackImg } from "../components/constants";
-import { getFileTypeFromURL, getUserInfo, formatUserName, formatAddress, getFavoriteCount, sleep, getBlacklist } from "../../utils";
+import { fallbackImg } from "../components/constants";
+import { getFileTypeFromURL, getUserInfo, getFavoriteCount, sleep, getBlacklist } from "../../utils";
 import NftCard from "../components/NftCard";
 
 //SWITCH VARIABLE FOR PAGE STYLE
@@ -196,7 +194,7 @@ const Collection = () => {
           chain: process.env.REACT_APP_CHAIN_ID
         };
         // const tokenIdMetadata = await Moralis.Web3API.token.getTokenIdMetadata(options);
-        await sleep(700);
+        await sleep(1000);
         const result = await Moralis.Web3API.token.getTokenIdOwners(options);
 
         for (let tokenIdMetadata of result.result) {

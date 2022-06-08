@@ -11,7 +11,7 @@ import { Modal, Spin } from "antd";
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import * as selectors from '../../store/selectors';
-import { defaultAvatar, fallbackImg } from '../components/constants';
+import { defaultAvatar, fallbackImg, mainnetChainID, wbnbAddr } from '../components/constants';
 import { formatAddress, formatUserName, addLike, removeLike } from '../../utils';
 
 const StyledSpin = styled(Spin)`
@@ -61,7 +61,7 @@ const MyNftCard = ({
                  }) => {
     const currentUserState = useSelector(selectors.currentUserState);
     
-    const { account } = useMoralis();
+    const { account, Moralis, isInitialized } = useMoralis();
     
     const dispatch = useDispatch();
 
@@ -69,13 +69,14 @@ const MyNftCard = ({
     const contractProcessor = useWeb3ExecuteFunction();
 
     const navigateTo = (link) => {
-        navigate(link);
+      navigate(link);
     }
 
     const [isLoading, setIsLoading] = useState(false);
 
     const [likes, setLikes] = useState(0);
     const [liked, setLiked] = useState(false);
+    const [usdPrice, setUsdPrice] = useState(0);
 
     const handleSellClick = async (nft) => {
       setIsLoading(true);
@@ -216,7 +217,9 @@ const MyNftCard = ({
       
       await contractProcessor.fetch({
         params: ops,
-        onSuccess: () => {
+        onSuccess: async (result) => {
+          await result.wait();
+
           console.log("success:cancelSale");
           flag = true;
         },
@@ -281,9 +284,57 @@ const MyNftCard = ({
     }
 
     useEffect(() => {
-      setLikes(nft.likes);
-      setLiked(nft.liked);
-    }, [nft])
+      async function getBaseData(nft) {
+        setLikes(nft.likes);
+        setLiked(nft.liked);
+
+        if (!isInitialized || !Moralis.Web3API) {
+          const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+          const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+  
+          Moralis.start({
+            serverUrl: SERVER_URL,
+            appId: APP_ID
+          });
+        }
+
+        let options = {
+          address: wbnbAddr,
+          chain: mainnetChainID,
+          exchange: 'pancakeswap-v2'
+        };
+        const wbnb = await Moralis.Web3API.token.getTokenPrice(options);
+
+        let usd = 0;
+                        
+        if (nft.payment) {
+          if (nft.payment.addr) {
+            options = {
+              address: nft.payment.addr,
+              chain: mainnetChainID,
+              exchange: 'pancakeswap-v2'
+            };
+
+            try {
+              const erc20Token = await Moralis.Web3API.token.getTokenPrice(options);
+              usd = (parseFloat(nft.price) * parseFloat(erc20Token.usdPrice)).toFixed(3);
+            } catch(e) {
+              usd = 0;
+            }
+          } else {
+            usd = (parseFloat(nft.price) * parseFloat(wbnb.usdPrice)).toFixed(3);
+          }
+        } else {
+          usd = 0;
+        }
+
+        setUsdPrice(usd);
+      }
+      
+      if (nft) {
+        getBaseData(nft);
+      }
+    }, [nft]);
         
     return (
         <div className={className}>
@@ -358,7 +409,7 @@ const MyNftCard = ({
                 
                 { (nft.onSale || nft.onAuction || nft.onOffer) && 
                 <div className="nft__item_price">
-                  {nft.price} {nft.payment && nft.payment.symbol ? nft.payment.symbol : 'Unknown'} 
+                  {nft.price} {nft.payment && nft.payment.symbol ? nft.payment.symbol : 'Unknown'} (${usdPrice})
                   <span>{nft.saleBalance} of {nft.saleAmount}</span>
                 </div>
                 }

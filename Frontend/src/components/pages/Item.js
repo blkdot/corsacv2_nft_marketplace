@@ -8,7 +8,7 @@ import moment from "moment";
 import { navigate, useParams } from '@reach/router';
 import BigNumber from 'bignumber.js';
 
-import {useMoralisDapp} from "../../providers/MoralisDappProvider/MoralisDappProvider";
+import { useMoralisDapp } from "../../providers/MoralisDappProvider/MoralisDappProvider";
 import { useMoralisWeb3Api, useMoralis, useWeb3ExecuteFunction } from "react-moralis";
 import Countdown from 'react-countdown';
 
@@ -18,7 +18,7 @@ import { StyledHeader } from '../Styles';
 import { Spin, Modal, Button, InputNumber } from "antd";
 import styled from 'styled-components';
 import { formatAddress, getFileTypeFromURL, getUserInfo, getPayments, getHistory, formatUserName, getFavoriteCount, addLike, removeLike, getBlacklist, sleep, getRarityRanking, increaseItemViews } from "../../utils";
-import { defaultAvatar, fallbackImg } from "../components/constants";
+import { defaultAvatar, fallbackImg, wbnbAddr, mainnetChainID } from "../components/constants";
 
 const StyledSpin = styled(Spin)`
   .ant-spin-dot-item {
@@ -134,8 +134,10 @@ const Item = () => {
 
 		const [likes, setLikes] = useState(0);
   	const [liked, setLiked] = useState(false);
-
+    
 		const [copy, setCopy] = useState(1);
+
+    const [usdPrice, setUsdPrice] = useState(0);
 
     const renderer = props => {
 			if (props.completed) {
@@ -741,7 +743,7 @@ const Item = () => {
 			
 			let nft = null;
 
-			const options = {
+			let options = {
 				chain: process.env.REACT_APP_CHAIN_ID,
 				address: collectionAddr,
 				token_id: tokenId,
@@ -995,6 +997,39 @@ const Item = () => {
 					}
 				}
 			}
+
+      //get usd price
+      options = {
+        address: wbnbAddr,
+        chain: mainnetChainID,
+        exchange: 'pancakeswap-v2'
+      };
+      const wbnb = await Moralis.Web3API.token.getTokenPrice(options);
+
+      let usd = 0;
+                      
+      if (nft.payment) {
+        if (nft.payment.addr) {
+          options = {
+            address: nft.payment.addr,
+            chain: mainnetChainID,
+            exchange: 'pancakeswap-v2'
+          };
+
+          try {
+            const erc20Token = await Moralis.Web3API.token.getTokenPrice(options);
+            usd = (parseFloat(nft.price) * parseFloat(erc20Token.usdPrice)).toFixed(3);
+          } catch(e) {
+            usd = 0;
+          }
+        } else {
+          usd = (parseFloat(nft.price) * parseFloat(wbnb.usdPrice)).toFixed(3);
+        }
+      } else {
+        usd = 0;
+      }
+
+      setUsdPrice(usd);
 
 			setNFT(nft);
 			setIsPageLoading(false);
@@ -1262,7 +1297,7 @@ const Item = () => {
                             <h4>Price</h4>
                             <div className="nft-item-price">
                               <img src="/img/misc/bnb.png" alt="" style={{width: "24px", height: "24px", marginTop: "-5px", marginRight: "5px"}}/>
-                              <span style={{color: "#FFFFFF"}}>{nft.price} {symbol}</span>
+                              <span style={{color: "#FFFFFF"}}>{nft.price} {symbol} (${usdPrice})</span>
                             </div>
                           </div>
                           <div className="col-md-6 col-sm-12 mb-4">

@@ -195,11 +195,13 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             console.log(ex);
           }
 
+          //set payment and price
           if (payments.length >= payment + 1) {
             nft.price = new BigNumber(ops.params.basePrice).dividedBy(new BigNumber(10).pow(payments[payment].decimals)).toNumber();
             nft.payment = payments[payment];
           }
 
+          //set sale status
           if (parseInt(ops.params.method) === 0) {
             nft.onSale = true;
             nft.onAuction = false;
@@ -220,6 +222,21 @@ const MyNFTBalance = ({ showLoadMore = true, shuffle = false, authorId = null })
             nft.saleAmount = ops.params.copy;
             nft.saleBalance = ops.params.copy;
           }
+
+          //reset nfts
+          const ns = JSON.parse(JSON.stringify(myNfts));
+          for (let n of ns) {
+            if (!n.author || !nft.author) {
+              continue;
+            }
+            if (n.token_address.toLowerCase() === nft.token_address && 
+              parseInt(n.token_id) === parseInt(nft.token_id) &&
+              n.author.walletAddr.toLowerCase() === nft.author.walletAddr.toLowerCase()) {
+                n = JSON.parse(JSON.stringify(nft));
+                break;
+            }
+          }
+          setMyNfts(ns);
         },
         onError: (error) => {
           console.log(error);

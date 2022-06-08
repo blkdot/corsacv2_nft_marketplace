@@ -2522,29 +2522,6 @@
     "@react-spring/core" "npm:@tim-soft/react-spring-core@9.0.0-beta.34"
     "@react-spring/shared" "9.0.0-beta.33"
 
-"@tokenizer/http@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@tokenizer/http/-/http-0.6.1.tgz#0f46ea8dd4bbced9649e0412c88fec896f4ac9f8"
-  integrity sha512-NCyA/ZS2VUJDPhP5wIt9YUqFFMrBwUvh8nGugVfTFoEH95qD4TOVYTS5N2Nu9TA+R5kPT80wov8ZP0d4BPwDSQ==
-  dependencies:
-    "@tokenizer/range" "^0.3.2"
-    debug "^4.1.1"
-    node-fetch "^2.6.0"
-    strtok3 "^6.0.4"
-
-"@tokenizer/range@^0.3.2":
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/@tokenizer/range/-/range-0.3.3.tgz#ca1726ba65ef0b798334f0936407796a2bddbbd3"
-  integrity sha512-kEIGyLK31/woTYkdJLAVXTcZ6d55J/Ir2y/2S9PnA4MjJPRqlZBssDwKSkEwnuLEZEhQPscKkIC1husW1UC08A==
-  dependencies:
-    debug "^4.1.1"
-    strtok3 "^6.0.4"
-
-"@tokenizer/token@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@tokenizer/token/-/token-0.3.0.tgz#fe98a93fe789247e998c75e74e9c7c63217aa276"
-  integrity sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==
-
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
@@ -12735,11 +12712,6 @@ pbkdf2@^3.0.17, pbkdf2@^3.0.3:
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
 
-peek-readable@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/peek-readable/-/peek-readable-4.1.0.tgz#4ece1111bf5c2ad8867c314c81356847e8a62e72"
-  integrity sha512-ZI3LnwUv5nOGbQzD9c2iDG6toheuXSZP5esSHBjopsXH4dg19soufvpUGA3uohi5anFtGb2lhAVdHzH6R/Evvg==
-
 performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
@@ -16261,14 +16233,6 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
   integrity sha1-PFMZQukIwml8DsNEhYwobHygpgo=
-
-strtok3@^6.0.4:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/strtok3/-/strtok3-6.3.0.tgz#358b80ffe6d5d5620e19a073aa78ce947a90f9a0"
-  integrity sha512-fZtbhtvI9I48xDSywd/somNqgUHl2L2cstmXCCif0itOf96jeW18MBSyrLuNicYQVkvpOxkZtkzujiTJ9LW5Jw==
-  dependencies:
-    "@tokenizer/token" "^0.3.0"
-    peek-readable "^4.1.0"
 
 sturdy-websocket@^0.2.1:
   version "0.2.1"

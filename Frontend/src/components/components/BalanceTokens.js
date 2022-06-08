@@ -66,21 +66,21 @@ const BalanceTokens = () => {
         for (const b of balances) {
           const balance = new BigNumber(b.balance).dividedBy(new BigNumber(10).pow(b.decimals)).toNumber();
 
-          const options = {
-            address: b.token_address,
-            chain: mainnetChainID,
-            exchange: 'pancakeswap-v2'
-          };
+          // const options = {
+          //   address: b.token_address,
+          //   chain: mainnetChainID,
+          //   exchange: 'pancakeswap-v2'
+          // };
 
           let usd = 0;
 
-          try {
-            const price = await Web3Api.token.getTokenPrice(options);
-            usd = price.usdPrice * balance;
-          } catch(e) {
-            console.log(e);
-            usd = 0;
-          }
+          // try {
+          //   const price = await Web3Api.token.getTokenPrice(options);
+          //   usd = price.usdPrice * balance;
+          // } catch(e) {
+          //   console.log(e);
+          //   usd = 0;
+          // }
           
           ts.push({
             symbol: b.symbol, 

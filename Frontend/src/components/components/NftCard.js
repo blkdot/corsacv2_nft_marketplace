@@ -3,8 +3,8 @@ import { useMoralis } from 'react-moralis';
 import styled from "styled-components";
 import Countdown from 'react-countdown';
 import { navigate } from '@reach/router';
-import { defaultAvatar, fallbackImg } from './constants';
-import { formatAddress, formatUserName, getFileTypeFromURL, getPayments, getUserInfo, getFavoriteCount, addLike, removeLike } from '../../utils';
+import { defaultAvatar, fallbackImg, wbnbAddr, mainnetChainID } from './constants';
+import { formatAddress, formatUserName, addLike, removeLike } from '../../utils';
 import BigNumber from "bignumber.js";
 
 const Outer = styled.div`
@@ -28,11 +28,12 @@ const renderer = props => {
 
 //react functional component
 const NftCard = ({ nft, className = 'd-flex d-item col-lg-3 col-md-6 col-sm-6 col-xs-12 mb-4', clockTop = true, handleItemClick }) => {
-  const { account } = useMoralis();
+  const { account, Moralis, isInitialized } = useMoralis();
   const [height, setHeight] = useState(210);
 
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [usdPrice, setUsdPrice] = useState(0);
   
   const onImgLoad = (e) => {
     let currentHeight = height;
@@ -68,8 +69,56 @@ const NftCard = ({ nft, className = 'd-flex d-item col-lg-3 col-md-6 col-sm-6 co
   }
 
   useEffect(() => {
-    setLikes(nft.likes);
-    setLiked(nft.liked);
+    async function getBaseData(nft) {
+      setLikes(nft.likes);
+      setLiked(nft.liked);
+
+      if (!isInitialized || !Moralis.Web3API) {
+        const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+        const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+
+        Moralis.start({
+          serverUrl: SERVER_URL,
+          appId: APP_ID
+        });
+      }
+
+      let options = {
+        address: wbnbAddr,
+        chain: mainnetChainID,
+        exchange: 'pancakeswap-v2'
+      };
+      const wbnb = await Moralis.Web3API.token.getTokenPrice(options);
+
+      let usd = 0;
+                      
+      if (nft.payment) {
+        if (nft.payment.addr) {
+          options = {
+            address: nft.payment.addr,
+            chain: mainnetChainID,
+            exchange: 'pancakeswap-v2'
+          };
+
+          try {
+            const erc20Token = await Moralis.Web3API.token.getTokenPrice(options);
+            usd = (parseFloat(nft.price) * parseFloat(erc20Token.usdPrice)).toFixed(3);
+          } catch(e) {
+            usd = 0;
+          }
+        } else {
+          usd = (parseFloat(nft.price) * parseFloat(wbnb.usdPrice)).toFixed(3);
+        }
+      } else {
+        usd = 0;
+      }
+
+      setUsdPrice(usd);
+    }
+    
+    if (nft) {
+      getBaseData(nft);
+    }
   }, [nft])
 
   return (
@@ -134,7 +183,7 @@ const NftCard = ({ nft, className = 'd-flex d-item col-lg-3 col-md-6 col-sm-6 co
             </span>
               { (nft.onSale || nft.onOffer || nft.onAuction) && 
                   <div className="nft__item_price">
-                    {nft.price} {nft.payment ? nft.payment.symbol : 'Unknown'}
+                    {nft.price} {nft.payment ? nft.payment.symbol : 'Unknown'} (${usdPrice})
                     <span>{nft.saleBalance} of {nft.saleAmount}</span>
                     {/* { nft.onAuction && 
                         <span>{nft.bid}/{nft.max_bid}</span>
